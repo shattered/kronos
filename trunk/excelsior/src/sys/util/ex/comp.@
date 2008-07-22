@@ -1,1 +1,1 @@
-{ SYM='. /sys /sym /usr/sym' mxOUT=*=/sys CD=/sys/util/ex } mx exScreen exCmd exMem exHead exMacro exIO exSetUp exTex exMain ex excal $1
+{ SYM='. /sys /sym /usr/sym' mxOUT=*=/sys CD=/sys/util/ex } mx exScreen exCmd exMem exHead exMacro exIO exSetUp exTex exMain ex excal $1

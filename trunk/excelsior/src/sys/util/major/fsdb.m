@@ -17,6 +17,13 @@ MODULE fsdb; (* Hady. 03-Jan-90. (c) KRONOS *)
              без параметров.                              (Hady)
   10-Jan-91: Ошибки в check_ref. Поиск по неполному имени
              узла в директории.                           (Hady)
+  08-Feb-92: Изменен тип i_node: res[0] --> lanres.
+             переделана распаковка суперблока (введена
+             возможность длинных сетов.                   (Hady)
+  09-Feb-92: Организованы пакетные режимы для
+             "check_disk" & "verify_disk", а следовательно,
+             отпала необходимость в утилите "fschk".      (Hady)
+
 *)
 
 IMPORT  BIO, ASCII;
@@ -30,7 +37,8 @@ IMPORT  img: Strings  , tty: Terminal
 
 WITH STORAGE: mem;
 
-CONST version = 'File System DeBug  v0.041 04-Jan-91 (c) KRONOS';
+CONST version = 'File System DeBug  v0.100 (c)1991,1992 KRONOS';
+      no_mem  = "нет памяти";
 
 MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
 
@@ -40,16 +48,16 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
   IMPORT  bio: BIO;
   IMPORT  lex: Lexicon;
 
-  IMPORT  img, err;
+  IMPORT  img, err, no_mem;
 
   EXPORT QUALIFIED dir, lng, esc, sys, all_modes
                  , d_del, d_file, d_dir, d_hidden, d_entry, d_esc, d_sys
-                 , all_kinds, drv, vol_name
+                 , all_kinds, drv, vol_name, vol_label
                  , i_node, dir_node, Dir, no_i, no_b, iSET, bSET
                  , free_i, free_b, sys_0, d_size
                  , s_put, message, error, reset, get_inode, put_inode
                  , get_block, put_block, dir_walk, end_walk, mount
-                 , release, dNode;
+                 , release, dNode, WRITE;
 
   CONST
     dir = 1;  lng = 2;  esc = 3; sys = 4; all_modes ={dir,lng,esc,sys};
@@ -64,7 +72,8 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
       cTime : INTEGER;  (* Creation time *)       -- 48
       wTime : INTEGER;  (* Last write time *)     -- 52
       pro   : INTEGER;                            -- 56
-      res   : ARRAY [0..1] OF INTEGER;            -- 64
+      lanres: INTEGER;  (* Networks reserved *)   -- 60
+      res   : INTEGER;  (* Not used, must be 0*)  -- 64
     END (* i_node *);
 
     b_ptr = POINTER TO ARRAY [0..1023] OF SYSTEM.WORD;
@@ -97,15 +106,19 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
         Dir = POINTER TO DIR;
 
   VAR     vol_name: ARRAY [0..79] OF CHAR;
+         vol_label: ARRAY [0..7 ] OF CHAR;
       no_i, free_i: INTEGER; -- inodes account on device
       no_b, free_b: INTEGER; -- blocks account on device
       d_size,sys_0: INTEGER;
+          i_offset: INTEGER; -- first inode block number
+             WRITE: BOOLEAN; -- security allows to write
 
   VAR iSET: DYNARR OF BITSET; -- free iNodes
       bSET: DYNARR OF BITSET; -- free blocks
 
   VAR   drv: bio.FILE;
-      super: b_ptr;    s_put: BOOLEAN;
+      super: DYNARR OF SYSTEM.WORD;
+      s_put: BOOLEAN;
       ibuff: b_ptr;    i_put: BOOLEAN;
        iblk: INTEGER;
 
@@ -122,10 +135,9 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
     reset;        drv:=bio.null;
     no_i  :=-1;   free_i:=-1;
     no_b  :=-1;   free_b:=-1;
-    d_size:=-1;   sys_0 :=-1;  iblk  :=-1;
-    NEW(iSET) ;   NEW(bSET) ;
-    super:=NIL;   ibuff:=NIL;
-    s_put:=FALSE; i_put:=FALSE;
+    d_size:=-1;   sys_0 :=-1;   iblk  :=-1;
+    NEW(iSET) ;   NEW(bSET) ;   NEW(super);
+    ibuff:=NIL;   s_put:=FALSE; i_put:=FALSE;
   END init_state;
 
   PROCEDURE check();
@@ -150,79 +162,109 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
     --tty.print('put_block: no: %5d, size: %4d\n',no,sz);
   END put_block;
 
-  PROCEDURE unpack_sup;
+  PROCEDURE read_super;
+
+    PROCEDURE ill_vol;
+    BEGIN
+      error:=TRUE; message:="Некорректный носитель";
+    END ill_vol;
 
     CONST inods = 4096 DIV BYTES(i_node);
+          LABEL = 16;
 
-    VAR lab: POINTER TO ARRAY [0..7] OF INTEGER;
+    VAR lab: RECORD
+               label: ARRAY [0..7] OF CHAR;
+               res00: INTEGER;
+               res01: INTEGER;
+               no_i : INTEGER;
+               no_b : INTEGER;
+               mark : ARRAY [0..3] OF CHAR; (* "CXE" *)
+             END;
+
+    VAR   i: INTEGER;
     isz,bsz: INTEGER;
           s: POINTER TO ARRAY [0..3] OF CHAR;
-          i: INTEGER;
 
   BEGIN
-    lab:=SYSTEM.ADDRESS(super);
-    no_b:=lab^[5];
-    no_i:=lab^[4];
-    -- s:=SYSTEM.ADR(lab^[6]); -- CHECK "CXE ?";
+    bio.seek(drv,4096,0);
+    check; IF error THEN RETURN END;
+    bio.get(drv,lab,BYTES(lab));
+    check; IF error THEN RETURN END;
+    IF lab.mark#"CXE" THEN
+      error:=TRUE;
+      message:='этот диск не Excelsior XX';
+      RETURN
+    END;
+    img.copy(vol_label,lab.label);
+    IF vol_label="UL" THEN vol_label:="" END;
+    no_b:=lab.no_b;
+    no_i:=lab.no_i;
+
+    free_i:=-1; free_b:=-1; sys_0:=-1;
+
+    IF (no_b>(d_size DIV 64 + 1) * 64) OR
+       (no_i>(d_size DIV 64 + 1) * 64) THEN ill_vol; RETURN
+    END;
+
     isz:=(no_i+31) DIV 32;
     bsz:=(no_b+31) DIV 32;
-    bSET^.ADR:=SYSTEM.ADDRESS(super)+16; bSET^.HIGH:=bsz-1;
-    iSET^.ADR:=bSET^.ADR+bsz;          iSET^.HIGH:=isz-1;
-    IF no_i>d_size*2 THEN -- мокропальцевая оценка
-      free_i:=-1
-    ELSE
-      free_i:=0; i:=0;
-      WHILE i<no_i DO
-        IF i MOD 32=0 THEN
-          WHILE (i<no_i) & (iSET[i DIV 32]={}) DO INC(i,32) END;
-          WHILE (i<no_i) & (iSET[i DIV 32]={0..31}) DO
-            INC(i,32); INC(free_i,32)
-          END
-        END;
-        IF (i<no_i) & ((i MOD 32) IN iSET[i DIV 32])
-        THEN free_i:=free_i+1
-        END; INC(i)
-      END
+    i:=isz+bsz+LABEL; NEW(super,i);
+
+    bio.seek(drv,4096,0);
+    check; IF error THEN RETURN END;
+    bio.get(drv,super,BYTES(super));
+    check; IF error THEN RETURN END;
+
+    i_offset:=1+(i+1023) DIV 1024;
+
+    bSET^.ADR:=SYSTEM.ADR(super)+LABEL; bSET^.HIGH:=bsz-1;
+    iSET^.ADR:=bSET^.ADR+bsz;           iSET^.HIGH:=isz-1;
+    free_i:=0; i:=0;
+    WHILE i<no_i DO
+      IF i MOD 32=0 THEN
+        WHILE (i<no_i) & (iSET[i DIV 32]={}) DO INC(i,32) END;
+        WHILE (i<no_i) & (iSET[i DIV 32]={0..31}) DO
+          INC(i,32); INC(free_i,32)
+        END
+      END;
+      IF (i<no_i) & ((i MOD 32) IN iSET[i DIV 32])
+      THEN free_i:=free_i+1
+      END; INC(i)
     END;
-    IF no_b>d_size*2 THEN -- мокропальцевая оценка
-      free_b:=-1
-    ELSE
-      free_b:=0; i:=0;
-      WHILE i<no_b DO
-        IF i MOD 32=0 THEN
-          WHILE (i<no_b) & (bSET[i DIV 32]={}) DO INC(i,32) END;
-          WHILE (i<no_b) & (bSET[i DIV 32]={0..31}) DO
-            i:=i+32; free_b:=free_b+32
-          END
-        END;
-        IF (i<no_b) & ((i MOD 32) IN bSET[i DIV 32])
-        THEN free_b:=free_b+1
-        END; INC(i)
-      END
+    free_b:=0; i:=0;
+    WHILE i<no_b DO
+      IF i MOD 32=0 THEN
+        WHILE (i<no_b) & (bSET[i DIV 32]={}) DO INC(i,32) END;
+        WHILE (i<no_b) & (bSET[i DIV 32]={0..31}) DO
+          i:=i+32; free_b:=free_b+32
+        END
+      END;
+      IF (i<no_b) & ((i MOD 32) IN bSET[i DIV 32])
+      THEN free_b:=free_b+1
+      END; INC(i)
     END;
-    sys_0:=1   +((no_i+inods-1) DIV inods);
-  END unpack_sup;
+    sys_0:=i_offset-1+((no_i+inods-1) DIV inods);
+  END read_super;
 
   PROCEDURE mount(drv_name: ARRAY OF CHAR);
     VAR a: SYSTEM.ADDRESS;
   BEGIN
+    WRITE:=TRUE;
     vol_name:=no_volume;
-    NEW(super); s_put:=FALSE;
+    NEW(super); NEW(iSET); NEW(bSET); s_put:=FALSE;
     bio.open(drv,drv_name,"mc");
     IF NOT bio.done & (bio.error=err.sec_vio) THEN
-      bio.open(drv,drv_name,"r")
+      WRITE:=FALSE; bio.open(drv,drv_name,"r")
     END;
     check;
     IF bio.is_disk*bio.kind(drv)={} THEN
-      img.print(message,'"%s" is not disk device',drv_name);
+      img.print(message,'"%s": не дисковое устройство',drv_name);
       error:=TRUE; RETURN
     END;
     d_size:=bio.eof(drv) DIV 4096;
     bio.lock(-1,drv); check;
     IF error THEN RETURN END;
-    get_block(1,super,4096);
-    IF error THEN RETURN END;
-    unpack_sup;
+    read_super;
     img.copy(vol_name,drv_name)
   END mount;
 
@@ -235,7 +277,7 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
         s: ARRAY [0..79] OF CHAR;
   BEGIN
     IF ibuff=NIL THEN NEW(ibuff); i_put:=FALSE; END;
-    b:=2+(no DIV inods);
+    b:=i_offset+(no DIV inods);
     IF b#iblk THEN
       IF i_put THEN -- flush inode buffer
         put_block(iblk,ibuff,4096); i_put:=FALSE;
@@ -243,7 +285,7 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
       get_block(b,ibuff,4096);
       IF error THEN
         s:=message;
-        img.print(message,"reading inode block %05d: %s",b,s);
+        img.print(message,"при чтении инодного блока %05d: %s",b,s);
         RETURN NIL;
       END;
       iblk:=b;
@@ -276,7 +318,7 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
         IF free>HIGH(d^.REF) THEN
           RESIZE(d^.REF,SIZE(d^.REF)+8);
           IF free>HIGH(d^.REF) THEN
-            error:=TRUE; message:='No memory'; RETURN -1
+            error:=TRUE; message:=no_mem; RETURN -1
           END;
         END;
         d^.REF[free]:=ref[i]; i:=i+1; free:=free+1;
@@ -293,7 +335,7 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
         IF {lng}*Mode#{} THEN
           buff:=NIL; NEW(buff);
           IF buff=NIL THEN error:=TRUE;
-            message:='No memory'; RETURN
+            message:=no_mem; RETURN
           END;
           i:=0; max:=0;
           LOOP
@@ -319,7 +361,7 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
     p_n:=get_inode0(ino);
     IF p_n=NIL THEN RETURN NIL END;
     IF p_n^.Mode*{dir}={} THEN
-      error:=TRUE; img.print(message,"Is not directory");
+      error:=TRUE; img.print(message,"Это не директория");
       RETURN NIL;
     END;
     NEW(d); NEW(d^.REF); free:=0;
@@ -327,7 +369,7 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
       acc_eof(n);
       IF error THEN DISPOSE(REF); DISPOSE(d); RETURN NIL END;
       IF max=0 THEN DISPOSE(d);
-        error:=TRUE; img.print(message,'Bad Eof in dir %d ',ino);
+        error:=TRUE; img.print(message,'в директории i%d испорчен Eof',ino);
         RETURN NIL
       END;
       NEW(buff,max); b:=0;
@@ -361,17 +403,19 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
     VAR s: ARRAY [0..79] OF CHAR;
   BEGIN
     IF s_put THEN
-      put_block(1, super, 4096); s_put:=FALSE;
-      IF error THEN s:=message;
-        img.print(message,"ATTENTION! writting super block: %s",s);
-        RETURN
+      bio.seek(drv,4096,0);
+      bio.put(drv,super,BYTES(super));
+      IF NOT bio.done THEN
+        lex.perror(message,bio.error,"ВИМАНИЕ! %%s при записи сетов");
+        error:=TRUE
       END;
-      DISPOSE(super);
+      s_put:=FALSE; DISPOSE(super);
+      IF error THEN RETURN END;
     END;
     IF i_put THEN
       put_block(iblk,ibuff,4096); i_put:=FALSE;
       IF error THEN s:=message;
-        img.print(message,"ATTENTION! writting inode block %05d: %s",iblk,s);
+        img.print(message,"ВИМАНИЕ! при записи инодного блока %d: %s",iblk,s);
         RETURN
       END;
       DISPOSE(ibuff);
@@ -599,67 +643,87 @@ MODULE errors; (* Hady. 05-Nov-89. (c) KRONOS *)
 
   VAR no_anon: INTEGER;
 
-  TYPE item = POINTER TO error;
-      error = RECORD
-                   one,
-                   two: INTEGER;
-                  next: item;
-              END;
+  TYPE ano_ptr = POINTER TO ano_rec;
+       ano_rec = RECORD
+                   next: ano_ptr;
+                   file: INTEGER;
+                 END;
 
-  VAR dbl, anon: item;
+  TYPE dbl_ptr = POINTER TO dbl_rec;
+       dbl_rec = RECORD
+                   next: dbl_ptr;
+                   file: INTEGER;
+                   ref : INTEGER;
+                   rbno: INTEGER;
+                   pbno: INTEGER;
+                 END;
 
-  PROCEDURE make_err(one,two: INTEGER): item;
-    VAR e: item;
-  BEGIN NEW(e);
-    e^.one :=one;  e^.two:=two;
-    e^.next:=NIL;  RETURN  e  ;
-  END make_err;
+  VAR doubles: dbl_ptr;
+      anonims: ano_ptr;
 
-  PROCEDURE put_err(VAR to: item; one,two: INTEGER);
-    VAR e,l: item;
+  PROCEDURE put_dbl(f,r,rb,pb: INTEGER);
+    VAR d,t: dbl_ptr;
   BEGIN
-    e:=make_err(one,two);
-    IF to=NIL THEN to:=e;
-    ELSE l:=to;
-      IF (l^.one=one) & (l^.two=two) THEN DISPOSE(e); RETURN END;
-      WHILE l^.next#NIL DO
-        l:=l^.next;
-        IF (l^.one=one) & (l^.two=two) THEN DISPOSE(e); RETURN END;
-      END;
-      l^.next:=e;
+    NEW(d);
+    WITH d^ DO
+      next:=NIL; file:=f; ref:=r; rbno:=rb; pbno:=pb
     END;
-  END put_err;
+    IF doubles=NIL THEN doubles:=d
+    ELSE
+      t:=doubles;
+      WHILE t^.next#NIL DO t:=t^.next END;
+      t^.next:=d
+    END
+  END put_dbl;
 
-  PROCEDURE put_dbl(f,no: INTEGER); BEGIN put_err(dbl,f,no)   END put_dbl;
+  PROCEDURE get_dbl(VAR f,r,rb,pb: INTEGER): BOOLEAN;
+    VAR d: dbl_ptr;
+  BEGIN
+    IF doubles=NIL THEN RETURN FALSE END;
+    d:=doubles;
+    doubles:=d^.next;
+    WITH d^ DO
+      f:=file; r:=ref; rb:=rbno; pb:=pbno
+    END;
+    DISPOSE(d); RETURN TRUE
+  END get_dbl;
 
   PROCEDURE put_anon(no: INTEGER);
-  BEGIN put_err(anon,no,-1); INC(no_anon) END put_anon;
-
-  PROCEDURE get_err(VAR from: item; VAR o,t: INTEGER): BOOLEAN;
-    VAR e: item;
+    VAR a,t: ano_ptr;
   BEGIN
-    IF from=NIL THEN RETURN FALSE END;
-    e:=from;    from:=from^.next;
-    o:=e^.one;  t:=e^.two;
-    DISPOSE(e); RETURN TRUE;
-  END get_err;
-
-  PROCEDURE get_dbl(VAR f,no: INTEGER): BOOLEAN;
-  BEGIN RETURN get_err(dbl,f,no) END get_dbl;
+    NEW(a);
+    a^.next:=NIL; a^.file:=no;
+    IF anonims=NIL THEN
+      anonims:=a
+    ELSE
+      t:=anonims;
+      WHILE t^.next#NIL DO t:=t^.next END;
+      t^.next:=a
+    END;
+    INC(no_anon)
+  END put_anon;
 
   PROCEDURE get_anon(VAR no: INTEGER): BOOLEAN;
-    VAR b: INTEGER;
-  BEGIN DEC(no_anon); RETURN get_err(anon,no,b) END get_anon;
+    VAR a: ano_ptr;
+  BEGIN
+    IF anonims=NIL THEN RETURN FALSE END;
+    a:=anonims; anonims:=a^.next;
+    no:=a^.file;
+    DISPOSE(a); RETURN TRUE
+  END get_anon;
 
   PROCEDURE release;
-    VAR e: item;
+    VAR a: ano_ptr; d: dbl_ptr;
   BEGIN
-    WHILE dbl #NIL DO e:=dbl;  dbl :=dbl^.next ; DISPOSE(e) END;
-    WHILE anon#NIL DO e:=anon; anon:=anon^.next; DISPOSE(e) END;
+    WHILE doubles#NIL DO d:=doubles; doubles:=doubles^.next; DISPOSE(d) END;
+    WHILE anonims#NIL DO a:=anonims; anonims:=anonims^.next; DISPOSE(a) END;
     no_anon:=0;
   END release;
 
-BEGIN anon:=NIL; dbl:=NIL; no_anon:=0;
+BEGIN
+  anonims:=NIL;
+  doubles:=NIL;
+  no_anon:=0
 END errors;
 
 MODULE notes; (* 25-Dec-89. (c) KRONOS *)
@@ -669,7 +733,7 @@ MODULE notes; (* 25-Dec-89. (c) KRONOS *)
   IMPORT  kbr;
   IMPORT  img;
 
-  EXPORT QUALIFIED print, show, release, edit, line;
+  EXPORT QUALIFIED print, show, release, edit, line, set_term;
 
   TYPE string = POINTER TO str_body;
      str_body = RECORD
@@ -833,14 +897,29 @@ MODULE notes; (* 25-Dec-89. (c) KRONOS *)
     new_string(s);
   END show;
 
-  PROCEDURE print(VAL fmt: ARRAY OF CHAR; SEQ arg: SYSTEM.WORD);
+  PROCEDURE pri0(VAL fmt: ARRAY OF CHAR; SEQ arg: SYSTEM.WORD);
     VAR bump: ARRAY [0..255] OF CHAR;
-  BEGIN img.print(bump,fmt,arg); show(bump) END print;
+  BEGIN img.print(bump,fmt,arg); show(bump) END pri0;
+
+  PROCEDURE pri1(VAL f: ARRAY OF CHAR; SEQ a: SYSTEM.WORD);
+  BEGIN
+    tty.print(f,a); tty.print('\n')
+  END pri1;
+
+  TYPE PRINT = PROCEDURE (ARRAY OF CHAR, SEQ SYSTEM.WORD);
+
+  VAR print: PRINT;
+
+  PROCEDURE set_term(yes: BOOLEAN);
+  BEGIN
+    IF yes THEN print:=pri1 ELSE print:=pri0 END
+  END set_term;
 
 BEGIN
   text:=NIL; cur:=NIL;
   first:=0;  ln:=0;
   line:=19;
+  print:=pri0;
 END notes;
 
 (*$<*) (*$T-*)
@@ -892,12 +971,18 @@ BEGIN
   END;
 END _query;
 
-PROCEDURE message(l: INTEGER; VAL f: ARRAY OF CHAR; SEQ arg: SYSTEM.WORD);
+PROCEDURE message0(l: INTEGER; VAL f: ARRAY OF CHAR; SEQ arg: SYSTEM.WORD);
 BEGIN
   tty.set_pos(14+l,30); tty.print(f,arg); tty.erase_line(0);
-END message;
+END message0;
 
-PROCEDURE warn(VAL s: ARRAY OF CHAR; SEQ args: SYSTEM.WORD);
+PROCEDURE message1(l: INTEGER; VAL f: ARRAY OF CHAR; SEQ a: SYSTEM.WORD);
+BEGIN
+  tty.print(f,a);
+  IF l=0 THEN tty.print('\n') ELSE tty.print('\r') END
+END message1;
+
+PROCEDURE warn0(VAL s: ARRAY OF CHAR; SEQ args: SYSTEM.WORD);
 BEGIN
   IF dio.error THEN
     tty.set_pos(notes.line,0); tty.erase_line(0);
@@ -908,10 +993,27 @@ BEGIN
     IF _query() THEN HALT(1) END;
     dio.reset;
   END;
-END warn;
+END warn0;
+
+PROCEDURE warn1(VAL s: ARRAY OF CHAR; SEQ a: SYSTEM.WORD);
+BEGIN
+  IF dio.error THEN
+    tty.print('#%s\n',dio.message);
+    tty.print('Это серьезно? [Yes/No] ');
+    IF _query() THEN HALT(1) END;
+    tty.print('\n'); dio.reset
+  END;
+END warn1;
+
+CONST RDI = " при чтении инода %d ";
+      WRI = " при записи инода %d ";
+      RDB = " при чтении блока %d ";
+      WRB = " при записи блока %d ";
+      RDD = " при чтении директории %d ";
+      WRD = " при записи директории %d ";
 
 PROCEDURE ask(VAL fmt: ARRAY OF CHAR; SEQ arg: SYSTEM.WORD): BOOLEAN;
-BEGIN message(0,fmt,arg); RETURN _query(); END ask;
+BEGIN message0(0,fmt,arg); RETURN _query(); END ask;
 
 MODULE search; (* Hady. 07-Dec-89. (c) KRONOS *)
 
@@ -980,6 +1082,8 @@ MODULE editors; (*$N+ Hady. 13-Dec-89. (c) KRONOS *)
   IMPORT  mem;
   IMPORT  search;
   IMPORT  nums;
+
+  IMPORT  RDB,WRB,RDI,WRI,RDD,WRD,no_mem;
 
   EXPORT QUALIFIED edit_block, edit_file, edit_inode, edit_dir, vis_char;
 
@@ -1081,8 +1185,8 @@ MODULE editors; (*$N+ Hady. 13-Dec-89. (c) KRONOS *)
                           VAL type: ARRAY OF CHAR;
                           VAL file: ARRAY OF INTEGER);
 
-    CONST read_warn = " при чтении блока %d";
-         write_warn = " при записи блока %d";
+    CONST read_warn = RDB;
+         write_warn = WRB;
 
     VAR bump: ARRAY [0..79] OF CHAR;
 
@@ -1177,7 +1281,7 @@ MODULE editors; (*$N+ Hady. 13-Dec-89. (c) KRONOS *)
   *)
     CONST INFO = "<<< EDIT       000000               000000"
                        ".000000                WORD MODE >>>";
-  
+
     VAR info : ARRAY [0..79] OF CHAR;
   
     PROCEDURE init_info;  VAR i: INTEGER;
@@ -1607,14 +1711,14 @@ MODULE editors; (*$N+ Hady. 13-Dec-89. (c) KRONOS *)
     VAR i,b: INTEGER;
 
   BEGIN
-    dio.get_inode(no,inode); warn(" при чтении инода %d",no);
+    dio.get_inode(no,inode); warn(RDI,no);
     NEW(file,8); ASSERT(file^.ADR#NIL); pos:=0;
     IF inode.Mode*{dio.lng}#{} THEN
       NEW(B); ASSERT(B#NIL);
       FOR b:=0 TO HIGH(inode.Ref) DO
         IF (inode.Ref[b]>=0) & (inode.Ref[b]<dio.no_b) THEN
           dio.get_block(inode.Ref[b],B,4096);
-          IF dio.error THEN warn(" при чтении блока %d",inode.Ref[b]);
+          IF dio.error THEN warn(RDB,inode.Ref[b]);
           ELSE
             FOR i:=0 TO 1023 DO put(B^[i]) END;
           END;
@@ -2361,11 +2465,11 @@ MODULE editors; (*$N+ Hady. 13-Dec-89. (c) KRONOS *)
   PROCEDURE edit_inode(no: INTEGER);
     VAR cur: dio.i_node;
   BEGIN
-    dio.get_inode(no,cur); warn("при чтении инода %d",no);
+    dio.get_inode(no,cur); warn(RDI,no);
     IF _edit_inode(cur,no) &
         ask("Записать модифицированный инод %d на диск?",no)
     THEN
-      dio.put_inode(no,cur); warn(" при записи инода %d",no);
+      dio.put_inode(no,cur); warn(WRI,no);
     END;
   END edit_inode;
 
@@ -2390,15 +2494,28 @@ MODULE editors; (*$N+ Hady. 13-Dec-89. (c) KRONOS *)
 BEGIN init_term;
 END editors;
 
+TYPE WARN = PROCEDURE (         ARRAY OF CHAR, SEQ SYSTEM.WORD);
+     MESS = PROCEDURE (INTEGER, ARRAY OF CHAR, SEQ SYSTEM.WORD);
+
+VAR warn: WARN;
+    message: MESS;
+    AUTO: BOOLEAN;
+
 MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
 
   IMPORT  SYSTEM;
   IMPORT  incl, excl, in?, excl?;
-  IMPORT  warn, message, ask;
+
+  IMPORT  warn, message, AUTO;
+
   IMPORT  low, tty, key: kbr;
+
   IMPORT  img, sys: SYSTEM, lex: Lexicon;
+
   IMPORT  dio, bio: BIO, sci: ASCII, errors, err;
+
   IMPORT  notes, Time;
+  IMPORT  RDB,WRB,RDI,WRI,RDD,WRD,no_mem;
 
   FROM  editors   IMPORT  vis_char;
 
@@ -2460,6 +2577,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
   PROCEDURE cor?(): BOOLEAN;
     VAR ch: CHAR; cap: BOOLEAN;
   BEGIN
+    IF AUTO THEN RETURN dio.WRITE END;
     tty.WriteString(' Исправить [y|n|a|A|i|I] ?');
     IF all  THEN tty.Write("Y"); RETURN TRUE  END;
     IF skip THEN tty.Write("N"); RETURN FALSE END;
@@ -2491,38 +2609,36 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
       r:=FALSE;
       WITH n DO
         IF Mode-dio.all_modes#{} THEN
-          notes.print("inode %d modes=%{} -> %{}.",
+          notes.print("i%d флаги=%{} -> %{}.",
                        ino,Mode,Mode*dio.all_modes);
           IF correct & cor?() THEN
             Mode:=Mode*dio.all_modes; r:=TRUE
           END;
         END;
         IF Eof<0 THEN
-          notes.print("inode %d eof=%d -> 0.",ino,Eof);
+          notes.print("i%d eof=%d -> 0.",ino,Eof);
           IF correct & cor?() THEN Eof:=0; r:=TRUE END;
         END;
         IF Mode*{dio.dir}#{} THEN
           IF Eof MOD 64 # 0 THEN
             i:=(Eof DIV 64)*64;
-            notes.print("inode %d is dir (eof MOD 64 # 0) %d -> %d.",ino,Eof,i);
+            notes.print("i%d директория (eof MOD 64 # 0) %d -> %d.",ino,Eof,i);
             IF correct & cor?() THEN Eof:=i; r:=TRUE END
           END;
           IF Links>1 THEN
-            notes.print("inode %d is dir (links > 1) %d -> 1.",ino,Links);
+            notes.print("i%d директория (links > 1) %d -> 1.",ino,Links);
             IF correct & cor?() THEN Links:=1; r:=TRUE END
           END
         END;
         IF Links<0 THEN
-          notes.print("inode %d links=%d -> 0.",ino,Links);
+          notes.print("i%d links=%d -> 0.",ino,Links);
           IF correct & cor?() THEN
             Links:=0; iLinks[ino]:=0; r:=TRUE
           END;
         END;
-        FOR i:=0 TO HIGH(res) DO
-          IF res[i]#0 THEN
-            notes.print("inode %d rfe%d=%08h -> 0.",ino,i,res[i]);
-            IF correct & cor?() THEN res[i]:=0; r:=TRUE END;
-          END
+        IF res#0 THEN
+          notes.print("i%d rfe00=%08h -> 0.",ino,res);
+          IF correct & cor?() THEN res:=0; r:=TRUE END
         END
       END;
       RETURN r
@@ -2535,21 +2651,24 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
                             ino: INTEGER): BOOLEAN;
 
       CONST
-        IND = " %s indirect-block %05d.Ref[%d]=%05d [%#h]";
-        CLR = "Illegal block %05d.ref[%d]=%05d (will be cleared)";
+        IND = " %s индирект-блока %05d.Ref[%d]=%05d [%#h]";
+        CLR = "некорректный блок %05d.ref[%d]=%05d (будет очищен)";
 
       VAR yes: BOOLEAN;
 
-      PROCEDURE check_blk(VAR no: INTEGER; l_no: INTEGER): BOOLEAN;
+      PROCEDURE check_blk(VAR no: INTEGER; ref,ind: INTEGER): BOOLEAN;
         VAR i: INTEGER;
       BEGIN
         IF (no<-1) OR (no>=dio.no_b) THEN
-          IF l_no>=0 THEN i:=l_no ELSE i:=HIGH(n.Ref)+1-l_no END;
-          notes.print('Некорректный номер блока %d в файле %d.',no,ino);
+          IF ind<0 THEN
+            notes.print('Некорректный номер блока %d (файл %d.ref[%d]).',no,ino,ref);
+          ELSE
+            notes.print('Некорректный номер блока %d (файл %d.ref[%d,%d]).',no,ino,ref,ind);
+          END;
           IF correct & cor?() THEN no:=-1; RETURN TRUE END;
         END;
         IF no>0 THEN
-          IF excl?(bBusy,no) THEN errors.put_dbl(ino,l_no) END;
+          IF excl?(bBusy,no) THEN errors.put_dbl(ino,ref,ind,no) END;
           IF yes THEN max:=max+1 END
         ELSE yes:=FALSE
         END;
@@ -2568,17 +2687,17 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
             RETURN TRUE
           END;
           dio.get_block(no,  buff,  4096); r:=dio.error;
-          warn(IND,"reading",ino,i,no,no);
+          warn(IND,"при чтении",ino,i,no,no);
           IF r THEN RETURN FALSE END;
           r:=FALSE;
           FOR j:=0 TO HIGH(buff^) DO
             IF (buff^[j]<-1) OR (buff^[j]>0) THEN
-              r:=check_blk(buff^[j],i*1024+j) OR r
+              r:=check_blk(buff^[j],i,j) OR r
             END
           END;
           IF NOT r THEN RETURN FALSE END;
           dio.put_block(no,buff,4096);
-          warn(IND,"writing",ino, i, no, no)
+          warn(IND,"при записи",ino, i, no, no)
         END;
         RETURN FALSE
       END check_ind;
@@ -2591,7 +2710,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
       max:=0; yes:=TRUE;
       WITH n DO
         FOR i:=0 TO HIGH(Ref) DO
-          mod:=check_blk(Ref[i],i-HIGH(Ref)-1) OR mod
+          mod:=check_blk(Ref[i],i,-1) OR mod
         END;
         IF n.Mode*{dio.lng}={} THEN RETURN mod END;
         IF buff=NIL            THEN NEW(buff)  END;
@@ -2614,7 +2733,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
     FOR i:=0 TO dio.no_i-1 DO
       IF i MOD 64 = 0 THEN message(1,'%d%%',i*100 DIV dio.no_i) END;
       dio.get_inode(i,N); r:=dio.error;
-      warn("reading inode %d",i);
+      warn(RDI,i);
       IF NOT r THEN
         write:=check_inode(i,N);
         IF N.Links>0 THEN
@@ -2634,7 +2753,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
           END
         END;
         IF write & correct THEN
-          dio.put_inode(i,N); warn("writing inode %d",i)
+          dio.put_inode(i,N); warn(WRI,i)
         END
       END
     END;
@@ -2752,7 +2871,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
         inode: INTEGER;
     BEGIN
       message(1,'%8d',no);
-      d:=dio.dir_walk(no); warn("reading directory %d ",no);
+      d:=dio.dir_walk(no); warn(RDD,no);
       IF (d=NIL) THEN RETURN END;
 
       write:=FALSE; entry:=0;
@@ -2775,7 +2894,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
       ELSIF prev<=-2 THEN -- поиск корня
         inode:=d^.buff[entry].inod;
         IF (inode>no) & in?(iDirs,inode) & in?(myDirs,inode) THEN
-          dio.end_walk(d,FALSE); warn("close directory %d",no);
+          dio.end_walk(d,FALSE); warn("при закрытии директории %d",no);
           forward:=FALSE;
           RETURN
         END
@@ -2806,13 +2925,13 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
             write:=one_node(d^.buff[entry]) OR write;
             IF in?(myDirs,inod) & (name#"..") THEN
               iter_tree(no,inod,level+1);
-              warn("iterate directory %d",inod);
+              warn("при итерации директори %d",inod);
             END
           END
         END;
         INC(entry)
       END;
-      dio.end_walk(d,write&correct); warn("close directory %d",no)
+      dio.end_walk(d,write&correct); warn("при закрытии директории %d",no)
     END iter_tree;
 
     PROCEDURE init;
@@ -2929,7 +3048,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
         IF    dir^.n.Ref[b]<=0   THEN
           dir^.n.Ref[b]:=alloc_blk();
           IF dir^.n.Ref[b]=-1 THEN
-            message(0,'NO FREE BLOCK ON VOLUME\n');
+            message(0,'НЕТ СВОБОДНОГО БЛОКА НА ДИСКЕ\n');
             RETURN -1
           END;
         ELSIF b=HIGH(dir^.n.Ref) THEN
@@ -2951,42 +3070,44 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
   END alloc_slot;
 
   PROCEDURE check_dbl(correct: BOOLEAN);
-    VAR f,no: INTEGER;
-       b,lno: INTEGER;
+
+    VAR f,ref,ind,no: INTEGER;
+           b: INTEGER;
       br,new: INTEGER;
            N: dio.i_node;
        write: BOOLEAN;
         buff: POINTER TO ARRAY [0..1023] OF INTEGER;
-         ref: ARRAY [0..7] OF CHAR;
+
   BEGIN
     buff:=NIL;
-    WHILE errors.get_dbl(f,no) DO
-      IF no<0 THEN lno:=HIGH(N.Ref)+1+no; ref:="Ref."
-      ELSE         lno:=no;               ref:=""
+    WHILE errors.get_dbl(f,ref,ind,no) DO
+      IF ind<0 THEN
+        notes.print("Повторно использован блок %d (файл %d.ref[%d]).",no,f,ref);
+      ELSE
+        notes.print("Повторно использован блок %d (файл %d.ref[%d,%d]).",no,f,ref,ind);
       END;
-      notes.print("Повторно использован блок %s%d в файле %d.",ref,lno,f);
       IF correct & cor?() THEN
-        dio.get_inode(f,N); write:=FALSE;
-        warn(" при чтении инода %d",f);
-        IF no<0 THEN
-          br:=N.Ref[lno] ; new:=alloc_blk();
-          N.Ref[lno]:=new; write:=TRUE
+        dio.get_inode(f,N); warn(RDI,f);
+        write:=FALSE;
+        IF ind<0 THEN
+          br:=N.Ref[ref] ; new:=alloc_blk();
+          N.Ref[ref]:=new; write:=TRUE
         ELSE
           IF buff=NIL THEN NEW(buff) END;
-          b:=N.Ref[no DIV 1024];
+          b:=N.Ref[ref];
           dio.get_block(b,buff,4096);
-          warn(" при чтении блока %d",b);
-          br:=buff^[no MOD 1024];
-          new:=alloc_blk(); buff^[no MOD 1024]:=new;
+          warn(RDB,b);
+          br:=buff^[ind];
+          new:=alloc_blk(); buff^[ind]:=new;
           dio.put_block(b,buff,4096);
-          warn(" при записи блока %d",b);
+          warn(WRB,b);
         END;
         IF write THEN dio.put_inode(f,N) END;
-        warn(" при записи инода %d",f);
+        warn(WRI,f);
         IF new>0 THEN
           IF buff=NIL THEN NEW(buff) END;
-          dio.get_block(br ,buff,4096); warn(" при чтении блока %d",br);
-          dio.put_block(new,buff,4096); warn(" при записи блока %d",new);
+          dio.get_block(br ,buff,4096); warn(RDB,br);
+          dio.put_block(new,buff,4096); warn(WRB,new);
         END
       END
     END;
@@ -3038,7 +3159,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
     IF errors.no_anon<=0 THEN RETURN END;
 
     IF NOT find_collector() THEN
-      notes.show('Нет поддиректории "lost+find"');
+      notes.print('Нет поддиректории "lost+find"');
       WHILE errors.get_anon(no) DO
         notes.print("Файл %d аноним. Не могу поднять",no);
       END;
@@ -3057,7 +3178,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
           dio.end_walk(colr,FALSE); RETURN
         END;
         dio.get_inode(no,inode);
-        IF dio.error THEN warn("при чтении инода %d", no);
+        IF dio.error THEN warn(RDI, no);
           dio.end_walk(colr,FALSE); RETURN
         END;
         IF (inode.Eof>0) OR ({dio.dir}*inode.Mode#{}) THEN
@@ -3065,7 +3186,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
             img.print(name,anon_name,no);
             IF {dio.dir}*inode.Mode#{} THEN
               kind:=kind+dio.d_dir; kind:=kind-dio.d_file;
-              dir:=dio.dir_walk(no);  warn(" при чтении директории   %d",no);
+              dir:=dio.dir_walk(no);  warn(RDD,no);
               dir^.buff[0].inod:=coll; dir^.buff[0].name:="..";
               dio.end_walk(dir,TRUE); warn(" при закрытии директории %d",no);
                                           img.print(rep,'Директория ');
@@ -3073,7 +3194,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
             END;
             inod:=no;
             img.append(rep,'%d аноним. Поднят под именем "%s"',no,name);
-            notes.show(rep);
+            notes.print("%s",rep);
           END;
           DEC(iLinks[no]);
         ELSE
@@ -3100,14 +3221,14 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
         ELSE
           img.append(rep,'меньше на %d.', iLinks[i]);
         END;
-        notes.show(rep);
+        notes.print('%s',rep);
         IF correct & cor?() THEN
-          dio.get_inode(i,N); warn(" при чтении инода %d.",i);
+          dio.get_inode(i,N); warn(RDI,i);
           IF N.Links=0 THEN excl(iBusy,i) END;
           N.Links:=N.Links-iLinks[i];
           IF N.Links<0 THEN N.Links:=0    END;
           IF N.Links=0 THEN incl(iBusy,i) END;
-          dio.put_inode(i,N); warn(" при записи инода %d.",i);
+          dio.put_inode(i,N); warn(WRI,i);
         END;
       END;
     END;
@@ -3153,8 +3274,8 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
     PROCEDURE vis_error(error: INTEGER);
     BEGIN
       lex.perror(bump^,error,"%%s");
-      IF bsy THEN notes.print('block %d (busy): %s.',bno,bump^)
-      ELSE        notes.print('block %d: %s.',bno,bump^)
+      IF bsy THEN notes.print('блок %d (занятый): %s.'  ,bno,bump^)
+      ELSE        notes.print('блок %d (свободный): %s.',bno,bump^)
       END
     END vis_error;
 
@@ -3196,16 +3317,18 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
     END ask1;
 
     PROCEDURE check_error(no,error: INTEGER): BOOLEAN;
-      VAR y: BITSET;
+      VAR y: BITSET; ans: BOOLEAN;
     BEGIN
       y:=BITSET(error);
       IF INTEGER(y*BITSET(err.io_error))=err.io_error THEN
-        vis_error(error); RETURN ask1(no)
+        vis_error(error);
+        ans:=dio.WRITE & (AUTO OR ask1(no))
       ELSE
         vis_error(error);
-        IF ask0() THEN HALT(1) END;
-        RETURN TRUE
-      END
+        IF AUTO OR ask0() THEN HALT(1) END;
+        ans:=FALSE
+      END;
+      tty.print('\n'); RETURN ans
     END check_error;
 
     PROCEDURE check_block(no: INTEGER): BOOLEAN;
@@ -3226,7 +3349,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
     BEGIN
       dio.get_inode(2,badf);
       IF dio.error THEN
-        message(0,"read_inode(2): %s",dio.message);
+        message(0," при чтении инода 2: %s",dio.message);
         RETURN
       END;
       IF dio.lng IN badf.Mode THEN
@@ -3235,7 +3358,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
           IF badf.Ref[i]>=0 THEN
             dio.get_block(badf.Ref[i],blk,4096);
             IF dio.error THEN
-              message(0,"read i2.REF[%d]: %s",i,dio.message);
+              message(0,"при чтении i2.REF[%d]: %s",i,dio.message);
             ELSE
               FOR j:=0 TO HIGH(blk^) DO
                 IF blk^[j]>=0 THEN INC(bad); incl(bads,blk^[j]) END
@@ -3323,7 +3446,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
       BEGIN
         IF no>HIGH(blk^) THEN
           dio.put_block(badf.Ref[b],blk,4096);
-          warn("writing i2.REF[%d]",b);
+          warn("при записи i2.REF[%d]",b);
           INC(b); no:=0; low.fill(blk^,-1)
         END;
         blk^[no]:=i; INC(no)
@@ -3338,7 +3461,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
       END;
       IF no>0 THEN
         dio.put_block(badf.Ref[b],blk,BYTES(blk^));
-        warn("writing i2.Ref[%d]",b)
+        warn("при записи i2.Ref[%d]",b)
       END
     END write_long;
 
@@ -3358,20 +3481,20 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
       badf.Eof:=bad*4096;
       badf.wTime:=Time.time();
       dio.put_inode(2,badf);
-      warn('writing inode 2 ("BAD.BLOCKS")');
+      warn(WRI,2);
     END write;
 
   BEGIN
     NEW(bump);
-    NEW(bads,(dio.d_size+31) DIV 32);
+    NEW(bads,LEN(dio.bSET));
     FOR bno:=0 TO HIGH(bads) DO bads[bno]:={} END;
     bad:=0; bbad:=0; unpack; was:=bad;
     bno:=0; all:=FALSE; skip:=FALSE; free:=FALSE;
-    message(0,"%8d blocks tested",bno);
-    message(1,"%04d(%04d busy) bad blocks detected",bad,bbad);
-    WHILE (bno<dio.d_size) & NOT skip DO
+    message(0,"Search bad blocks");
+    message(1,"%6d tested, %4d/%-4d  bad/busy",bno,bad,bbad);
+    WHILE (bno<dio.no_b) & NOT skip DO
       IF bno MOD 32=0 THEN
-        message(0,"%8d blocks tested",bno);
+        message(1,"%6d tested, %4d/%-4d  bad/busy",bno,bad,bbad);
       END;
       bsy:=NOT in?(dio.bSET,bno);
       IF NOT in?(bads,bno) & check_block(bno) THEN
@@ -3380,14 +3503,14 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
         ELSE
           INC(bad); incl(bads,bno); excl(dio.bSET,bno);
           dio.s_put:=TRUE;   IF bsy THEN INC(bbad) END;
-          message(1,"%04d(%04d busy) bad blocks detected",bad,bbad)
+          message(1,"%6d tested, %4d/%-4d  bad/busy",bno,bad,bbad);
         END
       END;
       INC(bno)
     END;
-    message(1,"");
     IF bad=was THEN DISPOSE(bump); RETURN FALSE END;
     write; DISPOSE(bump);
+    message(1,"%4d bad /%d busy/ blocks detected",bad,bbad);
     RETURN bbad>0
   END verify_disk;
 
@@ -3408,7 +3531,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
       FOR i:=0 TO dio.no_i-1 DO
         IF i MOD 64 = 0 THEN message(1,'%d%%',i*100 DIV dio.no_i) END;
         dio.get_inode(i,N);
-        IF dio.error THEN warn("reading inode %d",i);
+        IF dio.error THEN warn(RDI,i);
         ELSE
           IF (N.Links>0) & (N.Mode*{dio.dir}#{}) THEN incl(iDirs,i) END;
         END
@@ -3425,7 +3548,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
          bump: ARRAY [0..47] OF CHAR;
 
     BEGIN
-      d:=dio.dir_walk(no); warn(" чтение директории %d [%hh]", no,no);
+      d:=dio.dir_walk(no); warn(RDD,no);
       IF (d=NIL) THEN RETURN END;
       entry:=0;
       excl(myDirs,no);
@@ -3442,7 +3565,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
             END;
             app(path,bump,s_pos);
             IF (kind*dio.d_del#{}) THEN
-              app(path,"  -- deleted",s_pos);
+              app(path,"  -- удален",s_pos);
             END;
             path[s_pos]:=0c; show(path);
           END;
@@ -3495,7 +3618,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
     IF start<0 THEN start:=0 END;
     FOR i:=start TO final DO
       dio.get_inode(i,N);
-      IF dio.error THEN warn(" при чтении инода %d",i)
+      IF dio.error THEN warn(RDI,i)
       ELSE
         WITH N DO
           IF (({1}*desc#{}) & (Links >0)) OR
@@ -3515,7 +3638,7 @@ MODULE disks; (* Hady. 10-Dec-89. (c) KRONOS *)
                     END;
                   END;
                   dio.get_block(Ref[j],B,4096);
-                  warn(" при чтении блока %d",Ref[j]);
+                  warn(RDB,Ref[j]);
                   FOR k:=0 TO HIGH(B^) DO
                     IF (B^[k]>=0) & (B^[k]=patt) THEN
                       free:=(Links<=0); DISPOSE(B); RETURN i
@@ -3576,7 +3699,7 @@ PROCEDURE monitor(vt52: BOOLEAN; VN: ARRAY OF CHAR);
                     from,to: INTEGER; VAR nm: INTEGER): BOOLEAN;
     VAR bump: ARRAY [0..31] OF CHAR; cc: INTEGER;
   BEGIN
-    IF inp_str(bump,"%s in range [%d..%d]",pmt,from,to) THEN
+    IF inp_str(bump,"%s в диапазоне [%d..%d]",pmt,from,to) THEN
       tty.set_cursor(0);
       IF nums.int_expr(bump,0,cc)<0 THEN message(0,nums.message)
       ELSIF (cc>=from) & (cc<=to)   THEN nm:=cc; RETURN TRUE
@@ -3696,7 +3819,11 @@ PROCEDURE monitor(vt52: BOOLEAN; VN: ARRAY OF CHAR);
     IF dio.vol_name="" THEN
       tty.print('no any disk mounted');
     ELSE
-      tty.print('disk: "%s": ',dio.vol_name);
+      tty.print('disk: "%s"',dio.vol_name);
+      IF dio.vol_label#"" THEN
+        tty.print(', label: "%s"',dio.vol_label);
+      END;
+      tty.print(': ');
       tty.set_pos(3,21);
       tty.print('size %d (logical %d/%d total/free) blocks,'
               ,dio.d_size, dio.no_b,dio.free_b);
@@ -3740,13 +3867,14 @@ PROCEDURE monitor(vt52: BOOLEAN; VN: ARRAY OF CHAR);
       IF (    in?(dio.bSET,b) & ({0}*blocks#{})) OR
          (NOT in?(dio.bSET,b) & ({1}*blocks#{})) THEN
         IF buff=NIL THEN mem.ALLOCATE(buff,1024);
-          IF buff=NIL THEN message(0,'Sorry, no free memory'); RETURN END;
+          IF buff=NIL THEN message(0,no_mem); RETURN END;
         END;
-        dio.get_block(b,buff,4096); warn(" при чтении блока %d",b);
+        dio.get_block(b,buff,4096); warn(RDB,b);
         i:=search.search(buff,0,4095);
         IF i>=0 THEN
           img.print(bump," образец найден в блоке %d.",b);
-          notes.show(bump); tty.print(" Показать [Y/N/ESC] ? ",b);
+          notes.print('%s',bump);
+          tty.print(" Показать [Y/N/ESC] ? ",b);
           LOOP kbr.read(ch);
             IF ch=033c THEN RETURN END;
             ch:=CAP(ch);
@@ -3787,7 +3915,7 @@ PROCEDURE monitor(vt52: BOOLEAN; VN: ARRAY OF CHAR);
           img.print(bump,' Блок %d найден в ',patt);
           IF _free THEN img.append(bump,'свободном '); END;
           img.append(bump,'файле %d.',no);
-          notes.show(bump); tty.print(' Искать дальше ?');
+          notes.print('%s',bump); tty.print(' Искать дальше ?');
           IF NOT _query() THEN no:=-1 END;
         END;
       UNTIL no<0;
@@ -3925,12 +4053,13 @@ PROCEDURE monitor(vt52: BOOLEAN; VN: ARRAY OF CHAR);
 
   VAR final: BOOLEAN;
      active: BITSET;
+        ign: CHAR;
 
   PROCEDURE edit;
     VAR no: INTEGER; bump: ARRAY [0..255] OF CHAR;
   BEGIN
     IF {current}*active={} THEN
-      message(0,"this function is banned now");
+      message(0,"данная команда запрещена");
       RETURN
     END;
     CASE current OF
@@ -3946,7 +4075,12 @@ PROCEDURE monitor(vt52: BOOLEAN; VN: ARRAY OF CHAR);
                errors.release;
                 disks.release;
                dio.mount(bump);
-               warn(" при монтировании носителя ")
+               warn(" при монтировании носителя ");
+               IF NOT dio.WRITE THEN
+                 notes.print('"%s": security violation;  HIT KEY.',bump);
+                 kbr.read(ign);
+                 dio.release; active:=no_any_disk
+               END;
              END;
              refresh
            END;
@@ -3958,7 +4092,7 @@ PROCEDURE monitor(vt52: BOOLEAN; VN: ARRAY OF CHAR);
            END
       |06: tty.set_cursor(1);
            IF notes.edit() THEN refresh
-           ELSE message(0,"No reports in protocol")
+           ELSE message(0,"Нет сообщений")
            END;
            tty.set_cursor(0)
       |07: notes.release; done
@@ -4023,8 +4157,11 @@ BEGIN
   IF VN#"" THEN
     dio.mount(VN);
     IF dio.error THEN
-      notes.print('mount("%s"): %s;    HIT KEY',VN,dio.message);
+      tty.print('%s при монтировании носителя "%s";    HIT KEY',dio.message,VN);
       kbr.read(ch);
+    ELSIF NOT dio.WRITE THEN
+      tty.print('security violation при монтировании "%s";\n',VN);
+      RETURN
     ELSE active:=all_active
     END
   END;
@@ -4061,15 +4198,99 @@ BEGIN
   UNTIL final
 END monitor;
 
-VAR vt52: BOOLEAN;
+PROCEDURE usage;
+BEGIN
+  tty.print('  "fsdb" %s\n',version);
+  tty.print(
+    'usage:\n'
+    '  fsdb    [+W]  disk  - check  [and correct] disk\n'
+    '  fsdb -v [+W]  disk  - verify [and close bad] blocks\n'
+    '  fsdb -m      [disk] - debug  disk structures\n'
+           );
+  tty.print(
+    '                           Hady. February 8, 92.\n'
+           );
+END usage;
+
+VAR bool: BOOLEAN;
 
 BEGIN
-  tty.set_reverse(1);
-  vt52:=NOT tty.done;
-  tty.set_reverse(0);
-  sle.new(DESC,16);
-  IF HIGH(tskArgs.words)<0 THEN monitor(vt52,"")
-  ELSE                          monitor(vt52,tskArgs.words[0])
+  AUTO:=NOT tskArgs.flag("-","m");
+  IF tskArgs.flag("-","h") THEN usage; HALT END;
+  IF AUTO THEN
+    IF HIGH(tskArgs.words)<0 THEN usage; HALT
+    END;
+    warn:=warn1; message:=message1; notes.set_term(TRUE);
+    bool:=tskArgs.flag("+","W");
+    dio.mount(tskArgs.words[0]);
+    IF dio.error THEN
+      tty.print('#%s\n',dio.message); HALT(1)
+    END;
+    IF bool>dio.WRITE THEN
+      tty.print('#security violation "%s"\n',dio.vol_name); HALT(1)
+    END;
+    dio.WRITE:=bool;
+
+    tty.print("%s\n",version);
+    tty.print('  %s ',dio.vol_name);
+    IF dio.vol_label#"" THEN
+      tty.print('("%s") ', dio.vol_label)
+    END;
+    tty.print('%d KB,\n',dio.d_size*4);
+    tty.print('  blocks: %6d/%-6d total/free,\n',dio.no_b,dio.free_b);
+    tty.print('  files : %6d/%-6d total/free.\n',dio.no_i,dio.free_i);
+    tty.print('\n');
+
+    IF tskArgs.flag("-","v") THEN
+      IF disks.verify_disk() THEN
+        tty.print(
+          '    Закрыты занятые блоки!\n'
+          'Диск необходимо скорректировать.\n'
+                 );
+        tty.print(
+          '  Busy blocks were closed!\n'
+          'Your disk need to be debugged.\n'
+                 );
+      END;
+    ELSE
+      disks.check_volume(bool)
+    END
+
+  ELSE
+    warn:=warn0; message:=message0;
+    tty.set_reverse(1);
+    bool:=NOT tty.done;
+    tty.set_reverse(0);
+    sle.new(DESC,16);
+    IF HIGH(tskArgs.words)<0 THEN
+         monitor(bool,"")
+    ELSE monitor(bool,tskArgs.words[0])
+    END;
   END;
-  dio.release
+  bool:=dio.s_put;
+  dio.release;
+  tty.set_pos(tty.state^.lines-1,0);
+  tty.print('\n');
+  IF dio.error THEN
+    tty.print('#%s\n\n',dio.message);
+  END;
+
+  IF bool THEN
+    tty.print(
+      'ВНИМАНИЕ: скорректированы карты блоков и\n'
+      'файлов. Для сохранения корректности диска - \n'
+      '    ПЕРЕГРУЗИТЕ КОМПЬЮТЕР!\n');
+    tty.print(
+      'ATTENTION: SETS were corrected.\n'
+      'To save corrections were made -\n'
+      '    REBOOT YOUR COMPUTER!\n');
+  END
+
 END fsdb.
+
+
+
+block 153 i123.r[4,123]
+block 153 i123.r[4]
+
+4*123 = 492

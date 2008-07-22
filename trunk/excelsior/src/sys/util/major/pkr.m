@@ -38,6 +38,7 @@ VAR (* flags *)
   all : BOOLEAN;
   path: BOOLEAN;
   bcup: BOOLEAN;
+  relp: BOOLEAN;
 
 TYPE
   ENTRY = POINTER TO BODY;
@@ -696,8 +697,12 @@ BEGIN
   WHILE fw.next_dir(tree) DO
     dir:=fw.dir(tree);
     IF NOT fw.done THEN fw_error(patt) END;
-    bio.fname(dir,dname);
-    IF NOT bio.done THEN bio_error(patt) END;
+    IF relp THEN
+      fw.dpath(tree,dname)
+    ELSE
+      bio.fname(dir,dname);
+      IF NOT bio.done THEN bio_error(patt) END
+    END;
     IF fw.done THEN
       list:=NIL; co:=0;
       WHILE fw.next_entry(tree,name,mode) DO
@@ -845,7 +850,7 @@ BEGIN
     IF e.kind*bio.is_dir#{} THEN s:="       dir "
     ELSE size2str(e.eof,s)
     END;
-    tty.print("%s %s\n",s,fname)
+    std.print("%s %s\n",s,fname)
   END
 END listarchive;
 
@@ -1033,6 +1038,7 @@ BEGIN
   qry :=NOT arg.flag('-','q');
   path:=    arg.flag('-','T');
   bcup:=    arg.flag('-','b');
+  relp:=    arg.flag('-','r');
   IF arg.string("after" ,s) THEN date(after,FALSE) ELSE after := 0  END;
   IF arg.string("before",s) THEN date(before,TRUE) ELSE before:=max END;
   IF before<after THEN
@@ -1045,13 +1051,14 @@ BEGIN
   std.print(
       '  "pkr"  packing & archiving utility program (c) KRONOS\n'
       'usage:\n'
-      '   pkr [-hmlT] archive_name {[@]files_tree_spec} .... [times]\n\n');
+      '   pkr [-hmlrTq] archive_name {[@]files_tree_spec} .... [times]\n\n');
   std.print(
       'flags:\n'
       '   -h   print this text\n'
       '   -l   list  existing archive\n'
       '   -m   small memory model compression\n'
       '   -T   restore with tree structure\n'
+      '   -r   relational paths storing\n'
       '   -q   not   query\n');
   std.print(
       'times:\n'

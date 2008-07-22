@@ -79,7 +79,7 @@ TYPE str256 = ARRAY [0..255] OF CHAR;
 VAR desc: sle.descriptor;
     bump: str256;
 
-VAR echo: BITSET;
+VAR echo: ARRAY [0..31] OF CHAR;
 
 PROCEDURE profile(VAL s: ARRAY OF CHAR); FORWARD;
 
@@ -89,7 +89,7 @@ BEGIN
   NEW(s,str.len(dir)+4);                       --++
   IF NOT mem.done THEN HALT(mem.error) END;    --++
   str.print(s,"CD=%s",dir);
-  shell.system(s,{});  DISPOSE(s);             --++
+  shell.system(s,"");  DISPOSE(s);             --++
   IF shell.result#0 THEN RETURN END;           --++
   env.put_str(env.home,dir,FALSE);
   IF arg.string('profile',s) THEN profile(s)          --++
@@ -97,7 +97,7 @@ BEGIN
   END                                                 --++
 END home;
 
-PROCEDURE execute(VAR cmd: ARRAY OF CHAR; echo: BITSET);
+PROCEDURE execute(VAR cmd: ARRAY OF CHAR; echo: ARRAY OF CHAR);
   VAR i,j: INTEGER;
       par: ARRAY [0..79] OF CHAR;
         s: STRING;
@@ -158,10 +158,10 @@ BEGIN
 END monitor;
 
 PROCEDURE command_file(VAL cmd: ARRAY OF CHAR);
-BEGIN shell.submit(cmd,{31})  END command_file;
+BEGIN shell.submit(cmd,FALSE)  END command_file;
 
 PROCEDURE profile(VAL name: ARRAY OF CHAR);
-BEGIN shell.submit(name,{})    END profile;
+BEGIN shell.submit(name,TRUE)    END profile;
 
 PROCEDURE up_tty;
   VAR    s: STRING;

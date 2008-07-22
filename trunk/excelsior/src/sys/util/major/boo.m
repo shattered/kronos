@@ -1,4 +1,4 @@
-MODULE boo; (* Leo 21-Dec-19. (c) KRONOS *)
+MODULE boo; (* Leo 21-Dec-1989. (c) KRONOS *)
 
 IMPORT       SYSTEM;
 IMPORT  bio: BIO;

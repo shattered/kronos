@@ -1,1 +1,1 @@
-{ CD=/sys/util/mx SYM=". /sys /sym /usr/sym" mxOUT=*=/sys } mx mxScan.d mxObj.d mxSym.d mxCmd.d mxGen.d mxPars.d
+{mxOUT=*=/sys SYM=". /sys /sym" CD=/sys/util/mx} mx mxScan.d mxObj.d mxSym.d mxCmd.d mxGen.d mxPars.d

@@ -1,5 +1,5 @@
-IMPLEMENTATION MODULE LZW0; (*$T+ Leo  20-Jun-91. (c) KRONOS *)
-                            (*$N+ Andy 10-Apr-91. (c) KRONOS *)
+IMPLEMENTATION MODULE LZW0; (*$T- Leo  20-Jun-91. (c) KRONOS *)
+                            (*$N- Andy 10-Apr-91. (c) KRONOS *)
 
 IMPORT       SYSTEM;
 IMPORT  cod: defCodes;

@@ -29,6 +29,8 @@ MODULE pm;                              (* Andy 27-Apr-89. (c) KRONOS *)
 
 (*$X+*)
 
+CONST echo="TB@"; -- shell._cfi+shell._trap+shell._break; -- "TB@";
+
 TYPE MSG_PRINT= PROCEDURE (INTEGER, ARRAY OF CHAR, SEQ sys.WORD);
 
 TYPE pMSG= POINTER TO MSG;
@@ -576,6 +578,9 @@ PROCEDURE collect;
     WHILE walk.next_dir(tree) DO
       WHILE walk.next_entry(tree,name,mode) DO
         walk.fpath(tree,fname);
+        IF (fname[0]='.') & (fname[1]='/') THEN
+          str.delete(fname,0,2);
+        END;
         add_list(fname,name);
       END;
       chk;
@@ -748,8 +753,9 @@ END MakeGraph;
 
 VAR GraphName: ARRAY [0..63] OF CHAR;
 
-VAR gs: bio.FILE; --stm.STREAM;
+VAR gs: bio.FILE;
 VAR gn_desc: sle.descriptor;
+    cn_desc: sle.descriptor;
 
 CONST separ= '#'0c;
       Separ= '###';
@@ -1248,13 +1254,29 @@ BEGIN
            name,comp.line,comp.time,comp.iotime);
 END comp_result;
 
-PROCEDURE WriteCompileTask(VAL task: COMPTASK);
-  VAR i: INTEGER; f: bio.FILE; def: BOOLEAN;
-      s: STRING; no: INTEGER;
+VAR comp_name: ARRAY [0..79] OF CHAR;
+    comp_file: ARRAY [0..63] OF CHAR;
+    max_width: LONGINT;
+
+PROCEDURE GetCompParms;
 BEGIN
-  high_info({d_norm},FALSE,FALSE,'Preparing file "pmcomp.@"...');
-  bio.create(f,'pmcomp.@','w',0);
-  bio.print(f,'mx');
+  c_on;
+  cn_desc^.how:=sle.show;
+  sle.edit_str('Compiler>>',comp_name,InfoLine,0,50,cn_desc,ASCII.ESC);
+  gn_desc^.how:=sle.show;
+  sle.edit_str('Batch file>>',comp_file,Info1Line,0,50,gn_desc,ASCII.ESC);
+  c_off;
+  clear_low; clear_high;
+END GetCompParms;
+
+PROCEDURE WriteCompileTask(VAL task: COMPTASK);
+  VAR i,no: INTEGER; f: bio.FILE; def: BOOLEAN;
+      line: ARRAY [0..255] OF CHAR; pos,spos: INTEGER;
+BEGIN
+  high_info({d_norm},FALSE,FALSE,'Preparing file "%s"...',comp_file);
+  bio.create(f,comp_file,'w',0);
+  pos:=0;
+  str.image(line,pos,"%s",comp_name);
   def:=FALSE;
   FOR i:=0 TO task.cnt-1 DO
      no:=task.list[i];
@@ -1264,17 +1286,25 @@ BEGIN
          def:=TRUE;
        ELSIF def THEN
          def:=FALSE;
-         bio.print(f,'\nmx');
+         IF pos#0 THEN bio.print(f,'%s\n',line); pos:=0 END;
+         str.image(line,pos,"%s",comp_name);
        END;
-       bio.print(f,' %s',path);
+       spos:=pos;
+       str.image(line,pos,' %s',path);
+       IF pos>=max_width THEN
+         line[spos]:=0C;
+         bio.print(f,'%s\n',line); pos:=0;
+         str.image(line,pos,"%s",comp_name);
+         str.image(line,pos,' %s',path);
+       END;
        d_mode:= d_mode-{d_inten,d_dim}+{d_norm};
        IF NOT (selected? IN atr) THEN EXCL(d_mode,d_line) END;
      END;
      show_item(no);
   END;
-  bio.print(f,'\n');
+  IF pos#0 THEN bio.print(f,'%s\n',line) END;
   bio.close(f);
-  high_info({d_norm},TRUE,TRUE,'File "pmcomp.@" prepared');
+  high_info({d_norm},TRUE,TRUE,'File "%s" prepared',comp_file);
 END WriteCompileTask;
 
 PROCEDURE CompileTask(VAL task: COMPTASK);
@@ -1482,7 +1512,7 @@ BEGIN
   IF clear_screen? THEN tty.home; tty.erase(2) END;
   c_on;
   shell.print:=tty.print;
-  shell.system(res,TRUE);
+  shell.system(res,echo);
   c_off;
   IF wait? THEN tty.print('\nPRESS ANY KEY TO RETURN TO "PM"...');
       key.read(x)
@@ -1559,7 +1589,7 @@ BEGIN
   curr_edit:= no; editor.start:= put_msg;
   str.print(cmd,'{+myEditor}ex %s',project[no].path);
   shell.print:=err_print;
-  shell.system(cmd,{});
+  shell.system(cmd,echo);
   comp.del_list(project[no].msg_list);
   start; draw;
 END Edit;
@@ -1571,7 +1601,7 @@ PROCEDURE Shell;
       pro: ARRAY [0..47] OF CHAR;
       command: ARRAY [0..255] OF CHAR;
       l,c: INTEGER; xxx: BOOLEAN;
-      echo: BITSET;
+      echo: ARRAY [0..15] OF CHAR;
 BEGIN
   l:=tty.state^.lines-1; c:=tty.state^.columns-2;
   LOOP
@@ -1629,10 +1659,9 @@ BEGIN
   tty.print('\n');
   tty.print('   F5 r    - write batch file for recompilation\n');
   tty.print('   F5 g    - write batch file for generation\n');
+  tty.print('   F5 s    - set batch file parameters\n');
   tty.print('\n');
-  tty.print('Small and capital letters are equal\n');
-  tty.print('\n');
-  tty.print('PRESS ANY KEY...');
+  tty.print('Small and capital letters are equal   PRESS ANY KEY...\n');
   key.read(c);
   start; draw;
 END help;
@@ -1651,6 +1680,7 @@ BEGIN
                     CASE k1 OF
                      |'r','R':  s; MakeRecompileTask(TRUE);     p;
                      |'g','G':  s; MakeGenerateTask(TRUE);      p;
+                     |'s','S':  s; GetCompParms;                p;
                     ELSE (* Nothing *) END;
         |SILVER:
                     key.read(k1);
@@ -1700,18 +1730,20 @@ BEGIN
   std.print(
       '  "pm"  project manager utility program (c) KRONOS\n'
       'usage:\n'
-      '   pm [+E] [-h] {file_tree}\n'
+      '   pm [+E] [-h] [comp=compiler] [batch=compfile]\n'
+      '                [W=max_@file_width] {file_tree}\n'
       '                                   Andy, 16-Nov-90\n');
 END pusage;
 
 PROCEDURE Version;
 BEGIN
-  std.print("Project Manager v2.3.4 16-Nov-90 Andy (c) KRONOS\n");
+  std.print("Project Manager v2.4.1 20-Feb-92 Andy (c) KRONOS\n");
 END Version;
 
 PROCEDURE finish;
 BEGIN
   sle.dispose(gn_desc);
+  sle.dispose(cn_desc);
 (*  sle.dispose(com_desc); *)
   sle.dispose(sh_desc);
   norm;
@@ -1744,6 +1776,7 @@ BEGIN env.final(finish);
   IF arg.flag('-','#') THEN Version; HALT END;
   IF arg.flag('-','h') THEN pusage;  HALT END;
 
+  IF NOT arg.number('W',max_width) THEN max_width:=250 END;
   tty.set_color(-1);
   has_low?:=tty.done;
   tty.reset;
@@ -1751,10 +1784,15 @@ BEGIN env.final(finish);
   bell?:= TRUE;
   NEW(Graph);
   GraphName:='pm.links';
+  comp_name:="mx";
+  IF arg.string("comp",s) THEN str.copy(comp_name,s) END;
+  comp_file:="pmcomp.@";
+  IF arg.string("batch",s) THEN str.copy(comp_file,s) END;
   gs:=bio.null;
-  sle.new(gn_desc,  8);
-(*  sle.new(com_desc, 8); *)
-  sle.new(sh_desc, 16);
+  sle.new(gn_desc,8);
+  sle.new(cn_desc,8);
+(*  sle.new(com_desc,8); *)
+  sle.new(sh_desc,16);
   set_opts;
 (*  init_commands; *)
 

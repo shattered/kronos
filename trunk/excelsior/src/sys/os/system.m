@@ -14,6 +14,7 @@ IMPORT  ldr: osLoader;
 
 IMPORT  Users;      (* to link with system and init *)
 IMPORT  osFiles;    (* to link with system and init *)
+--IMPORT  osNet;      (* to link with system and init *)
 
 CONST KB = 256; (* 256 words per 1KB *)
 

@@ -11,9 +11,6 @@ PROCEDURE out(adr, data: WORD);   CODE cod.out END out;
 PROCEDURE di(): BITSET;  CODE cod.getm cod.copt cod.li3 cod.bic cod.setm END di;
 PROCEDURE ei(m: BITSET); CODE cod.setm END ei;
 
-
-VAR on: BOOLEAN; (* Qbus present *)
-
 PROCEDURE write_str(xxx: INTEGER; VAL s: ARRAY OF CHAR; i,len: INTEGER);
   VAR m: BITSET;
      ch: CHAR;
@@ -36,14 +33,7 @@ END write_str;
 
 PROCEDURE print(f: ARRAY OF CHAR; SEQ a: WORD);
 BEGIN
-  IF on THEN fmt.format(0,write_str,f,a) END
+  fmt.format(0,write_str,f,a);
 END print;
 
-VAR i: INTEGER;
-
-BEGIN
-  out(177564b DIV 2,000b);
-  i:=10000;
-  REPEAT DEC(i) UNTIL (i=0) OR (inp(177564b DIV 2)*{7}#{});
-  on:=(i#0)
 END deBug.

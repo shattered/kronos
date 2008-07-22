@@ -12,7 +12,9 @@ FROM mxScan IMPORT  sy, GetSy;
 
 WITH STORAGE: inter;
 
-CONST _origin = -10;    _dcopy = -11;
+CONST
+  _origin = -10;    _dcopy = -11;   _ash = 16;
+  _short_long = 17;
 
 VAR  CU: obs.ObjPtr;  -- compilation unit
   modNo: INTEGER;
@@ -140,18 +142,24 @@ PROCEDURE sFuncCall(no: INTEGER; VAR o: gen.ObjPtr);
   VAR p: gen.ObjPtr; v: obs.ObjPtr;
 BEGIN
   CheckGet(scan.lpar);
-  gen.enterStandardCall(o);
-  IF    no IN exprs THEN Expr(p);       gen.standard_param(p);
-  ELSIF no IN desis THEN designator(p); gen.standard_param(p);
-  ELSIF no IN quals THEN qualident(v);
-    gen.genObj(p,v); gen.standard_param(p);
-  ELSIF no=gen._ref THEN
-    designator(p);   gen.standard_param(p); CheckGet(scan.coma);
-    qualident(v);
-    gen.genObj(p,v); gen.standard_param(p);
-  ELSE ASSERT(FALSE);
+  IF no=_short_long THEN Expr(o);
+  ELSE
+    gen.enterStandardCall(o);
+    IF    no IN exprs THEN Expr(p);       gen.standard_param(p);
+    ELSIF no IN desis THEN designator(p); gen.standard_param(p);
+    ELSIF no IN quals THEN qualident(v);
+      gen.genObj(p,v); gen.standard_param(p);
+    ELSIF no=gen._ref THEN
+      designator(p);   gen.standard_param(p); CheckGet(scan.coma);
+      qualident(v);
+      gen.genObj(p,v); gen.standard_param(p);
+    ELSIF no=_ash THEN
+      Expr(p);   gen.standard_param(p); CheckGet(scan.coma);
+      Expr(p);   gen.standard_param(p);
+    ELSE ASSERT(FALSE);
+    END;
+    gen.exitStandardCall(o);
   END;
-  gen.exitStandardCall(o);
   CheckGet(scan.rpar);
 END sFuncCall;
 
@@ -790,7 +798,8 @@ BEGIN
     LOOP
       IF sy=scan.ident THEN id:=scan.Id; GetSy;
         IF   from? THEN obs.FromImport(o,id)
-        ELSIF sy=scan.colon THEN GetSy;
+        ELSIF (sy=scan.colon) OR (sy=scan.becomes) THEN
+          GetSy;
           IF sy=scan.ident THEN obs.Import(outside(scan.Id),id) END;
           CheckGet(scan.ident);
         ELSE obs.Import(outside(id),id);
@@ -1029,7 +1038,7 @@ PROCEDURE Block;
 
   PROCEDURE proc_comp(proc: obs.TypePtr);
     VAR o : obs.ObjPtr;   f   : BOOLEAN;
-      parm: obs.ParmPtr;  kind: BITSET;  id: INTEGER;
+      parm: obs.ParmPtr;  kind: BITSET;  id,xid: INTEGER;
        que: inter.QUEUE;  val : BOOLEAN;
   BEGIN
     IF sy#scan.lpar THEN
@@ -1044,10 +1053,30 @@ PROCEDURE Block;
       ELSIF sy=scan.val   THEN GetSy; val:=TRUE;
       ELSIF sy#scan.ident THEN EXIT
       END;
-      IdList(que,scan.colon); GetSy; f:=(sy=scan.array);
+      LOOP
+        IF sy=scan.ident THEN
+          id:=scan.Id; GetSy;
+          IF sy=scan.minus THEN
+            IF obs.varpar IN kind THEN scan.err(36)
+            ELSE INC(id,scan.noIdents);
+            END;
+            GetSy;
+          END;
+          inter.push(que,id)
+        ELSE CheckGet(scan.ident);
+        END;
+        IF    sy=scan.coma  THEN GetSy
+        ELSIF sy=scan.colon THEN EXIT
+        ELSIF sy=scan.ident THEN scan.expc(scan.coma)
+        ELSE EXIT
+        END
+      END;
+      CheckGet(scan.colon);
+      f:=(sy=scan.array);
       IF f THEN GetSy; CheckGet(scan.of) END;
       qualident(o); obs.chkType(o);
-      WHILE (parm#NIL) & inter.pop(que,id) DO
+      WHILE (parm#NIL) & inter.pop(que,xid) DO
+        IF xid>scan.noIdents THEN id:=xid-scan.noIdents ELSE id:=xid END;
         IF f THEN
           IF parm^.type^.mode#obs.farr THEN scan.err_id(21,id)
           ELSE obs.TypeCmp(parm^.type^.base,o^.type);
@@ -1057,7 +1086,7 @@ PROCEDURE Block;
         END;
         IF kind#parm^.kind*{obs.varpar} THEN scan.err_id(21,id) END;
         parm^.id:=id;
-        IF val THEN INCL(parm^.kind,obs.RO) END;
+        IF val OR (xid#id) THEN INCL(parm^.kind,obs.RO) END;
         parm:=parm^.next;
       END;
       IF (parm=NIL) & inter.pop(que,id) THEN scan.err_id(49,id) END;
@@ -1106,8 +1135,33 @@ PROCEDURE Block;
         IF unit=comp.def THEN scan.err(37) ELSE INCL(kind,obs.RO) END;
       ELSIF sy#scan.ident THEN EXIT
       END;
-      IdList(que,scan.colon); GetSy; parm:=FormalType();
-      WHILE inter.pop(que,id) DO p:=obs.AppParm(proc,id,parm,kind) END;
+      LOOP
+        IF sy=scan.ident THEN
+          id:=scan.Id; GetSy;
+          IF sy=scan.minus THEN
+            IF obs.varpar IN kind THEN scan.err(36)
+            ELSE INC(id,scan.noIdents);
+            END;
+            GetSy;
+          END;
+          inter.push(que,id)
+        ELSE CheckGet(scan.ident);
+        END;
+        IF    sy=scan.coma  THEN GetSy
+        ELSIF sy=scan.colon THEN EXIT
+        ELSIF sy=scan.ident THEN scan.expc(scan.coma)
+        ELSE EXIT
+        END
+      END;
+      CheckGet(scan.colon);
+      parm:=FormalType();
+      WHILE inter.pop(que,id) DO
+        IF id>=scan.noIdents THEN
+          p:=obs.AppParm(proc,id-scan.noIdents,parm,kind+{obs.RO})
+        ELSE
+          p:=obs.AppParm(proc,id,parm,kind)
+        END;
+      END;
       IF sy#scan.rpar THEN CheckGet(scan.semic) END
     END;
     inter.clear(que);
@@ -1126,10 +1180,44 @@ PROCEDURE Block;
     RETURN proc
   END headType;
 
-  PROCEDURE ProcHead(VAR p: obs.ObjPtr);
+  PROCEDURE CodeProc(p: obs.ObjPtr);
+    VAR o: gen.ObjPtr;
+  BEGIN
+    INCL(p^.tags,obs.code_proc);
+    gen.enterCodeProc(p);
+    WHILE sy#scan.end DO
+      Expr(o);
+      IF (sy=scan.semic) OR (sy=scan.rpar) THEN scan.err(26); GetSy END;
+      gen.code_expr(p,o);
+    END; GetSy;
+    gen.exitCodeProc(p);
+  END CodeProc;
+
+  PROCEDURE newCodeProc(p: obs.ObjPtr);
+    VAR o: gen.ObjPtr;
+  BEGIN
+    IF unit=comp.def THEN scan.err(37) END;
+    IF obs.forward IN p^.tags THEN scan.err(15) END;
+    INCL(p^.tags,obs.code_proc);
+    gen.enterCodeProc(p);
+    IF sy#scan.semic THEN
+      LOOP
+        Expr(o);
+        gen.code_expr(p,o);
+        IF sy=scan.semic THEN EXIT  END;
+        IF sy=scan.coma  THEN GetSy END;
+      END;
+    END;
+    gen.exitCodeProc(p);
+    GetSy;
+  END newCodeProc;
+
+  PROCEDURE ProcHead(VAR p: obs.ObjPtr; VAR new_code: BOOLEAN);
     VAR pre?: BOOLEAN; pid: INTEGER;
   BEGIN
     ASSERT(sy=scan.procedure); GetSy;
+    new_code:=(sy=scan.minus);
+    IF new_code THEN GetSy END;
     IF sy#scan.ident THEN scan.expc(scan.ident); pid:=scan.DmId
     ELSE pid:=scan.Id
     END;
@@ -1138,21 +1226,12 @@ PROCEDURE Block;
     IF pre? THEN proc_comp(p^.type);
     ELSE obs.NewObj(p,obs.proc); p^.type:=headType(); obs.Dcl(pid,p);
     END;
-    CheckGet(scan.semic);
-    IF NOT pre? & (sy#scan.code) THEN gen.dclProc(p) END;
+    IF new_code THEN newCodeProc(p)
+    ELSE
+      CheckGet(scan.semic);
+      IF NOT pre? & (sy#scan.code) THEN gen.dclProc(p) END;
+    END;
   END ProcHead;
-
-  PROCEDURE CodeProc(p: obs.ObjPtr);
-    VAR o: gen.ObjPtr;
-  BEGIN INCL(p^.tags,obs.code_proc);
-    gen.enterCodeProc(p);
-    WHILE sy#scan.end DO
-      Expr(o);
-      IF (sy=scan.semic) OR (sy=scan.rpar) THEN scan.err(26); GetSy END;
-      gen.code_expr(p,o)
-    END; GetSy;
-    gen.exitCodeProc(p);
-  END CodeProc;
 
   PROCEDURE dclParms(p: obs.ParmPtr);
     VAR o: obs.ObjPtr;
@@ -1166,10 +1245,10 @@ PROCEDURE Block;
   END dclParms;
 
   PROCEDURE ProcDcl;
-    VAR p: obs.ObjPtr;
+    VAR p: obs.ObjPtr; new_code: BOOLEAN;
   BEGIN
-    ProcHead(p);
-    IF unit=comp.def THEN RETURN END;
+    ProcHead(p,new_code);
+    IF (unit=comp.def) OR (new_code) THEN RETURN END;
     IF sy=scan.forward THEN
       GetSy; CheckGet(scan.semic);
       IF obs.forward IN p^.tags THEN scan.err(63) END;
@@ -1358,11 +1437,14 @@ PROCEDURE IniSTANDARD;
 
 BEGIN
   stnd?:=TRUE;
-  type(obs.intp,obs.int,"INTEGER");  type0(obs.intp,"LONGINT");
+  type(obs.intp,obs.int,"INTEGER");
+    type0(obs.intp,"LONGINT");
+    type0(obs.intp,"SHORTINT");
   type(obs.charp,obs.char,"CHAR");
   type(obs.procp,obs.proctype,"PROC");
   obs.procp^.base:=NIL; obs.procp^.plist:=NIL;
-  type(obs.realp,obs.real,"REAL");   type0(obs.realp,"LONGREAL");
+  type(obs.realp,obs.real,"REAL");
+    type0(obs.realp,"LONGREAL");
   type(obs.bitsetp,obs.bitset,"BITSET"); obs.bitsetp^.base:=obs.intp;
   type(obs.boolp,obs.bool,"BOOLEAN");
   const("FALSE",0,obs.boolp);
@@ -1382,6 +1464,9 @@ BEGIN
   proc("MIN"  ,gen._min);    proc("MAX"  ,gen._max);
   proc("HIGH" ,gen._high);   proc("REF"  ,gen._ref);
   proc("LEN"  ,gen._len);
+  proc("ASH"  ,_ash);
+  proc("SHORT",_short_long);
+  proc("LONG",_short_long);
 ----------------------------------------------------------------
   proc("INC" ,gen._inc);     proc("DEC"   ,gen._dec);
   proc("INCL",gen._incl);    proc("EXCL"  ,gen._excl);
@@ -1487,7 +1572,7 @@ BEGIN
 END final;
 
 BEGIN
-  vers:='Modula X  v0.98 /06-May-91/';
+  vers:='Modula X  v0.993 /03-Nov-91/';
   gen_opts:={
          ORD('W')-ORD('A')
         ,ORD('N')-ORD('A')

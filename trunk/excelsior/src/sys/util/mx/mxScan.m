@@ -381,6 +381,7 @@ BEGIN
     |'}': sy:=rbrace; getchar0; RETURN
     |'^': sy:=bar   ; getchar0; RETURN
     |'&': sy:=and   ; getchar0; RETURN
+    |'~': sy:=not   ; getchar0; RETURN
     |'|': sy:=sep   ; getchar0; RETURN
     |';': sy:=semic ; getchar0; RETURN
     |',': sy:=coma  ; getchar0; RETURN
@@ -505,6 +506,7 @@ PROCEDURE message(no: INTEGER; VAL f: ARRAY OF CHAR; SEQ args: sys.WORD);
 
 BEGIN
   CASE no OF
+(*
   |00: show("")
 --|01:
   |02: show("Переполнена хеш таблица (слишком много имен)")
@@ -587,6 +589,88 @@ BEGIN
   |79: show("Ограничение транслятора: слишком много");
   |80: show("Копирование динмассивов только с ключом $X+");
   ELSE message(0,"Неизвестная ошибка # %d",no);
+*)
+  |00: show("")
+--|01:
+  |02: show("Hash table overflow (too many identificators)")
+  |03: show("Expression stack overflow (try to simplify expressions)")
+  |04: show("Unexpected end of file")
+--|05:
+  |06: show("Error in module header");
+  |07: show("Identifier expected");
+  |08: show("Must be name of the block")
+  |09: show("Illegal or non-constant of empty range")
+  |10: show("CASE labels range > 256 ")
+  |11: show("Expected 'h' after hexidecimal")
+  |12: show("String constant too long or closing quote mark is missing")
+  |13: show("Ignoring unexpected character")
+  |14: show("Object is not visible in this scope")
+  |15: show("Duplicate declaration")
+  |16: show("Not implemented")
+  |17: show("Recursive object definition")
+  |18: show("Symbol expected")
+  |19: show("Type expected")
+  |20: show("Illegal type conversion")
+  |21: show("Incompatible types")
+  |22: show("Only scalar type is allowed here")
+  |23: show("Error in type definition")
+  |24: show("Only single word type is allowed here")
+  |25: show("Error in constant expression")
+  |26: show("Illegal expression")
+  |27: show("Variable expected")
+  |28: show("Array expected")
+  |29: show("Does not have an address")
+  |30: show("Does not have a value")
+--|31:
+  |32: show("Record expected")
+  |33: show("Conditional experssion is too complicated")
+  |34: show("Expected constant expersion")
+  |35: show("Statement expected")
+  |36: show("Error in declaration")
+  |37: show("Illegal in definition module")
+  |38: show("Illegal use of formal type")
+  |39: show("procedure (none-funtion) call in expression")
+  |40: show("FOR loop variable should be local");
+  |41: show("EXIT out of LOOP'а")
+  |42: show("This is not a module")
+  |43: show("Illegal call")
+  |44: show("Index out of range")
+  |45: show("Same label already seen")
+  |46: show("Function is call where only procedure call is allowed")
+  |47: show("Impossible to export. Same named object already declared in outer scope")
+  |48: show("Code consists of bytes [0..0FFh]")
+  |49: show("Wrong number of parameters")
+  |50: show("This is not a procedure")
+  |51: show("Pointer type expected")
+  |52: show("SETt type expected")
+  |53: show("RETURN is allowed only in a procedure or function")
+  |54: show("Overflow (underflow) in constant expression")
+  |55: show("Error in sym-file header")
+  |56: show("Incorrect version of sym-file")
+  |57: show("Descriptor access only with $U+ (unsafe) option on");
+  |58: show("Non-implemented procedure")
+  |59: show("Hidden (opaque) type should be single word and not enum type")
+  |60: show("Type size is too big")
+  |61: show("Incorrect information inside sym-file")
+  |62: show("Attempt to snick foreign (none Modula-2) sym-file")
+  |63: show("Duplicate FORWARD (forward already seen)")
+  |64: show("Procedure is too big")
+  |65: show("Module identifier cannot be used this way");
+  |66: show("Non-closed comment began at line ")
+  |67: show("Incorrect string literal syntax")
+  |68: show("Allowed only at compile unit level")
+  |69: show("Inaccessable RTS procedure")
+  |70: show("VAL is inacceptable in procedure type definition");
+  |71: show("Too many parameters");
+  |72: show("CASE should have at least a single label");
+--|73: show("Compiler is out of memory");
+  |74: show("Parameter differs from definition");
+  |75: show("FOR loop variable cannot be VAR parameter");
+  |76: show("Attempt to assign to VAL (read-only) variable");
+  |77: show("Only in definition module");
+  |78: show("Version conflict (compilation time)");
+  |79: show("Compiler limitation: too many of ");
+  |80: show("Dynamic arrays can be copied only with $X+ option");
   END;
 END message;
 

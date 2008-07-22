@@ -1,1 +1,1 @@
-{ SYM='/sys /sym' mxOUT=*=/sys CD=/sys/cool } mx coolDefs coolIO coolSym coolSystem visCode xRef $1
+{ SYM='/sys /sym' mxOUT=*=/sys CD=/sys/cool } mx coolDefs coolIO coolSym coolSystem visCode xRef $1

@@ -68,10 +68,12 @@ BEGIN
     END;
     ch:=t^.buf[t^.pos]; INC(t^.pos);
     IF ch=ASCII.NL THEN EXIT END;
+    IF ch=012c     THEN EXIT END; -- LF
     io^.buf[i]:=ch; INC(i);
-    IF i>=HIGH(io^.buf) THEN RESIZE(io^.buf,i+16) END;
+    IF i>=HIGH(io^.buf)-1 THEN RESIZE(io^.buf,i+16) END;
     (*$>*)
   END;
+  IF (i > 0) AND (io^.buf[i-1] = 015c) THEN DEC(i) END; -- CR
   io^.buf[i]:=0c;
   io^.len:=i;
   io^.done:=TRUE;

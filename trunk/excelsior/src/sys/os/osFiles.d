@@ -1,11 +1,10 @@
 DEFINITION MODULE osFiles; (* Leo 02-Jan-86. (c) KRONOS *)
                            (* Leo 24-Aug-89. (c) KRONOS *)
                            (* Ned 19-Sep-89. (c) KRONOS *)
+                           (* Igo 13-Feb-92. (c) KRONOS *)
 
 IMPORT       SYSTEM;
-IMPORT   os: osKernel;
 IMPORT  req: defRequest;
-
 
 CONST -- disk modes
   sys      = {4};
@@ -23,10 +22,12 @@ CONST -- open file modes
     fsys   =  {9};
     hidden = {10};
 
-TYPE
-  PORT;
-  FILE;
-  DOIO = PROCEDURE (VAR req.REQUEST);
+TYPE FILE;
+
+     FHANDLE = RECORD
+                 fsys: ARRAY [0.. 7] OF CHAR;
+                 file: ARRAY [0..23] OF CHAR;
+               END;
 
 CONST (* dnode kind: *)
 
@@ -50,14 +51,7 @@ TYPE
   END;
 
 VAL
-  root: FILE;
   null: FILE;
-
-  (* statistics *)
-  chsize : INTEGER;
-  dkwrite: INTEGER;
-  dkread : INTEGER;
-  chread : INTEGER;
 
 CONST
   a_eof   = 0;
@@ -78,7 +72,10 @@ PROCEDURE state(f: FILE): BITSET;
 PROCEDURE usrlock  (f: FILE; t: INTEGER): INTEGER;
 PROCEDURE usrunlock(f: FILE);
 
+PROCEDURE root(): FILE;
+
 PROCEDURE mount  (dir: FILE; name: ARRAY OF CHAR;   dev: FILE;
+                           fsname: ARRAY OF CHAR;
                              info: ARRAY OF CHAR;
                           VAR lab: ARRAY OF CHAR;    ro: BOOLEAN): INTEGER;
 
@@ -107,6 +104,13 @@ PROCEDURE make_dir(VAR d: FILE; where: FILE): INTEGER;
 PROCEDURE move_dir(from: FILE; fname: ARRAY OF CHAR;
                      to: FILE; tname: ARRAY OF CHAR; hid: BOOLEAN): INTEGER;
 
+PROCEDURE read_dir(d: FILE; VAR dir: SYSTEM.ADDRESS; VAR sz: INTEGER): INTEGER;
+(* read directory:
+   allocate memory for directory & read it
+   dir point to array of dnode
+   memory allocated by os.ALLOCATE from task^.area
+*)
+
 PROCEDURE read (f: FILE; fpos: INTEGER;     buf: SYSTEM.ADDRESS;
                          bpos: INTEGER; VAR len: INTEGER): INTEGER;
 
@@ -124,11 +128,23 @@ PROCEDURE cut   (f: FILE; size: INTEGER): INTEGER;
 PROCEDURE extend(f: FILE; size: INTEGER): INTEGER;
 
 PROCEDURE make_fs(disk: FILE;
+                fsname: ARRAY OF CHAR;
                  label: ARRAY OF CHAR;
                   bads: ARRAY OF INTEGER): INTEGER;
 
 PROCEDURE make_node(d: FILE; VAR f: FILE; ref: ARRAY OF CHAR): INTEGER;
 
+PROCEDURE getfhandle(f: FILE; VAR fh: FHANDLE);
+
+PROCEDURE openfh(VAR f: FILE; VAR fh: FHANDLE): INTEGER;
+
+PROCEDURE statistic(VAR chsize,dkwrite,dkread,chread: INTEGER);
+
+
+---------------------------- DEVICES ---------------------------
+                            ---------
+
+TYPE  DOIO = PROCEDURE (VAR req.REQUEST);
 
 PROCEDURE define_driver(name,host: ARRAY OF CHAR; drn: INTEGER;
                              mode: BITSET;       doio: DOIO): INTEGER;
