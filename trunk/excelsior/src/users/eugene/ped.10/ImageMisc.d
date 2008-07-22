@@ -1,0 +1,21 @@
+DEFINITION MODULE ImageMisc; (* Sem 20-Mar-87. (c) KRONOS *)
+
+FROM Model     IMPORT   Object;
+
+CONST neg=1;
+
+VAR mdl: Object;
+
+PROCEDURE DIP14(Name: ARRAY OF CHAR);
+
+PROCEDURE DIP16(Name: ARRAY OF CHAR);
+
+PROCEDURE DIP20(Name: ARRAY OF CHAR);
+
+PROCEDURE DIP24(Name: ARRAY OF CHAR);
+
+PROCEDURE AppPin(n,x,y,r: CARDINAL; type: BITSET; s: ARRAY OF CHAR);
+
+PROCEDURE Finish;
+
+END ImageMisc.

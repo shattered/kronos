@@ -1,0 +1,52 @@
+DEFINITION MODULE inExp;
+
+IMPORT pcK;
+IMPORT inCmd;
+
+TYPE
+  val_mode = (vm_undef,vm_cardinal,vm_integer,vm_real,
+              vm_boolean,vm_set,vm_string,vm_address);
+  EXT      = POINTER TO ext_rec;
+  ext_rec  = RECORD
+               CASE :INTEGER OF
+                 |1: buf : ADDRESS;
+                     n   : LONGINT;
+                 |2: real: REAL;
+                 |3: lrl : LONGREAL;
+               END;
+             END;
+
+CONST
+  mem_const = pcK.Forms{pcK.array,pcK.record,pcK.vector,pcK.longreal};
+  indirect  = 15; (* indirect global var tag *)
+
+VAR gen_call: PROCEDURE (pcK.NODE);
+
+PROCEDURE pos(txt_pos: LONGINT): CARDINAL;
+
+PROCEDURE vm  (t: pcK.STRUCT): val_mode;
+PROCEDURE sign(t: pcK.STRUCT): BOOLEAN;
+
+PROCEDURE gen_access  (o: pcK.OBJECT; VAR a: inCmd.access);
+
+PROCEDURE min         (t: pcK.STRUCT; VAR a: inCmd.access);
+PROCEDURE max         (t: pcK.STRUCT; VAR a: inCmd.access);
+PROCEDURE min_max     (t: pcK.STRUCT; VAR a,b: LONGINT);
+
+PROCEDURE low         (l: pcK.NODE; VAR a: inCmd.access);
+PROCEDURE high        (l: pcK.NODE; VAR a: inCmd.access);
+PROCEDURE adr         (l: pcK.NODE; VAR a: inCmd.access);
+PROCEDURE adr_u       (l: pcK.NODE; VAR a: inCmd.access);
+PROCEDURE bytes_u     (l: pcK.NODE; VAR a: inCmd.access);
+PROCEDURE designator  (l: pcK.NODE; VAR a: inCmd.access);
+PROCEDURE designator_u(l: pcK.NODE; VAR a: inCmd.access);
+PROCEDURE expression  (l: pcK.NODE; VAR a: inCmd.access);
+
+PROCEDURE gen_condition(l: pcK.NODE; then,else: inCmd.node);
+PROCEDURE range_check (l: pcK.NODE; VAR a: inCmd.access;
+                       to: pcK.STRUCT; chk: BOOLEAN);
+PROCEDURE bounds_check(l: pcK.NODE; VAR a: inCmd.access;
+                       to: pcK.STRUCT; chk: BOOLEAN; VAR v_sz: CARDINAL);
+PROCEDURE make_bitset(v_sz,r_sz: CARDINAL);
+
+END inExp.

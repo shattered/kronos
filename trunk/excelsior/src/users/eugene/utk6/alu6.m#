@@ -1,0 +1,684 @@
+MODULE alu6; (* 02-Nov-88. (c) KRONOS *)
+
+FROM Terminal   IMPORT  Read, print, BusyRead;
+FROM SYSTEM     IMPORT  WORD, ADR, ADDRESS;
+FROM Random     IMPORT  Rand;
+FROM UTK6       IMPORT  input, output, b?, b, a, power;
+
+-- программа управления стендом для тестирования модулей ЖШСИ 010.02
+
+CONST
+-- out
+  bmF0  = 97;
+  bmF1  = 98;
+  bmF2  = 99;
+  bmF3  =100;
+  bmF4  =101;
+  bmF5  =102;
+  bmF6  =103;
+  bmF7  =104;
+  bmAA0 =105;
+  bmAA1 =106;
+  bmAA2 =107;
+  bmAA3 =108;
+  bmAB0 =109;
+  bmAB1 =110;
+  bmAB2 =111;
+  bmAB3 =112;
+  bmRDA =113;
+  bmRDB =114;
+  bmWRA =115;
+  bmWRB =116;
+  bmCI0 =117;
+  bmCI1 =118;
+  bmALUEN   =119;
+  bmSHIFTEN =120;
+  bmRDSTK   =121;
+  bmWRSTK   =122;
+  bmRDCONST =123;
+  bmSREG    =124;
+  bmNEXT    =125;
+  bmBUSD0   =126;
+  bmBUSD1   =127;
+  brestart  =128;
+  const0    =161;
+  const1    =162;
+  const2    =163;
+  const3    =164;
+  const4    =165;
+  const5    =166;
+  const6    =167;
+  const7    =168;
+  bmCOND0   =169;
+  bmCOND1   =170;
+  bmCOND2   =171;
+  bmCOND3   =172;
+  bmDECCNT  =173;
+  bfa       = 19;
+  bfb       = 71;
+
+  bd00  =  3;     bd16 = 11;
+  bd01  = 55;     bd17 = 63;
+  bd02  =  4;     bd18 = 12;
+  bd03  = 56;     bd19 = 64;
+  bd04  =  5;     bd20 = 13;
+  bd05  = 57;     bd21 = 65;
+  bd06  =  6;     bd22 = 14;
+  bd07  = 58;     bd23 = 66;
+  bd08  =  7;     bd24 = 15;
+  bd09  = 59;     bd25 = 67;
+  bd10  =  8;     bd26 = 16;
+  bd11  = 60;     bd27 = 68;
+  bd12  =  9;     bd28 = 17;
+  bd13  = 61;     bd29 = 69;
+  bd14  = 10;     bd30 = 18;
+  bd15  = 62;     bd31 = 70;
+
+  cash0 =177;
+  cash1 =178;
+  cash2 =179;
+  cash3 =180;
+  cash4 =181;
+  cash5 =182;
+  cash6 =183;
+  cash7 =184;
+  cash8 =192;
+
+  flag  =175;
+  intreq=176;
+
+PROCEDURE ?1(n: INTEGER): BOOLEAN;
+BEGIN
+  RETURN b?(n,1);
+END ?1;
+
+PROCEDURE ?0(n: INTEGER): BOOLEAN;
+BEGIN
+  RETURN b?(n,0);
+END ?0;
+
+PROCEDURE wait;
+  VAR ch: CHAR;
+BEGIN
+  print(' Нажмите любую клавишу для продолжения...\r');
+  ch:=Read();
+  print('                                         \r');
+END wait;
+
+PROCEDURE bd?(): WORD;
+  VAR n: BITSET;
+BEGIN
+  n:={};
+  IF b?(bd00,1) THEN INCL(n, 0) END; IF b?(bd01,1) THEN INCL(n, 1) END;
+  IF b?(bd02,1) THEN INCL(n, 2) END; IF b?(bd03,1) THEN INCL(n, 3) END;
+  IF b?(bd04,1) THEN INCL(n, 4) END; IF b?(bd05,1) THEN INCL(n, 5) END;
+  IF b?(bd06,1) THEN INCL(n, 6) END; IF b?(bd07,1) THEN INCL(n, 7) END;
+  IF b?(bd08,1) THEN INCL(n, 8) END; IF b?(bd09,1) THEN INCL(n, 9) END;
+  IF b?(bd10,1) THEN INCL(n,10) END; IF b?(bd11,1) THEN INCL(n,11) END;
+  IF b?(bd12,1) THEN INCL(n,12) END; IF b?(bd13,1) THEN INCL(n,13) END;
+  IF b?(bd14,1) THEN INCL(n,14) END; IF b?(bd15,1) THEN INCL(n,15) END;
+  IF b?(bd16,1) THEN INCL(n,16) END; IF b?(bd17,1) THEN INCL(n,17) END;
+  IF b?(bd18,1) THEN INCL(n,18) END; IF b?(bd19,1) THEN INCL(n,19) END;
+  IF b?(bd20,1) THEN INCL(n,20) END; IF b?(bd21,1) THEN INCL(n,21) END;
+  IF b?(bd22,1) THEN INCL(n,22) END; IF b?(bd23,1) THEN INCL(n,23) END;
+  IF b?(bd24,1) THEN INCL(n,24) END; IF b?(bd25,1) THEN INCL(n,25) END;
+  IF b?(bd26,1) THEN INCL(n,26) END; IF b?(bd27,1) THEN INCL(n,27) END;
+  IF b?(bd28,1) THEN INCL(n,28) END; IF b?(bd29,1) THEN INCL(n,29) END;
+  IF b?(bd30,1) THEN INCL(n,30) END; IF b?(bd31,1) THEN INCL(n,31) END;
+  RETURN n;
+END bd?;
+
+PROCEDURE bd!(n: WORD);
+  VAR s: BITSET;
+BEGIN
+  s:=n;
+  a(bd00,INTEGER( 0 IN s)); a(bd01,INTEGER( 1 IN s));
+  a(bd02,INTEGER( 2 IN s)); a(bd03,INTEGER( 3 IN s));
+  a(bd04,INTEGER( 4 IN s)); a(bd05,INTEGER( 5 IN s));
+  a(bd06,INTEGER( 6 IN s)); a(bd07,INTEGER( 7 IN s));
+  a(bd08,INTEGER( 8 IN s)); a(bd09,INTEGER( 9 IN s));
+  a(bd10,INTEGER(10 IN s)); a(bd11,INTEGER(11 IN s));
+  a(bd12,INTEGER(12 IN s)); a(bd13,INTEGER(13 IN s));
+  a(bd14,INTEGER(14 IN s)); a(bd15,INTEGER(15 IN s));
+  a(bd16,INTEGER(16 IN s)); a(bd17,INTEGER(17 IN s));
+  a(bd18,INTEGER(18 IN s)); a(bd19,INTEGER(19 IN s));
+  a(bd20,INTEGER(20 IN s)); a(bd21,INTEGER(21 IN s));
+  a(bd22,INTEGER(22 IN s)); a(bd23,INTEGER(23 IN s));
+  a(bd24,INTEGER(24 IN s)); a(bd25,INTEGER(25 IN s));
+  a(bd26,INTEGER(26 IN s)); a(bd27,INTEGER(27 IN s));
+  a(bd28,INTEGER(28 IN s)); a(bd29,INTEGER(29 IN s));
+  a(bd30,INTEGER(30 IN s)); a(bd31,INTEGER(31 IN s));
+END bd!;
+
+PROCEDURE const(n: WORD);
+  VAR s: BITSET;
+BEGIN
+  s:=n;
+  a(const0,INTEGER(0 IN s)); a(const1,INTEGER(1 IN s));
+  a(const2,INTEGER(2 IN s)); a(const3,INTEGER(3 IN s));
+  a(const4,INTEGER(4 IN s)); a(const5,INTEGER(5 IN s));
+  a(const6,INTEGER(6 IN s)); a(const7,INTEGER(7 IN s));
+END const;
+
+PROCEDURE testbd;
+  VAR n,v: BITSET; i: INTEGER;
+BEGIN
+  n:=bd?();
+  IF n#{0..31} THEN
+    print('На всех разрядах шины данных должен быть высокий уровень.\n');
+    print('Посмотри разряды %{}.\n',n/{0..31});
+    wait;
+  END;
+  output(bd00,bd01,bd02,bd03,bd04,bd05,bd06,bd07,
+         bd08,bd09,bd10,bd11,bd12,bd13,bd14,bd15);
+  v:={1..31};
+  FOR i:=0 TO 15 DO
+    bd!(v); n:=bd?();
+    IF n#v THEN
+      print('На шине данных низкий уровень должен быть только в разряде %d.\n',
+             i);
+      print('Посмотри разряды %{}.\n',n/v);
+      wait;
+    END;
+    v:=v<<1;
+  END;
+  input(bd00,bd01,bd02,bd03,bd04,bd05,bd06,bd07,
+        bd08,bd09,bd10,bd11,bd12,bd13,bd14,bd15);
+  b(bmBUSD1,0); b(brestart,1);
+  n:=bd?();
+  IF n#{0..31} THEN
+    print('На всех разрядах шины B должен быть высокий уровень.\n');
+    print('Посмотри разряды %{}.\n',n/{0..31});
+    wait;
+  END;
+  b(bmBUSD1,1);
+END testbd;
+
+PROCEDURE testconst;
+  VAR n: BITSET; i: INTEGER;
+BEGIN
+  b(bmBUSD1,0); b(brestart,1);
+  b(bmRDCONST,1);
+  FOR i:=0 TO 7 DO
+    const({0..7}-{i}); n:=bd?();
+    IF n#({0..31}-{i}) THEN
+      print('Включен генератор констант.\n');
+      print('На шине B низкий уровень должен быть только в разряде %d.\n',i);
+      print('Посмотри разряды %{}.\n',n/({0..31}-{i}));
+      wait;
+    END;
+  END;
+  b(bmRDCONST,0);
+  b(bmBUSD1,1);
+END testconst;
+
+PROCEDURE regrd(n: INTEGER): WORD;
+  VAR v: WORD;
+BEGIN
+  IF 0 IN BITSET(n) THEN a(bmAB0,1) ELSE a(bmAB0,0) END;
+  IF 1 IN BITSET(n) THEN a(bmAB1,1) ELSE a(bmAB1,0) END;
+  IF 2 IN BITSET(n) THEN a(bmAB2,1) ELSE a(bmAB2,0) END;
+  IF 3 IN BITSET(n) THEN a(bmAB3,1) ELSE a(bmAB3,0) END;
+  a(bmRDB,1); a(bmBUSD1,0); v:=bd?(); a(bmBUSD1,1); a(bmRDB,0);
+  RETURN v;
+END regrd;
+
+PROCEDURE regrdA(n: INTEGER): WORD;
+  VAR v: WORD;
+BEGIN
+  a(bmF0,0); a(bmF1,1); a(bmF2,0); a(bmF3,1);
+  a(bmF4,1); a(bmF5,1); a(bmF6,0); a(bmF7,1);
+  a(bmCI0,1); a(bmCI1,1); -- ALU=A
+  a(bmAA0,INTEGER(0 IN BITSET(n)));
+  a(bmAA1,INTEGER(1 IN BITSET(n)));
+  a(bmAA2,INTEGER(2 IN BITSET(n)));
+  a(bmAA3,INTEGER(3 IN BITSET(n)));
+  a(bmRDA,1);
+  a(bmALUEN,1);
+  b(bfa,0); b(bfb,0);
+  b(bmBUSD1,0); v:=bd?(); b(bmBUSD1,1);
+  b(bfa,1); b(bfb,1);
+  a(bmALUEN,0);
+  a(bmRDA,0);
+  RETURN v;
+END regrdA;
+
+PROCEDURE regwr(n: INTEGER; v: WORD);
+BEGIN
+  a(bmAB0,INTEGER(0 IN BITSET(n)));
+  a(bmAB1,INTEGER(1 IN BITSET(n)));
+  a(bmAB2,INTEGER(2 IN BITSET(n)));
+  a(bmAB3,INTEGER(3 IN BITSET(n)));
+  bd!(v);
+  output(bd00,bd01,bd02,bd03,bd04,bd05,bd06,bd07,
+         bd08,bd09,bd10,bd11,bd12,bd13,bd14,bd15,
+         bd16,bd17,bd18,bd19,bd20,bd21,bd22,bd23,
+         bd24,bd25,bd26,bd27,bd28,bd29,bd30,bd31);
+  a(bmBUSD0,1); a(bmWRB,1);
+  b(bfa,0); b(bfb,0);
+  b(bfa,1); b(bfb,1);
+  a(bmWRB,0); a(bmBUSD0,0);
+  input (bd00,bd01,bd02,bd03,bd04,bd05,bd06,bd07,
+         bd08,bd09,bd10,bd11,bd12,bd13,bd14,bd15,
+         bd16,bd17,bd18,bd19,bd20,bd21,bd22,bd23,
+         bd24,bd25,bd26,bd27,bd28,bd29,bd30,bd31);
+END regwr;
+
+PROCEDURE regcp(n: INTEGER);
+BEGIN
+  a(bmAA0,INTEGER(0 IN BITSET(n)));
+  a(bmAA1,INTEGER(1 IN BITSET(n)));
+  a(bmAA2,INTEGER(2 IN BITSET(n)));
+  a(bmAA3,INTEGER(3 IN BITSET(n)));
+  a(bmAB0,INTEGER(0 IN BITSET(n)));
+  a(bmAB1,INTEGER(1 IN BITSET(n)));
+  a(bmAB2,INTEGER(2 IN BITSET(n)));
+  a(bmAB3,INTEGER(3 IN BITSET(n)));
+  a(bmWRA,1); a(bmRDB,1); a(bmALUEN,1);
+  a(bmF0,1); a(bmF1,1); a(bmF2,1); a(bmF3,0);
+  a(bmF4,1); a(bmF5,1); a(bmF6,0); a(bmF7,1);
+  a(bmCI0,1); a(bmCI1,1); -- ALU=B
+  b(bfa,0); b(bfb,0);
+  b(bfa,1); b(bfb,1);
+  a(bmWRA,0); a(bmRDB,0); a(bmALUEN,0);
+END regcp;
+
+PROCEDURE testrg;
+  VAR v,n,n1,l,m: BITSET; p,i,i1: INTEGER;
+BEGIN
+  FOR p:=0 TO 2 DO
+    v:=BITSET({0,3,6,9,12,15,18,21,24,27,30}<<p);
+    n:=v;
+    FOR i:=0 TO 15 DO regwr(i,n); n:=n<<1 END;
+    n:=v;
+    FOR i:=0 TO 15 DO
+      l:=regrd(i);
+      IF l#n THEN
+        LOOP
+          print('register %2d, write %$8h, read (bus B) %$8h, diff %$8h\r',
+                 i,n,l,l/n);
+          regwr(i,n); l:=regrd(i);
+          IF BusyRead()#0c THEN
+            n1:=v;
+            FOR i1:=0 TO 15 DO regwr(i,n1); n1:=n1<<1 END;
+            print('\n'); EXIT;
+          END;
+        END;
+      END;
+      n:=n<<1;
+    END;
+    n:=v;
+    FOR i:=0 TO 15 DO
+      regcp(i);
+      l:=regrdA(i);
+      IF l#n THEN
+        LOOP
+          print('register %2d, write %$8h, read (bus A) %$8h, diff %$8h\r',
+                i,n,l,l/n);
+          IF BusyRead()#0c THEN
+            n1:=v;
+            FOR i1:=0 TO 15 DO regwr(i,n1); n1:=n1<<1 END;
+            print('\n'); EXIT;
+          END;
+          regwr(i,n); regcp(i); l:=regrdA(i);
+        END;
+      END;
+      n:=n<<1;
+    END;
+    v:=v<<1;
+  END;
+END testrg;
+
+PROCEDURE cash?(): WORD;
+  VAR s: BITSET;
+BEGIN
+  s:={};
+  IF b?(cash0,1) THEN INCL(s,0) END;
+  IF b?(cash1,1) THEN INCL(s,1) END;
+  IF b?(cash2,1) THEN INCL(s,2) END;
+  IF b?(cash3,1) THEN INCL(s,3) END;
+  IF b?(cash4,1) THEN INCL(s,4) END;
+  IF b?(cash5,1) THEN INCL(s,5) END;
+  IF b?(cash6,1) THEN INCL(s,6) END;
+  IF b?(cash7,1) THEN INCL(s,7) END;
+  RETURN s;
+END cash?;
+
+PROCEDURE testcash;
+  VAR first: BOOLEAN; i,j,m: INTEGER; k,n: BITSET;
+BEGIN
+  a(bmBUSD1,0); a(brestart,1);
+  first:=TRUE;
+  LOOP
+    a(bmAB3,0); a(bmAB2,1); a(bmSREG,1);
+    b(bfb,0); b(bfb,1); i:=ORD(?0(bd00))+ORD(?0(bd01))*2;
+    b(bfb,0);
+    a(bmAB0,1); a(bmAB1,1); a(bmAB2,0); a(bmAB3,1);
+    WHILE i>0 DO b(bfb,1); b(bfb,0); DEC(i) END;
+    -- pc must be 0
+    a(bmAB3,0); a(bmAB2,1);
+    b(bfb,1); i:=ORD(?0(bd00))+ORD(?0(bd01))*2;
+    IF i=0 THEN
+      IF NOT first THEN print('                           \r') END;
+      EXIT;
+    ELSIF first THEN
+      first:=FALSE;
+      print('Не могу установить PC в 0 !\r');
+    END;
+  END;
+  a(bmBUSD1,1);
+  a(bmRDA,1);
+  FOR i:=0 TO 31 DO
+    regwr(0,{0..31}-{i});
+    a(bmF0,0); a(bmF1,1); a(bmF2,0); a(bmF3,1);
+    a(bmF4,1); a(bmF5,1); a(bmF6,0); a(bmF7,1);
+    a(bmCI0,1); a(bmCI1,1); -- ALU=A
+    a(bmAA0,0); a(bmAA1,0); a(bmAA2,0); a(bmAA3,0);
+    a(bmALUEN,1);
+    a(bmAB3,1); a(bmAB2,0); a(bmAB1,0); a(bmAB0,0);
+    a(bmSREG,1);
+    b(bfa,0); b(bfb,0); b(bfa,1); b(bfb,1); -- write to cash
+    a(bmSREG,0);
+    a(bmALUEN,0);
+    a(bmBUSD1,0);
+    FOR j:=0 TO 3 DO
+      a(bmSREG,1); a(bmAB3,0); a(bmAB2,1);
+      m:=ORD(?0(bd00))+ORD(?0(bd01))*2+ORD(?0(bd02))*4;
+      IF j#m THEN print('(%d) PC must be eqval %d\n',i,j); wait END;
+      a(bmSREG,0);
+      k:=cash?(); n:={0..7}-BITSET({i}>>(j*8));
+      IF n#k THEN
+        print('(%d) Cash error, write %$2h read %$2h diff %$2h\n',i,n,k,n/k);
+        wait;
+      END;
+      b(bfa,0); b(bfb,0);
+      b(bmNEXT,1);
+      b(bfa,1); b(bfb,1); b(bmNEXT,0);
+      b(bfa,0); b(bfb,0); b(bfa,1); b(bfb,1);
+    END;
+    b(bmSREG,1); b(bmAB3,0); b(bmAB2,1);
+    m:=ORD(?0(bd00))+ORD(?0(bd01))*2+ORD(?0(bd02))*4;
+    IF 4#m THEN print('PC must be eqval 4\n'); wait END;
+    b(bmSREG,0);
+    b(bmBUSD1,1);
+  END;
+  b(bmRDA,0);
+END testcash;
+
+PROCEDURE testsh;
+  PROCEDURE loadcnt(n: WORD);
+  BEGIN
+    bd!(n);
+    output(bd00,bd01,bd02,bd03,bd04,bd05,bd06,bd07,
+           bd08,bd09,bd10,bd11,bd12,bd13,bd14,bd15);
+    b(bmBUSD0,1);
+    b(bmAB0,1); b(bmAB1,0); b(bmAB2,0); b(bmAB3,1);
+    b(bmSREG,1);
+    b(bfb,1); b(bfa,0); b(bfb,0); b(bfa,1);
+    b(bmSREG,0);
+    b(bmBUSD0,0);
+  END loadcnt;
+  VAR i,j: INTEGER; n: BITSET;
+BEGIN
+  b(bfa,1); b(bfb,0);
+  loadcnt(-1);
+  b(bmCOND0,0); b(bmCOND1,1); b(bmCOND2,1); b(bmCOND3,1);
+  b(bmDECCNT,1);
+  IF ?0(intreq) THEN print('INTREQ must be high\n'); wait END;
+  b(bmDECCNT,0);
+  IF ?1(intreq) THEN print('INTREQ must be low\n'); wait END;
+  LOOP
+    loadcnt({3..31});
+    b(bmDECCNT,1);
+    IF ?1(intreq) THEN
+      print('INTREQ must be low\r');
+    ELSE
+      print('                  \r');
+      FOR i:=0 TO 6 DO b(bfb,1); b(bfa,0); b(bfb,0); b(bfa,1) END;
+      IF ?0(intreq) THEN
+        print('Error in shift cnt 0..2\r');
+      ELSE
+        print('                       \r');
+        b(bmDECCNT,0);
+        EXIT;
+      END;
+    END;
+    b(bmDECCNT,0);
+  END;
+  LOOP
+    loadcnt({0..2,5..31});
+    b(bmDECCNT,1);
+    IF ?1(intreq) THEN
+      print('INTREQ must be low\r');
+    ELSE
+      print('                  \r');
+      FOR i:=0 TO 2 DO b(bfb,1); b(bfa,0); b(bfb,0); b(bfa,1) END;
+      IF ?0(intreq) THEN
+        print('Error in shift cnt 3..4\r');
+      ELSE
+        print('                       \r');
+        b(bmDECCNT,0);
+        EXIT;
+      END;
+    END;
+    b(bmDECCNT,0);
+  END;
+  b(bmF0,1); b(bmF1,1); b(bmF2,1); b(bmF3,0);
+  b(bmF4,0); b(bmF5,1); b(bmF6,0); b(bmF7,0);
+  b(bmCI0,1); b(bmCI1,1); -- ALU=ROL(B);
+  FOR i:=0 TO 31 DO
+    loadcnt({0..31}/BITSET(i));
+    regwr(0,{1..31});
+    b(bmSHIFTEN,1); b(bmALUEN,1); b(bmRDB,1); b(bmWRB,1); b(bmDECCNT,1);
+    WHILE ?0(intreq) DO
+      b(bfb,1); b(bfa,0); b(bfb,0); b(bfa,1);
+    END;
+    b(bfb,1); b(bfa,0); b(bfb,0); b(bfa,1);
+    b(bmBUSD1,0);
+    b(bfb,1); n:=bd?(); b(bfa,0); b(bfb,0); b(bfa,1);
+    b(bmBUSD1,1);
+    IF n#({1..31}<<i) THEN
+      print('Shift error write %$8h cnt %2d read %$8h\n',{1..31},i,n);
+    END;
+    b(bmSHIFTEN,0); b(bmALUEN,0); b(bmRDB,0); b(bmWRB,0); b(bmDECCNT,0);
+  END;
+END testsh;
+
+PROCEDURE teststk;
+  PROCEDURE wrstk(v: WORD);
+  BEGIN
+    a(bmAB0,0); a(bmAB1,0); a(bmAB2,0); a(bmAB3,0);
+    a(bmAA0,0); a(bmAA1,0); a(bmAA2,0); a(bmAA3,0);
+    bd!(v);
+    output(bd00,bd01,bd02,bd03,bd04,bd05,bd06,bd07,
+           bd08,bd09,bd10,bd11,bd12,bd13,bd14,bd15);
+    a(bmBUSD0,1);
+    a(bmWRB,1); b(bfb,1); b(bfa,0); b(bfb,0); b(bfa,1); a(bmWRB,0);
+    a(bmBUSD0,0);
+    input (bd00,bd01,bd02,bd03,bd04,bd05,bd06,bd07,
+           bd08,bd09,bd10,bd11,bd12,bd13,bd14,bd15);
+    a(bmRDA,1); a(bmWRSTK,0);
+    b(bfb,1); b(bfa,0); b(bfb,0); b(bfa,1);
+    a(bmRDA,0); a(bmWRSTK,1);
+  END wrstk;
+  PROCEDURE rdstk(): WORD;
+    VAR n: WORD;
+  BEGIN
+    a(bmAB0,1); a(bmAB1,0); a(bmAB2,0); a(bmAB3,0);
+    a(bmAA0,1); a(bmAA1,0); a(bmAA2,0); a(bmAA3,0);
+    a(bmWRA,1); a(bmRDSTK,0);
+    b(bfb,1); b(bfa,0); b(bfb,0); b(bfa,1);
+    a(bmWRA,0); a(bmRDSTK,1);
+    a(bmBUSD1,0); a(bmRDB,1);
+    b(bfb,1); n:=bd?(); b(bfa,0); b(bfb,0); b(bfa,1);
+    a(bmBUSD1,1); a(bmRDB,0);
+    RETURN n;
+  END rdstk;
+  VAR i,j: INTEGER; m,n: BITSET;
+BEGIN
+  b(bfb,0); b(bfa,1);
+  b(bmWRSTK,0);
+  FOR i:=0 TO 31 DO
+    b(bfb,1); b(bfa,0); b(bfb,0); b(bfa,1);
+  END;
+  a(bmWRSTK,1);
+  FOR j:=0 TO 9 DO
+    FOR i:=0 TO 15 DO
+      m:={0..31}-{i}; wrstk(m);
+    END;
+    FOR i:=15 TO 0 BY -1 DO
+      m:={0..31}-{i}; n:=rdstk();
+      IF n#m THEN
+        print('Stack error, write %$8h read %$8h diff %$8h\n',m,n,m/n);
+        REPEAT
+          wrstk(m); n:=rdstk();
+        UNTIL BusyRead()#0c;
+      END;
+    END;
+    n:=rdstk();
+  END;
+END teststk;
+
+PROCEDURE testflag;
+  PROCEDURE cond(n: INTEGER);
+  BEGIN
+    a(bmCOND0,INTEGER(0 IN BITSET(n)));
+    a(bmCOND1,INTEGER(1 IN BITSET(n)));
+    a(bmCOND2,INTEGER(2 IN BITSET(n)));
+    a(bmCOND3,INTEGER(3 IN BITSET(n)));
+  END cond;
+  PROCEDURE intreq1;
+  BEGIN
+    IF ?0(intreq) THEN print('INTREQ должен быть высоким.\n'); wait END;
+  END intreq1;
+  PROCEDURE intreq0;
+  BEGIN
+    IF ?1(intreq) THEN print('INTREQ должен быть низким.\n'); wait END;
+  END intreq0;
+  VAR i,n: INTEGER;
+BEGIN
+  cond(8);
+  intreq0;
+  cond(9);
+  intreq1;
+  cond(11);
+  IF ?0(intreq) THEN print('D23 (1) must be 0\n'); wait END;
+  cond(12);
+  IF ?0(intreq) THEN print('D23 (1) must be 0\n'); wait END;
+  cond(13);
+  IF ?1(intreq) THEN print('D23 (1) must be 1\n'); wait END;
+  b(bfb,0); b(bfa,1);
+  cond(9); b(bfa,0); b(bfa,1);
+  b(bfb,1);
+  IF ?1(flag) THEN
+    print('FLAG должен быть низким.\n');
+    REPEAT
+      b(bfb,0); b(bfa,0); b(bfa,1); b(bfb,1);
+    UNTIL BusyRead()#0c;
+  END;
+  b(bfb,0);
+  cond(8); b(bfa,0); b(bfa,1);
+  IF ?1(flag) THEN
+    print('Не работает триггер D24.1 .. D24.4\n'); wait;
+  END;
+  cond(0);
+  intreq1;
+  b(bfb,1);
+  IF ?0(flag) THEN
+    print('Не работает триггер D24.1 .. D24.4\n'); wait;
+  END;
+  intreq0;
+  b(bfb,0);
+  cond(9); b(bfa,0); b(bfa,1);
+  IF ?0(flag) THEN
+    print('Не работает триггер D24.1 .. D24.4\n'); wait;
+  END;
+  cond(0);
+  intreq0;
+  b(bfb,1);
+  IF ?1(flag) THEN
+    print('Не работает триггер D24.1 .. D24.4\n'); wait;
+  END;
+  intreq1;
+  cond(9); b(bfa,0); b(bfb,0); b(bfa,1); b(bfb,1);
+  cond(6);
+  intreq0;
+  FOR i:=0 TO 7 DO
+    b(bfa,0); intreq0;
+    b(bfb,0); intreq0;
+    b(bfa,1); intreq0;
+    b(bfb,1); intreq1;
+    b(bfa,0); intreq1;
+    b(bfb,0); intreq1;
+    b(bfa,1); intreq1;
+    b(bfb,1); intreq0;
+  END;
+  regwr(0,0FFFFFFFFh);
+  a(bmF0,0); a(bmF1,1); a(bmF2,0); a(bmF3,1);
+  a(bmF4,1); a(bmF5,1); a(bmF6,0); a(bmF7,1);
+  a(bmCI0,1); a(bmCI1,1); -- ALU=A
+  a(bmAA0,0); a(bmAA1,0); a(bmAA2,0); a(bmAA3,0); a(bmRDA,1); -- bus_A=R0
+  cond(9); intreq1;
+  cond(2); intreq0;
+  b(bfa,0); intreq0;
+  b(bfb,0); intreq0;
+  b(bfa,1); intreq0;
+  b(bfb,1); intreq0;
+  regwr(0,0FFFFFFFEh);
+  a(bmF0,0); a(bmF1,1); a(bmF2,0); a(bmF3,1);
+  a(bmF4,0); a(bmF5,1); a(bmF6,0); a(bmF7,0);
+  a(bmCI0,1); a(bmCI1,1); a(bmALUEN,1); -- ALU=A
+  a(bmAA0,0); a(bmAA1,0); a(bmAA2,0); a(bmAA3,0);
+  a(bmRDA,1); a(bmWRA,1); -- bus_A=RW_R0
+  FOR i:=0 TO 41 DO
+    b(bfa,0); intreq1;
+    b(bfb,0); intreq1;
+    b(bmBUSD1,0); b(brestart,1);
+    n:=bd?();
+    IF BITSET(n)#(BITSET(1<<(i+1))/{0..31}) THEN
+      print('На шине B низкий уровень должен быть только в разряде %d.\n',
+             (i+1) MOD 32);
+      wait;
+    END;
+    b(bmBUSD1,1);
+    b(bfa,1); intreq1;
+    b(bfb,1); intreq1;
+  END;
+  b(bmRDA,0); b(bmWRA,0); b(bmALUEN,0);
+END testflag;
+
+PROCEDURE testalu;
+BEGIN
+
+END testalu;
+
+VAR i: INTEGER;
+
+BEGIN
+  power(TRUE,0);
+  FOR i:=1 TO 192 DO input(i) END;
+  FOR i:=1 TO 192 DO a(i,0) END;
+  output(bmF0,bmF1,bmF2,bmF3,bmF4,bmF5,bmF6,bmF7,
+         bmAA0,bmAA1,bmAA2,bmAA3,bmAB0,bmAB1,bmAB2,bmAB3,bmRDA,bmRDB,
+         bmWRA,bmWRB,bmCI0,bmCI1,bmALUEN,bmSHIFTEN,bmRDSTK,bmWRSTK,
+         bmRDCONST,bmSREG,bmNEXT,bmBUSD0,bmBUSD1,brestart,const0,
+         const1,const2,const3,const4,const5,const6,const7,bmCOND0,
+         bmCOND1,bmCOND2,bmCOND3,bmDECCNT,bfa,bfb);
+  b(bmBUSD1,1);
+  b(brestart,1);
+  b(bmRDSTK,1);
+  b(bmWRSTK,1);
+  b(bfa,1);
+  b(bfb,1);
+  FOR i:=-2 TO 2 DO
+    power(TRUE,i);
+    print('test data bus\r'); testbd;
+    print('test const   \r'); testconst;
+    print('test regs    \r'); testrg;
+    print('test regs    \r'); testalu;
+    print('test cash    \r'); testcash;
+    print('test shifter \r'); testsh;
+    print('test stack   \r'); teststk;
+    print('test flag    \r'); testflag;
+  END;
+END alu6.

@@ -1,0 +1,748 @@
+%      (* Andy 18-Sep-87. (c) KRONOS *)
+
+
+
+:twNEWM
+        [ CALL ADR=twCHK_ARG ]
+        [ ALU=ROR(A) bus_A=RW_R2                % R2 = 1 << R1
+          CALL ADR=twSET_REG ]
+        [ ALU=ROL(A) bus_A=RW_R1 ]
+        [ ALU=A+B    bus_A=RW_R1 bus_B=PC ]     % R1 - абс. адрес входа
+        [ ALU=A+B    bus_A=PC CONST->R3 D=24 ]  % R3 - абс. адрес посл. входа
+ :search
+        [ bus_B=R1    RD_MEM_A ]
+        [ bus_B=WR_L  RD_MEM_D ]
+        [ ALU=A_BIC_B bus_A=RW_L bus_B=G ]      % L=clean(list^.next)
+        [ ALU=A-B bus_A=R1 bus_B=L FLAG=Z ]     % TRUE если вход пуст
+        [ ALU=A-B bus_A=R1 bus_B=R3 FLAG=Z      % TRUE если вход последний
+          GO_FALSE ADR=MEM_GOT ]
+        [ ALU=ROL(A) bus_A=RW_R2 ]
+        [ ALU=A+1 bus_A=RW_R1
+          GO_TRUE ADR=twNO_MEMORY ]
+        [ ALU=A+1 bus_A=RW_R1 GOTO ADR=search ]
+
+:MEM_GOT
+% R1 - абс. адрес входа  L - адрес найденного блока
+        [ CALL ADR=twUNLINK ]
+        [ ALU=A bus_A=L bus_B=WR_R3 ]
+        [ ALU=ROR(A-B) bus_A=RW_R3 bus_B=P CALL ADR=getScale ]
+        [ ALU=A_BIC_B  bus_A=RW_R4 bus_B=R6 CALL ADR=wrScale ]
+        % Вывязали блок из списка и исключили его из шкалы
+
+        [ ALU=ROR(A-B) bus_A=RW_R1 bus_B=PC ]     % R1:=ранг выдел. блока
+:split
+        [ ALU=A-B bus_A=Etop bus_B=R1 FLAG=Z ]
+% R1 - ранг блока L, R3 - его номер, R2 - его маска. R2=1<<R1
+        [ ALU=A-1 bus_A=RW_R1
+          GO_TRUE ADR=twEXIT_NEWM ]
+        [ ALU=ROR(A) bus_A=RW_R2 ]
+        [ ALU=A_OR_B bus_A=RW_R3 bus_B=R2
+                                 % Получили номер старшей половины блока
+        % Нужно вернуть памяти блок (#R3 rang:R1 mask:R2)
+          CALL ADR=twLINK ]
+        [ CALL ADR=getScale ]
+        [ ALU=A_OR_B  bus_A=RW_R4 bus_B=R6 CALL ADR=wrScale ]
+        [ ALU=A_BIC_B bus_A=RW_R3 bus_B=R2 % Восстановили R3=номер блока L
+          GOTO ADR=split ]
+
+:twEXIT_NEWM
+        [ ALU=A bus_A=L bus_B=WR_Etop ] % Адрес результата - на стек
+        [ bus_A=STACK->R6 CALL ADR=twREST_REG ]
+        [ FLAG=ZERO FINISH ]
+:twNO_MEMORY % На верхушке стека остается не сам запрос в словах,
+             % а макс. запрос его ранга!
+        [ ALU=ROL(A) bus_A=R2 bus_B=WR_Etop ]
+        [ bus_A=STACK->R6 CALL ADR=twREST_REG ]
+        [ bus_A=R6->STACK CALL ADR=BACK_2 ]
+        [ CONST->R1 D=4E FLAG=ZERO ]
+        [ GOTO ADR=TRAPED ]
+%%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%
+
+:twRETM
+        [ bus_A=STACK->R4 CALL ADR=twCHK_ARG ]
+        [ ALU=A bus_A=R4 bus_B=WR_L CALL ADR=twSET_REG ]
+        [ ALU=A-B bus_A=RW_L bus_B=P FLAG=CARRY ]
+        [ ALU=A-1 bus_A=RW_R2                     % R2=0..01..1 (rang+1)
+          GO_FALSE ADR=twBAD_ADR ]
+        [ ALU=A_AND_B bus_A=L bus_B=R2 FLAG=Z ]
+        [ ALU=ROR(A) bus_A=RW_L                   % L - номер блока
+          GO_FALSE ADR=twBAD_ADR ]
+        [ ALU=ROR(A+1) bus_A=RW_R2 ]              % R2 - маска номера L
+        [ ALU=A bus_A=L bus_B=WR_R3 ]
+:twCHECK
+        [ ALU=A_XOR_B bus_A=RW_R3 bus_B=R2        % R3 - номер близнеца
+          CALL ADR=getScale ]
+        [ ALU=A_AND_B bus_A=R4 bus_B=R6 FLAG=Z ]
+        [ ALU=ROL(A) bus_A=R3 bus_B=WR_L
+          GO_TRUE ADR=TWIN_OCC ]
+        [ ALU=A+B bus_B=RW_L bus_A=P RD_MEM_A ]
+        [ bus_B=WR_R5 RD_MEM_D ]
+        [ ALU=A_AND_B bus_A=R5 bus_B=G FLAG=Z ]
+        [ ALU=A_XOR_B bus_A=RW_R6 bus_B=R6        % R6:=0
+          GO_FALSE ADR=compRangs ]
+        [ ALU=A+B bus_A=L CONST D=2 RD_MEM_A ]
+        [ bus_B=WR_R6               RD_MEM_D ]
+ :compRangs % В R6 - ранг свободного близнеца
+        [ ALU=A-B bus_A=Etop bus_B=R6 FLAG=Z ]
+        [ ALU=A bus_A=R3 bus_B=WR_R6              % R6:=R3
+          GO_FALSE ADR=TWIN_OCC ]
+        [ ALU=A+1 bus_A=L  RD_MEM_A ]
+        [ bus_B=WR_R1      RD_MEM_D CALL ADR=twUNLINK ]
+        [ ALU=A bus_A=R6 bus_B=WR_R3 CALL ADR=getScale ]
+        [ ALU=A_BIC_B bus_A=RW_R4 bus_B=R6 CALL ADR=wrScale ]
+   % Полностью вычеркнули близнеца #R3 из свободных
+        [ ALU=A_BIC_B bus_A=RW_R3 bus_B=R2 ]      % R3 - номер мл. близнеца
+        [ ALU=A+1 bus_A=RW_Etop ]
+        [ ALU=ROL(A) bus_A=RW_R2 GOTO ADR=twCHECK ]
+
+:TWIN_OCC % R3 - номер занятого близнеца
+        [ ALU=A_XOR_B bus_A=RW_R3 bus_B=R2 ]      % R3 - номер блока
+        [ ALU=A bus_A=Etop bus_B=WR_R1 CALL ADR=twLINK ]
+        [ CALL ADR=getScale ]
+        [ ALU=A_OR_B bus_A=RW_R4 bus_B=R6 CALL ADR=wrScale ]
+% Кончаем команду
+        [ bus_A=STACK->R6 CALL ADR=twREST_REG ]
+        [ bus_A=STACK->Etop FLAG=ZERO FINISH ]
+
+:twBAD_ADR
+        [ bus_A=STACK->R6 CALL ADR=twREST_REG ]
+        [ bus_A=R6->STACK GOTO ADR=DM_FAIL ]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:twUNLINK
+% Вывязать блок из списка свободных.
+% Адрес блока - L, адрес предыдущего - R1
+% Портятся: R3, R5.
+        [ bus_B=L     RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]          % R3= dirty(L^.next)
+        [ bus_B=R1    WR_MEM_A ]
+        [ bus_B=R3    WR_MEM_D ]
+        [ ALU=A_BIC_B bus_A=RW_R3 bus_B=G ]
+        [ ALU=A+1 bus_A=L  RD_MEM_A ]
+        [ bus_B=WR_R5      RD_MEM_D ]
+        [ ALU=A+1 bus_A=R3 WR_MEM_A ]
+        [ bus_B=R5         WR_MEM_D RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:twLINK
+% Вернуть памяти блок (#R3 rang:R1 mask:R2)
+% Портятся R4,R5,R6
+        [ ALU=ROL(A) bus_A=RW_R3 ]
+        [ ALU=A+B    bus_A=RW_R3 bus_B=P ]           % R3 - адрес блока
+        [ ALU=ROL(A) bus_A=R1 bus_B=WR_R4 ]
+        [ ALU=A+B    bus_A=PC bus_B=RW_R4 RD_MEM_A ] % R4 - адрес входа
+        [ bus_B=WR_R5         RD_MEM_D ]             % R5= dirty(list^.next)
+        [ bus_B=R3   WR_MEM_A ]
+        [ bus_B=R5   WR_MEM_D ]    % R3^.next:=R5
+        [ ALU=A+1 bus_A=R3 WR_MEM_A ]
+        [ bus_B=R4   WR_MEM_D ]    % R3^.prev:=R4
+        [ ALU=A bus_A=R1 FLAG=Z ]
+        [ ALU=A bus_A=R3 bus_B=WR_R6
+          GO_TRUE ADR=rang0 ]
+        [ ALU=A+B bus_A=R3 CONST D=2 WR_MEM_A ]
+        [ bus_B=R1 WR_MEM_D GOTO ADR=link1 ]
+ :rang0 [ ALU=A_OR_B bus_A=RW_R6 bus_B=G ]
+ :link1 [ bus_B=R4 WR_MEM_A ]
+        [ bus_B=R6 WR_MEM_D ]    % R4^.next:=dirty(R3)
+        [ ALU=A_BIC_B bus_A=RW_R5 bus_B=G ]
+        [ ALU=A+1 bus_A=R5 WR_MEM_A ]
+        [ bus_B=R3         WR_MEM_D ]
+        [ ALU=ROR(A-B) bus_A=RW_R3 bus_B=P           % R3 - номер блока
+          RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:getScale
+% По номеру блока в R3 занести в R5 адрес соотв. слова шкалы,
+% в R4 - само это слово
+% и в R6 соотв. маску для этого слова.
+        [ ALU=ROR(A_BIC_B) bus_A=R3 CONST->R5 D=1F ]
+        [ ALU=ROR(A) bus_A=RW_R5 ]
+        [ ALU=ROR(A) bus_A=RW_R5 ]
+        [ ALU=ROR(A) bus_A=RW_R5 ]
+        [ ALU=ROR(A) bus_A=RW_R5 ]
+        [ ALU=A+B    bus_B=RW_R5 bus_A=H RD_MEM_A ]
+        [ bus_B=WR_R4 RD_MEM_D ]
+        [ CONST->R6 D=1 ]
+        [ ALU=A_AND_B bus_A=R3 CONST D=1F LOAD_CNT ]
+  :sc1  [ SHIFT=sc1 bus_B=RW_R6 ]
+        [ RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:wrScale
+% Записать слово в шкалу
+        [ bus_B=R5     WR_MEM_A ]
+        [ bus_B=R4     WR_MEM_D  RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:twCHK_ARG
+% После успешного окончания проверки:
+% Etop= R1= ранг запроса
+% R2= 1 << (Etop+1)
+% G= 10...0
+% R6= дескриптор памяти
+% R4 - не портится
+        [ ALU=B-A bus_A=Etop CONST D=0 FLAG=CARRY ] % IF Etop<=0 THEN
+        [ ALU=A_XOR_B bus_A=RW_R1 bus_B=R1          % R1:=0
+          GO_TRUE ADR=DM_FAIL ]                     % GOTO DM_FAIL
+        [ CONST->R2 D=2 ]
+        [ CONST->R3 D=12 ]                          % R3:=MaxRang
+ :rang1 [ ALU=A-B bus_A=R2 bus_B=Etop FLAG=CARRY ]
+        [ ALU=A-B bus_A=R1 bus_B=R3 FLAG=Z
+          GO_TRUE ADR=RangReady ]
+        [ ALU=A+1 bus_A=RW_R1
+          GO_TRUE ADR=DM_FAIL ]
+        [ ALU=ROL(A) bus_A=RW_R2 GOTO ADR=rang1 ]
+ :RangReady  % R1=rang(Etop) R2=1<<(R1+1)
+        [ bus_A=STACK->R6 ]             % Под дескриптором памяти на стеке
+        [ bus_A=G->STACK  ]             % сохраняем регистры
+        [ bus_A=L->STACK  ]
+        [ bus_A=P->STACK  ]
+        [ bus_A=PC->STACK ]
+        [ bus_A=H->STACK  ]
+        [ ALU=ROR(B) bus_A=WR_G CONST D=1 ] % G:=10...0
+        [ ALU=A bus_A=R1 bus_B=WR_Etop ]
+        [ bus_A=R6->STACK RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:twREST_REG % Восстановить регистры процесса
+        [ bus_A=STACK->H  ]
+        [ bus_A=STACK->PC ]
+        [ bus_A=STACK->P  ]
+        [ bus_A=STACK->L  ]
+        [ bus_A=STACK->G RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:twSET_REG
+        [ ALU=A+B bus_A=R6 CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_P                 RD_MEM_D ] % P = адрес раб. памяти
+        [ ALU=A+B bus_A=R6 CONST D=1 RD_MEM_A ]
+        [ bus_B=WR_H                 RD_MEM_D ] % H = адрес шкалы
+        [ ALU=A+B bus_A=R6 CONST D=2 RD_MEM_A ]
+        [ bus_B=WR_PC                RD_MEM_D   % PC= адрес таблицы входов
+          RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%                   (* Andy 30-Apr-87. (c) KRONOS *)
+%                   (* Andy 26-Aug-87. (c) KRONOS *)
+%                   (* Andy 02-Sep-87. (c) KRONOS *)
+%                   (* Andy 04-Sep-87. (c) KRONOS *)
+%                   (* Andy 07-Sep-87. (c) KRONOS *)
+%                           Версия без использования регистра P
+%                           Регистры L, G сохраняются в стеке
+%                           и используются в качестве рабочих констант
+%
+%     KRONOS P2.5-P2.6 FirmWare
+%
+%
+%  Команда USER
+%    коды функций:      0 - newm
+%                       1 - retm
+
+% (* Andy 12-Sep-87. (c) KRONOS *)
+% Изменена подпрограмма CHK_ARG и вход в команду RETM: работа с R4
+
+%:USR 0FBh      [ UPDATE_CASH ]
+%               [ ALU=B bus_B=WR_R1 INC_PC FLAG=Z GOTO ADR=USER_SWITCH ]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Команда USER                                                    %
+%    коды функций:      0 - Polar Check Sequence Index             %
+%                       1 - Polar Check Union Tag                  %
+%                       2 - newm (linear memory manager)           %
+%                       3 - retm (linear memory manager)           %
+%                       4 - newm (twin memory manager)             %
+%                       5 - retm (twin memory manager)             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+:USER_SWITCH
+        [ ALU=A-1 bus_A=RW_R1 FLAG=Z GO_TRUE ADR=CHK_INX ]
+        [ GO_TRUE ADR=CHK_TAG
+          ALU=A-1 bus_A=RW_R1 FLAG=Z ]
+        [ GO_TRUE ADR=NEWM
+          ALU=A-1 bus_A=RW_R1 FLAG=Z ]
+        [ GO_TRUE ADR=RETM
+          ALU=A-1 bus_A=RW_R1 FLAG=Z ]
+        [ GO_TRUE ADR=twNEWM
+          ALU=A-1 bus_A=RW_R1 FLAG=Z ]
+        [ GO_TRUE ADR=twRETM ]
+        [ CALL ADR=DEC_PC ]
+        [ CALL ADR=DEC_PC ]
+        [ CONST->R1 D=7 ]
+        [ GOTO ADR=TRAPED ]
+
+%   Протокол команды newm: на стеке (от вершины вниз) -
+%                     - Длина требуемого блока в словах
+%                     - Адрес дескриптора динамической памяти
+%                                    (Ring)
+%   Структура дескриптора: три слова -
+%       - дескриптор процесса, работающего в дин. памяти
+%         ( 0 если дин. память никем не занята )
+%         старший бит дескриптора - флаг запроса какого-либо процесса
+%         на операцию с кольцом
+%       - начальный указатель кольца
+%       - конечный  указатель кольца
+%
+%   После выполнения: на стеке словный адрес выделенного блока.
+%   При неудаче планировщика аргументы команды сохраняются на стеке
+%   и возбуждается TRAP 4Eh
+%
+
+:NEWM
+        [ CALL ADR=CHK_ARG ]            % Проверили корректность аргумента
+        [ CALL ADR=CHK_PDESCR ]
+                % FLAG=FALSE, если кольцо занимает чужой процесс
+        [ GO_FALSE ADR=FORC_TRAP
+          ALU=A bus_A=R5 FLAG=Z ]
+% В R2 - адрес дескриптора кольца, в R5 - дескр. процесса
+% FLAG=TRUE, если R5=0 (кольцо свободно)
+        [ ALU=A+1 bus_A=R2 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A_AND_B bus_A=RW_R3 bus_B=G GO_TRUE ADR=FIRST_ENTER ]
+                                                 % R3==StartPtr (clean)
+:RE_ENTER
+        [ ALU=A+B bus_A=R2 CONST D=2 RD_MEM_A ]
+        [ bus_B=WR_R4 RD_MEM_D
+          GOTO ADR=NEWM_BEGIN ]                  % R4==EndPtr (from Memory)
+        % В памяти EndPtr всегда "чистый"
+:FIRST_ENTER
+        [ ALU=A+B bus_A=R2 CONST D=2 WR_MEM_A ]
+        [ bus_B=R3 WR_MEM_D ]  % Записали StartPtr в дескр. как EndPtr
+        [ ALU=A bus_A=R3 bus_B=WR_R4
+          GOTO ADR=NEWM_BEGIN ]             % R4==EndPtr (==R3)
+
+% Forcing Trap
+% Внимание - Forcing Trap 0Dh происходит при разных состояниях стека и PC
+%            (как перед исполнением команды, так и после исполнения )
+:FORC_TRAP % В R5 - "чистый" дескриптор процесса, занимающего кольцо
+           % В R2 - адрес дескриптора кольца
+        [ ALU=A_OR_B bus_A=RW_R5 bus_B=L ] % Выставили старший бит в R5
+        [ bus_B=R2 WR_MEM_A ]
+        [ bus_B=R5 WR_MEM_D
+          CALL ADR=BACK_2 ]
+% Выставили в дескрипторе чужого процесса старший бит и записали
+% в дескриптор кольца. Сдвинули свой PC.
+:EXIT_TRAP
+        [ CONST->R1 D=7D FLAG=ZERO ]
+        [ GOTO ADR=TRAPED ] % Forcing Trap - 7Dh
+
+:NEWM_BEGIN
+% Начинаем поиск по кольцу. EndPtr дескриптора кольца уже подготовлен
+% В R1 нужно считать d~next(R3)
+
+        [ CONST->R2 D=20 ]
+        [ ALU=A bus_A=R3 RD_MEM_A ]
+        [ bus_A=R2->STACK                   % В стек засунули счетчик 20h
+          bus_B=WR_R1    RD_MEM_D ]
+
+% R3==p STACK==counter  R1==d~q                         R4==EndPtr
+:LOOP1  [ CALL ADR=GET_NEXT_BLK ]
+% R3==p STACK==counter R1==d~q R2==q R6==size(q) R5==d~next(q) R4==EndPtr
+        [ ALU=A-B bus_A=RW_R6 bus_B=Etop FLAG=CARRY ]
+                      % FLAG=TRUE, if R6>=Etop (size(q) >= request)
+        [ GO_FALSE ADR=CHK_END1         % Блок не подходит
+          ALU=A bus_A=R6 FLAG=Z ]       % R6 - размер остатка блока q
+        % Если нашли подходящий блок, R4 уже не нужен
+        % Результат запроса уже известен - (R2+R6). Заносим в Etop
+        [ ALU=B bus_A=WR_Etop bus_B=R2 ]
+        [ ALU=A+B bus_A=RW_Etop bus_B=R6 ]
+        [ GO_TRUE ADR=GIVE_WHOLE
+          ALU=A-1 bus_A=R6 FLAG=Z ]
+        [ ALU=A_OR_B bus_A=RW_R5 bus_B=L  % R5==next(q) с выст.бит.
+          GO_TRUE ADR=CUT_1     ]       % Остаток блока = 1
+ :CUT_N [ ALU=A+1 bus_A=R2 WR_MEM_A ]
+        [ bus_B=R6 WR_MEM_D GOTO ADR=EXIT_NEWM ]
+ :CUT_1 % R5==next(q) с выст.бит.
+        [ ALU=A bus_A=R2 WR_MEM_A ]
+        [ bus_B=R5 WR_MEM_D GOTO ADR=EXIT_NEWM ]
+:GIVE_WHOLE
+        [ ALU=A_AND_B bus_A=RW_R5 bus_B=G ]
+        [ ALU=A_AND_B bus_A=RW_R1 bus_B=L ]
+        [ ALU=A_OR_B  bus_A=RW_R5 bus_B=R1 ]
+%%%        [ ALU=A&NP+B&P bus_A=RW_R5 bus_B=R1 ]
+        [ bus_B=R3 WR_MEM_A ]
+        [ bus_B=R5 WR_MEM_D ]
+
+:EXIT_NEWM
+% По Exit Newm выполняются действия:
+%  - на стеке уже лежит адрес выделенного блока
+%  - в дескриптор кольца пишется
+%        (0, p, ... )
+%  Флаг запроса от других процессов сбрасывается, но если он
+%  был выставлен, то возбуждается Forcing Trap, иначе команда
+%  кончается нормально.
+% В стеке: счетчик и адрес дескриптора кольца.
+        [ bus_A=STACK->R1 ] % Выкинули счетчик цикла
+        [ ALU=A bus_A=STACK->R5 RD_MEM_A ]
+        [ bus_B=WR_R1           RD_MEM_D ]
+        % На стеке - только рез-т запроса,
+        % в R1 - старый дескриптор процесса, в R5 - дескриптор кольца
+        [ ALU=A_XOR_B bus_A=RW_R4 bus_B=R4       % R4==0
+          CALL ADR=WR_RING2 ]
+        [ ALU=A_AND_B bus_A=R1 bus_B=L FLAG=Z
+          CALL ADR=REST_LG ]
+        [ FLAG=ZERO GO_FALSE ADR=EXIT_TRAP ]
+:DM_fin [ FINISH ]
+
+:CHK_END1
+% R3==p STACK==counter R1==d~q R2==q             R5==d~next(q) R4==EndPtr
+        [ ALU=A-B bus_A=R2 bus_B=R4 FLAG=Z ]     % if (q=EndPtr)
+        [ GO_TRUE ADR=NO_MEMORY      ]
+        [ ALU=A-1 bus_A=STACK->R6 FLAG=Z ]
+        [ ALU=A bus_A=R2 bus_B=WR_R3             % R3==R2
+          GO_TRUE ADR=REENT_NEWM ]               % Счетчик исчерпан
+        [ ALU=A bus_A=R5 bus_B=WR_R1 ]           % R1==R5
+        [ bus_A=R6->STACK GOTO ADR=LOOP1 ]
+
+:REENT_NEWM
+% По ReEnter Newm выполняются действия:
+%  - протокол команды на стеке уже восстановлен
+%  - восстанавливается PC
+%  - в дескриптор кольца пишется
+%        (дескриптор данного процесса, q, ... )
+%  Флаг запроса от других процессов сохраняется
+        [ ALU=A bus_A=STACK->R5       RD_MEM_A ]
+        [                 bus_B=WR_R4 RD_MEM_D ]
+        % На стеке - все по-прежнему,
+        % в R4 - старый дескриптор процесса, в R5 - дескриптор кольца
+
+        [ ALU=A_AND_B bus_A=RW_R4 bus_B=L ]
+        [ ALU=A_OR_B  bus_A=P bus_B=RW_R4
+          CALL ADR=WR_RING2 ]
+%%         [ ALU=A&NP+B&P bus_A=P bus_B=RW_R4
+%%           CALL ADR=WR_RING2 ]
+        [ CALL ADR=REST_LG ]
+        [ bus_A=R5->STACK CALL ADR=BACK_2 ]
+        [ FLAG=ZERO FINISH ]
+
+:NO_MEMORY
+% По No Memory выполняются действия:
+%  - восстанавливается протокол команды на стеке
+%  - восстанавливается PC
+%  - в дескриптор кольца пишется
+%        (0, q, ... )
+%  Флаг запроса от других процессов сбрасывается
+% В стеке: счетчик и адрес дескриптора кольца.
+        [ bus_A=STACK->R1 ] % Выкинули счетчик цикла
+        [ bus_A=STACK->R5 CALL ADR=REST_LG ]
+        % На стеке - только запрос, в R5 - дескриптор кольца, R4=0
+        [ bus_A=R5->STACK CONST->R4 D=0 ]      % Восстановили стек
+        [ ALU=A bus_A=R2 bus_B=WR_R3
+          CALL ADR=WR_RING2 ]
+        [ CALL ADR=BACK_2 ]
+        [ CONST->R1 D=4E ] [ FLAG=ZERO GOTO ADR=TRAPED ]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Подпрограмма проверки аргумента запроса к планировщику памяти
+% Аргумент проверяется только на >0.
+% Запросы на 1 слово являются допустимыми.
+% После проверки: в R1 - адрес дескриптора кольца
+% L=10..0   G=01..1
+:CHK_ARG
+% ??? Можно проверить сразу на >0 вычитанием 0-Etop FLAG=CARRY ???
+        [ ALU=B-A bus_A=Etop CONST D=0 FLAG=CARRY ] % IF Etop<=0 THEN
+        [ GO_TRUE ADR=DM_FAIL ]                     % GOTO DM_FAIL
+        [ bus_A=STACK->R1 ]             % Вытащили адрес деск. кольца
+        [ bus_A=G->STACK ] [ bus_A=L->STACK ]
+        [ bus_A=R1->STACK ]
+        [ ALU=ROR(B) CONST->L D=1 bus_A=WR_G ]
+        [ ALU=NE(A) bus_A=RW_G RETURN ]
+:DM_FAIL
+% PC стоит на втором байте команды USER (на коде команды NEWM или RETM).
+% Сдвигаем PC назад на начало команды и прерываемся.
+% Внимание! Для RETM протокол на стеке восстановлен полностью,
+%           для NEWM под вершиной стека лежит лишнее слово - мусор.
+        [ CALL ADR=BACK_2 ]
+        [ CONST->R1 D=4F FLAG=ZERO ]
+        [ bus_A=R4->STACK GOTO ADR=TRAPED ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% R3==p R1==d~q
+% R3==p R1==d~q R2==q R6==size(q) R5==d~next(q)
+% Подпрограмма распаковки следующего свободного блока
+% В R3 - "чистый"  адрес блока A.
+% В R1 - "грязный" адрес блока next(A).
+% После работы - в R2 - чистый адрес next(A)
+%                в R6 - длина блока next(A)
+%                в R5 - грязный адрес next(next(A)).
+% R4 не портится
+:GET_NEXT_BLK
+        [ ALU=ROR(B) CONST->R6 D=1 bus_A=WR_R2 ]    % R2==R6=={10...0}
+        [ ALU=A_BIC_B bus_A=R1 bus_B=RW_R2
+          RD_MEM_A ]
+        [ bus_B=WR_R5 RD_MEM_D ]
+        [ ALU=A_AND_B bus_A=R5 bus_B=R6 FLAG=Z ]
+        [ ALU=ROL(A) bus_A=RW_R6                % R6==1
+          RETURN_FALSE ]
+        [ ALU=A+1 bus_A=R2 RD_MEM_A ]
+        [ bus_B=WR_R6      RD_MEM_D RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Подпрограмма проверки на занятость кольца памяти другим процессом.
+% Под верхушкой стека лежит адрес дескриптора кольца,
+% который там же и сохраняется. Он предполагается "чистым".
+% В R5 заносится "чистый" дескриптор процесса, занимающего кольцо.
+% После возвращения из подпрограммы
+%     - FLAG выставлен в FALSE, если это чужой процесс;
+%     - в R2 лежит адрес дескриптора кольца.
+:CHK_PDESCR
+        [ ALU=A bus_A=STACK->R2 RD_MEM_A ]
+        [ bus_A=R2->STACK bus_B=WR_R5 RD_MEM_D ]
+                        % В R5 - "грязный" дескриптор процесса, заним. кольцо
+        [ ALU=A_AND_B bus_A=RW_R5 bus_B=G FLAG=Z ]
+        [ RETURN_TRUE ]
+        [ ALU=A-B bus_A=R5 bus_B=P FLAG=Z RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Подпрограмма записи первых двух слов дескриптора кольца:
+:WR_RING2
+        [ ALU=A bus_A=R5   WR_MEM_A ]
+        [ bus_B=R4         WR_MEM_D ]
+        [ ALU=A+1 bus_A=R5 WR_MEM_A ]
+        [ bus_B=R3         WR_MEM_D
+          RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%   Протокол команды retm: на стеке (от вершины вниз) -
+%                     - Длина возвращаемого блока в словах
+%                     - Словный адрес блока
+%                     - Адрес дескриптора динамической памяти
+%                                    (Ring)
+%   После выполнения: со стека счеркивается три слова
+%
+
+:RETM
+
+
+        [ bus_A=STACK->R4               % В R4 - адрес возвращ. блока
+          CALL ADR=CHK_ARG ]            % Проверили корректность аргумента
+        [ CALL ADR=CHK_PDESCR ]
+                % FLAG=FALSE, если кольцо занимает чужой процесс
+% В R2 - адрес дескриптора кольца, в R5 - дескр. процесса
+        [ GO_TRUE ADR=RETM_BEGIN ]
+        [ bus_A=R4->STACK GOTO ADR=FORC_TRAP ]
+
+:RETM_BEGIN
+        [ CONST->R6 D=20 ]
+        [ ALU=A+1 bus_A=R2 RD_MEM_A ]
+        [ bus_A=R6->STACK                   % В стек засунули счетчик 20h
+          bus_B=WR_R3      RD_MEM_D ]               % R3==d~StartPtr
+        [ ALU=A_AND_B bus_A=RW_R3 bus_B=G ]         % R3==StartPtr
+
+% R3==p STACK==counter                                         R4==RetBlk
+:LOOP   [ ALU=A bus_A=R3 RD_MEM_A ]
+        [ bus_B=WR_R1    RD_MEM_D ]
+        [ ALU=ROR(B) bus_A=WR_R2 CONST D=1 ]
+        [ ALU=A_BIC_B bus_A=R1 bus_B=RW_R2 ]        % R2==q  R1==d~q
+% R3==p STACK==counter R1==d~q R2==q                           R4==RetBlk
+
+        [ ALU=A-B bus_A=R3 bus_B=R2 FLAG=CARRY ]
+        [ GO_FALSE ADR=Normal_CASE
+          ALU=A-B bus_A=R3 bus_B=R4 FLAG=CARRY ]
+        [ GO_FALSE ADR=Link_IN                      % Присоединить блок
+                                                    % к списку справа
+          ALU=A-B bus_A=R4 bus_B=R2 FLAG=CARRY ]
+        [ GO_FALSE ADR=Link_IN  ]                   % Присоединить блок
+                                                    % к списку слева
+:NOT_FIT
+        [ ALU=A bus_A=R2 bus_B=WR_R3 GOTO ADR=CHK_END ]
+:Normal_CASE
+        [ ALU=A-B bus_A=R3 bus_B=R4 FLAG=CARRY ]
+        [ GO_TRUE ADR=NOT_FIT
+          ALU=A-B bus_A=R4 bus_B=R2 FLAG=CARRY ]
+        [ GO_TRUE ADR=NOT_FIT ]
+:Link_IN
+        [ ALU=A bus_A=Etop bus_B=WR_R5 CALL ADR=LINK_BLKS ]
+        [ ALU=A bus_A=R3   bus_B=WR_R1 CALL ADR=GET_LEN ]   % R2 испорчен
+        [ ALU=A bus_A=R4   bus_B=WR_R2 ]
+        [ ALU=A bus_A=R6   bus_B=WR_R5 ]
+        [ ALU=A bus_A=R3   bus_B=WR_R4 CALL ADR=LINK_BLKS ]
+:EXIT_RETM
+% По Exit Retm выполняются действия:
+%  - на стеке лежат: длина возвращаемого блока, счетчик и дескр. кольца
+%    Все три слова сбрасываются со стека
+%  - в дескриптор кольца пишется
+%        (0, p, ... )
+%  Флаг запроса от других процессов сбрасывается, но если он
+%  был выставлен, то возбуждается Forcing Trap, иначе команда
+%  кончается нормально.
+        [ bus_A=STACK->R1 ] % Выкинули счетчик цикла
+        [ ALU=A bus_A=STACK->R5 RD_MEM_A ]
+        [ bus_B=WR_R1           RD_MEM_D ]
+        % На стеке - только длина блока,
+        % в R1 - старый дескриптор процесса, в R5 - дескриптор кольца
+        [ ALU=A_XOR_B bus_A=RW_R4 bus_B=R4       % R4==0
+          CALL ADR=WR_RING2 ]
+        [ ALU=A_AND_B bus_A=R1 bus_B=L FLAG=Z CALL ADR=REST_LG ]
+        [ bus_A=STACK->Etop
+          FLAG=ZERO GO_FALSE ADR=EXIT_TRAP ]
+        [ FINISH ]
+:CHK_END
+% R3==q STACK==counter         R2==q                           R4==RetBlk
+        [ ALU=A-1 bus_A=STACK->R6 FLAG=Z ]
+        [ GO_TRUE ADR=REENT_RETM ]               % Счетчик исчерпан
+        [ bus_A=R6->STACK GOTO ADR=LOOP ]
+
+:REENT_RETM
+% По ReEnter Retm выполняются действия:
+%  - восстанавливается протокол команды на стеке
+%  - восстанавливается PC
+%  - в дескриптор кольца пишется
+%        (дескриптор данного процесса, q, ... )
+%  Флаг запроса от других процессов сохраняется
+        [ ALU=A bus_A=R4 bus_B=WR_R1 ]           % R1:=R4
+        [ ALU=A bus_A=STACK->R5       RD_MEM_A ]
+        [                 bus_B=WR_R4 RD_MEM_D ]
+        % На стеке - ничего,
+        % в R4 - старый дескриптор процесса, в R5 - дескриптор кольца
+        [ ALU=A_AND_B bus_A=RW_R4 bus_B=L CALL ADR=REST_LG ]
+        [ ALU=A_OR_B  bus_A=P bus_B=RW_R4
+          CALL ADR=WR_RING2 ]
+%%%        [ ALU=A&NP+B&P bus_A=P bus_B=RW_R4
+%%%          CALL ADR=WR_RING2 ]
+        [ bus_A=R5->STACK CALL ADR=BACK_2 ]
+        [ bus_A=R1->STACK FLAG=ZERO FINISH ]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Подпрограмма определения длины блока
+% R1 - чистый адрес блока
+% После работы в R6 - его длина
+%              в R2 - clean~next(R1)
+:GET_LEN
+        [ ALU=A bus_A=R1 RD_MEM_A ]
+        [ bus_B=WR_R2    RD_MEM_D ]       % R2:=R1^
+        [ ALU=A+B bus_A=R2 bus_B=R2 FLAG=CARRY ]
+                        % FLAG=TRUE при выставленном старшем бите ???
+        [ CONST->R6 D=1 ]
+        [ ALU=A_AND_B bus_A=RW_R2 bus_B=G RETURN_TRUE ]
+                        % Очистили R2        NB: {10...0}&{0...01}={0...0}
+        [ ALU=A+1 bus_A=R1 RD_MEM_A ]
+        [ bus_B=WR_R6      RD_MEM_D RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Подпрограмма слияния двух блоков:
+%   R4 - чистый адрес блока слева
+%   R5 - его длина
+%   R2 - чистый адрес блока справа
+% После выполнения:
+%   R4 - чистый адрес результирующего блока
+%   R5 - его длина
+% Если R4<=R2 (блок в физической памяти лежит слева),
+% то проводится контроль на blocks overlap
+% Портятся R1, R6
+:LINK_BLKS
+        [ ALU=A-B bus_A=R2 bus_B=R4 FLAG=CARRY ] % =FALSE при R2 лежащем
+                                                 % физически слева
+        [ GO_TRUE ADR=CHK_OVR ]
+        [ ALU=A-1 bus_A=R5 FLAG=Z GOTO ADR=LINK_TO ]
+ :CHK_OVR
+        [ ALU=A   bus_A=R4 bus_B=WR_R6 ]
+        [ ALU=A+B bus_A=R5 bus_B=RW_R6 ]  % R6 - адрес за блоком R4
+        [ ALU=A-B bus_A=R2 bus_B=R6 FLAG=CARRY ]
+                        % FLAG=FALSE при R2<R6 == blocks overlap
+        [ ALU=A-B bus_A=R2 bus_B=R6 FLAG=Z
+          GO_TRUE ADR=DO_LINK ]
+        [ bus_A=STACK->R6 ]    % Выкинули счетчик со стека
+        [ bus_A=STACK->R5 CALL ADR=REST_LG ]
+        [ bus_A=R5->STACK ]
+        [ bus_A=R4->STACK GOTO ADR=DM_FAIL ]
+ :DO_LINK  % FLAG=TRUE, если R6=R2 == блоки рядом
+        [ ALU=A-1 bus_A=R5 FLAG=Z
+          GO_TRUE ADR=ADD_UP ]
+ :LINK_TO
+        [ GO_TRUE ADR=WR_1 ]
+ :WR_LEN
+        [ ALU=A+1 bus_A=R4 WR_MEM_A ]
+        [ bus_B=R5         WR_MEM_D GOTO ADR=WR_ADR ]
+ :WR_1  [ ALU=A_OR_B bus_A=RW_R2 bus_B=L ]
+ :WR_ADR
+        [ ALU=A bus_A=R4 WR_MEM_A ]
+        [ bus_B=R2       WR_MEM_D RETURN ]
+ :ADD_UP
+        [ ALU=A bus_A=R2 bus_B=WR_R1      % R1:=R2
+          CALL ADR=GET_LEN ]
+        [ ALU=A+B bus_A=RW_R5 bus_B=R6 GOTO ADR=WR_LEN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Восстановить регистры L и G перед выходом из команды
+:REST_LG
+        [ bus_A=STACK->L ]
+        [ bus_A=STACK->G RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Сдвинуть PC на 2 назад
+:BACK_2 [ CALL ADR=DEC_PC ]
+        [ CALL ADR=DEC_PC ]
+        [ RETURN ]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%                                       (* Andy 20-Oct-88. (c) KRONOS *)
+%                                       (* Andy 29-Oct-88. (c) KRONOS *)
+%                                       (* Andy 15-Dec-88. (c) KRONOS *)
+% ---------------------------------------------------------------------
+% ---------------- Polar Structures Access Operations -----------------
+% ---------------------------------------------------------------------
+%
+
+% Проверка тега Поляр-объединения:
+%          -- перед выполнением команды:
+%                  на верхушке стека - статический тег,
+%                  под ним - словный адрес объединения
+%          -- результат выполнения:
+%                  если статический и динамический теги не совпадают,
+%                     то аргументы сохраняются на стеке и
+%                     возбуждается TRAP 4A;
+%                  если теги совпадают,
+%                     то на стеке остается адрес подзначения
+%                     (словный адрес объединения + 1)
+
+:CHK_TAG
+        [ ALU=A bus_A=Etop bus_B=WR_R1 ]        % R1= static tag
+        [ ALU=A bus_A=STACK->Etop RD_MEM_A ]
+        [ bus_B=WR_R2             RD_MEM_D ]    % R2= dynamic tag
+        [ ALU=A-B bus_A=R1 bus_B=R2 FLAG=Z ]
+        [ ALU=A+1 bus_A=RW_Etop GO_FALSE ADR=TAG_ERR ]
+        [ FLAG=ZERO FINISH ]
+:TAG_ERR
+        [ ALU=A-1 bus_A=Etop bus_B=WR_R6 ]
+        [ bus_A=R6->STACK ]
+        [ ALU=A bus_A=R1 bus_B=WR_Etop GOTO ADR=TRAP4A FLAG=ZERO ]
+
+% Проверка индекса Поляр-последовательности:
+%          -- перед выполнением команды:
+%                  на верхушке стека - индекс,
+%                  под ним - словный адрес последовательности
+%          -- результат выполнения:
+%                  если индекс некорректный,
+%                     то аргументы сохраняются на стеке и
+%                     возбуждается TRAP 4A;
+%                  иначе
+%                     на верхушке стека остается индекс,
+%                     под ним - словный адрес тела последовательности.
+
+:CHK_INX
+        [ ALU=A bus_A=Etop FLAG=N ]
+        [ bus_A=STACK->R1 GO_FALSE ADR=INX_ERR ]
+        [ ALU=A+1 bus_A=R1 RD_MEM_A ]
+        [ bus_B=WR_R2      RD_MEM_D ]           % R2= dynamic HIGH
+        [ ALU=A-B bus_A=R2 bus_B=Etop FLAG=N_XOR_OVR LONG ]
+        [ bus_B=R1    RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D
+                          GO_FALSE ADR=INX_ERR ]
+        [ bus_A=R2->STACK FLAG=ZERO FINISH ]
+:INX_ERR
+        [ bus_A=R1->STACK FLAG=ZERO GOTO ADR=TRAP4A ]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

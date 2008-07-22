@@ -1,0 +1,79 @@
+:HARD_ERR
+        [ CALL ADR=DEC_PC ]
+:HARD_ERR1
+        [ bus_B=M RESET_HARD_ERR ]
+        [ CONST->R1 D=3 ]
+        [ GOTO ADR=INTERUPT ]
+
+:REQUEST
+        [ CALL ADR=DEC_PC ]
+        [ bus_B=M IDLE_OFF ]
+        [ CONST->R1 D=41  ]
+        [ GOTO ADR=TRAPED ]
+
+:DEBUG  [ CALL ADR=DEC_PC ]
+        [ bus_B=M RESET_DEBUG ]
+        [ CONST->R1 D=0B ]
+        [ GOTO ADR=INTERUPT ]
+
+:TIME   [ CALL ADR=DEC_PC ]
+        [ ALU=A+1 bus_A=RW_Time FLAG=CONF1 GO_IF_NOT_REQUEST ADR=TIME_4 ]
+        [ FLAG=CONF0 CALL_IF_REQUEST ADR=CHECK_HALT ]
+:TIME_4 [ CALL ADR=REFRESH ]
+        [ ALU=A_AND_B bus_A=M CONST D=2 FLAG=Z ]
+        [ GO_FALSE ADR=TIME_1 ]
+:TIME_2 [ FLAG=ZERO FINISH ]
+:TIME_1 [ ALU=A-B bus_A=Time CONST D=14 FLAG=CARRY ]
+        [ GO_FALSE ADR=TIME_2 ]
+        [ ALU=A-B bus_A=Time CONST D=0A0 FLAG=CARRY ]
+        [ GO_FALSE ADR=TIME_3 ]
+        [ CONST->Time D=14 ]
+:TIME_3 [ ALU=A-B bus_A=RW_Time CONST D=14 ]
+        [ CONST->R1 D=1 ]
+        [ GOTO ADR=INTERUPT ]
+
+:ACL    [ CALL ADR=DEC_PC ]
+        [ bus_B=M RESET_ACL ]
+        [ CONST->R1 D=4   ]
+        [ GOTO ADR=INTERUPT ]
+
+:CNSL   [ CALL ADR=DEC_PC ]
+        [ CONST->R1 D=3D ]
+        [ GOTO ADR=INTERUPT ]
+
+:BUS_CINT
+        [ CALL ADR=DEC_PC ]
+        [ CONST->R1 D=3E ]
+        [ GOTO ADR=INTERUPT ]
+
+:BUS_INT
+        [ CALL ADR=DEC_PC ]
+        [ bus_B=WR_R1 RD_VECTOR REG_EN ADR=BUS_INT_6 ]
+        [ ALU=A_AND_B bus_A=R1 CONST D=0FF FLAG=Z ]
+        [ GO_FALSE ADR=BUS_INT_Q
+          ALU=A bus_A=R1 bus_B=WR_R2 FLAG=Z ]
+        [ CONST->R1 D=20 GO_REG_TRUE ]
+:BUS_INT_L
+        [ ALU=A+B bus_A=R2 bus_B=RW_R2 FLAG=CARRY ]
+        [ ALU=A-1 bus_A=RW_R1 FLAG=Z GO_FALSE ADR=BUS_INT_L ]
+        [ GOTO ADR=INTERUPT ]
+
+:BUS_INT_6
+        [ CONST->R1 D=6 ]
+        [ GOTO ADR=INTERUPT ]
+:BUS_INT_Q
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=ASR(A) bus_A=RW_R1 REG_EN ADR=INTERUPT ]
+        [ ALU=A_AND_B bus_A=RW_R1 CONST D=3F GO_REG ]
+
+:REQ0=0FF8
+        [ GOTO ADR=BUS_INT  ]
+:REQ1   [ GOTO ADR=BUS_CINT ]
+:REQ2   [ GOTO ADR=CNSL     ]
+:REQ3   [ GOTO ADR=ACL      ]
+:REQ4   [ GOTO ADR=TIME     ]
+:REQ5   [ GOTO ADR=DEBUG    ]
+:REQ6   [ GOTO ADR=REQUEST  ]
+:REQ7   [ GOTO ADR=HARD_ERR ]
+$
+

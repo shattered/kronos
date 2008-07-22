@@ -1,0 +1,1 @@
+{ SYM='. /sys /sym' mxOUT=*=/sys CD=/sys/lib } mx StdIO CPD exeCut Shell Time strEditor Heap Terminal BIO tskEnv tskArgs Keyboard myEditor Signals Threads Tasks  Lexicon Printer Exceptions Statistics Plotter $1{ SYM='. /sys /sym' mxOUT=*=/sys CD=/sys/lib } mx Execute Shell ttyWindows ttyMenus

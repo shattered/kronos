@@ -1,0 +1,8 @@
+DEFINITION MODULE inSta;
+
+IMPORT pcK;
+
+PROCEDURE glo_const(ofs: LONGINT; adr: ADDRESS; size: LONGINT);
+PROCEDURE compile(n: pcK.NODE; main: BOOLEAN; proc_no: CARDINAL);
+
+END inSta.

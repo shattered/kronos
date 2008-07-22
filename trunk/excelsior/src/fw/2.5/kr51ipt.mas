@@ -1,0 +1,13 @@
+:REQ7   = 7E3
+        [ GOTO ADR=INT_OWR ][F][F][F]
+:REQ6   [ GOTO ADR=STK     ][F][F][F]
+:REQ5   [ GOTO ADR=DEBUG   ][F][F][F]
+:REQ4   [ GOTO ADR=TIME    ][F][F][F]
+:REQ3   [ GOTO ADR=CONSOL  ][F][F][F]
+:REQ2   [ GOTO ADR=ACL     ][F][F][F]
+:REQ1   [ GOTO ADR=CH_INT  ][F][F]
+:CASH_REQ
+        [ ALU=A+1 bus_A=RW_PC RD_MEM_A GOTO ADR=NEXT ]
+:REQ0   [ GOTO ADR=IO_INT  ]
+$
+

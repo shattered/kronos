@@ -1,0 +1,15 @@
+DEFINITION MODULE fcInOut; (* 03-Nov-88.  *)
+
+
+PROCEDURE Write;
+PROCEDURE Read;
+PROCEDURE Print;
+PROCEDURE Open;
+PROCEDURE Close;
+PROCEDURE Inquire;
+PROCEDURE Backspace;
+PROCEDURE Rewind;
+PROCEDURE Endfile;
+PROCEDURE Format;
+
+END fcInOut.

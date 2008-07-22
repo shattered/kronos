@@ -1,0 +1,1 @@
+{mxOUT=*=/sys SYM=". $1/sys $1/sym" CD=$1/sys/drvws} mx SIOws.d SIOcm.d KTV480.d KTVcm.d

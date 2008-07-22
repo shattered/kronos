@@ -1,0 +1,289 @@
+:start  [ go_cond=cmd0 adr=read ]
+        [ go_cond=cmd1 adr=write ]
+        [ goto adr=start ]
+
+:rd_bit [ go_cond=rd_dat adr=bit0 ]
+:bit0   [ go_cond=cmd0 adr=bit1 ]
+        [ goto adr=start ]
+:bit1   [ go_cond=rd_dat adr=bit2 ]
+        [ go_cond=rd_dat adr=bit3 ]
+        [ go_cond=rd_dat adr=bit4 ]
+        [ go_cond=rd_dat adr=bit4 ]
+        [ go_cond=rd_dat adr=bit4 ]
+        [ go_cond=rd_dat adr=bit5 ]
+        [ go_cond=rd_dat adr=bit6 ]
+        [ flag=false return ]
+:bit2   [  ]
+:bit3   [  ]
+:bit4   [  ]
+:bit5   [  ]
+:bit6   [ flag=true  return ]
+
+:read   [ go_cond=rd_dat adr=read1 ]
+        [ go_cond=cmd0 adr=read ]
+:read1  [       ]
+        [       ]
+        [       ]
+        [       ]
+
+:rd_mk1 [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+:rd_mk2 [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+:rd_mk3 [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+:rd_mk4 [ call adr=rd_bit ]
+        [ go_cond=no_flag adr=read ]    % 1
+:rd_mk5 [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+:rd_mk6 [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+:rd_mk7 [ call adr=rd_bit ]
+        [ go_cond=no_flag adr=rd_mk4 ]  % 1
+:rd_mk8 [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+:rd_mk9 [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+:rd_mk10[ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=no_flag adr=read ]    % 1
+        [ call adr=rd_mksub ]
+        [ go_cond=no_flag adr=read ]
+        [ call adr=rd_mksub ]
+        [ go_cond=no_flag adr=read ]    % 1
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=no_flag adr=rd_mk4 ]  % 1
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=no_flag adr=rd_mk10 ] % 1
+        [ call adr=rd_bit ]
+        [ go_cond=flag  adr=rd_mk1 ]    % 0
+:read2  [ call adr=rd_bit ]
+        [ shift ]
+        [ call adr=rd_bit ]
+        [       ]
+        [ call adr=rd_bit ]
+        [ shift ]
+        [ call adr=rd_bit ]
+        [       ]
+        [ call adr=rd_bit ]
+        [ shift ]
+        [ call adr=rd_bit ]
+        [       ]
+        [ call adr=rd_bit ]
+        [ shift ]
+        [ call adr=rd_bit ]
+        [       ]
+        [ call adr=rd_bit ]
+        [ shift ]
+        [ call adr=rd_bit ]
+        [       ]
+        [ call adr=rd_bit ]
+        [ shift ]
+        [ call adr=rd_bit ]
+        [       ]
+        [ call adr=rd_bit ]
+        [ shift ]
+        [ call adr=rd_bit ]
+        [       ]
+        [ call adr=rd_bit ]
+        [ shift ]
+        [ call adr=rd_bit ]
+        [ out_byte goto adr=read2 ]
+
+:rd_mksub
+        [ call adr=bit0 ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=no_flag adr=rd_mk4 ]  % 1
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=no_flag adr=rd_mk10 ] % 1
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=no_flag adr=read ]    % 1
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=no_flag adr=rd_mk4 ]  % 1
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ call adr=rd_bit ]
+        [ go_cond=flag adr=rd_mk1 ]     % 0
+        [ goto adr=rd_bit ]
+
+:write  [ reg_en adr=wr0000 ]
+        [ goto adr=write2 ]
+
+:write1 [ call_reg ]
+:write2 [ inp_byte ]
+        [ call_reg ]
+        [          ]
+        [ call_reg ]
+        [          ]
+        [ call_reg ]
+        [          ]
+        [ call_reg ]
+        [          ]
+        [ call_reg ]
+        [          ]
+        [ call_reg ]
+        [          ]
+        [ call_reg ]
+        [ go_cond=cmd1 adr=write1 ]
+        [ call_reg ]
+        [ goto adr=start ]
+
+:wait_16[       ]
+:wait_15[       ]
+:wait_14[       ]
+:wait_13[       ]
+:wait_12[       ]
+:wait_11[       ]
+:wait_10[       ]
+:wait_9 [       ]
+:wait_8 [       ][       ][        ][       ][       ]
+:wait_3 [       ]
+:wait_2 [       ][ return ]
+
+
+% <---- 2,3
+:wr0001 [ go_cond=trk20 adr=wr0001l ]
+        [ wr_pulse ]
+        [ goto adr=wr0001h ]
+:wr0001l[       ]
+        [ wr_pulse ]
+:wr0001h[ call adr=wait_13 ]
+        [ go_cond=wr_dat adr=wr0001z ]
+        [ shift reg_en adr=wr011 return ]
+:wr0001z[ shift reg_en adr=wr010 return ]
+
+% ----- 4
+:wr00o0 [ call adr=wait_16 ]
+        [ go_cond=wr_dat adr=wr00o0z ]
+        [ shift reg_en adr=wr0o01 return ]
+:wr00o0z[ shift reg_en adr=wr0000 return ]
+
+% *---- 4
+:wr0o01 [ call adr=wait_2 ]
+        [ wr_pulse call adr=wait_13 ]
+        [ go_cond=wr_dat adr=wr0o01z ]
+        [ shift reg_en adr=wr011 return ]
+:wr0o01z[ shift reg_en adr=wr010 return ]
+
+% >---- 5,6
+:wr1000 [ call adr=wait_2 ]
+        [ go_cond=trk20 adr=wr1000l ]
+        [          ]
+        [ wr_pulse ]
+        [ goto adr=wr1000h ]
+:wr1000l[ wr_pulse ]
+        [          ]
+        [          ]
+:wr1000h[ call adr=wait_9 ]
+        [ go_cond=wr_dat adr=wr1000z ]
+        [ shift reg_en adr=wr0001 return ]
+:wr1000z[ shift reg_en adr=wr0000 return ]
+
+% *---- 4
+:wr100o [ call adr=wait_2 ]
+        [ wr_pulse call adr=wait_13 ]
+        [ go_cond=wr_dat adr=wr100oz ]
+        [ shift reg_en adr=wr0001 return ]
+:wr100oz[ shift reg_en adr=wr00o0 return ]
+
+% --<--  12,13
+:wr110  [ call adr=wait_9 ]
+        [ go_cond=trk20 adr=wr110l ]
+        [ wr_pulse ]
+        [ goto adr=wr110h ]
+:wr110l [       ]
+        [ wr_pulse ]
+:wr110h [ call adr=wait_3 ]
+        [ go_cond=wr_dat adr=wr110z ]
+        [ shift reg_en adr=wr101 return ]
+:wr110z [ shift reg_en adr=wr100 return ]
+
+% -->-- 15,16
+:wr011  [ call adr=wait_12 ]
+        [ go_cond=trk20 adr=wr011l ]
+        [       ]
+        [ wr_pulse ]
+        [ goto adr=wr011h ]
+:wr011l [ wr_pulse call adr=wait_2 ]
+:wr011h [ go_cond=wr_dat adr=wr011z ]
+        [ shift reg_en adr=wr111 return ]
+:wr011z [ shift reg_en adr=wr110 return ]
+
+% --*-- 14
+:wr010  [ call adr=wait_12 ]
+        [ wr_pulse call adr=wait_3 ]
+        [ go_cond=wr_dat adr=wr010z ]
+        [ shift reg_en adr=wr101 return ]
+:wr010z [ shift reg_en adr=wr100 return ]
+
+% --*-- 14
+:wr111  [ call adr=wait_12 ]
+        [ wr_pulse call adr=wait_3 ]
+        [ go_cond=wr_dat adr=wr111z ]
+        [ shift reg_en adr=wr111 return ]
+:wr111z [ shift reg_en adr=wr110 return ]
+
+% -----
+:wr100  [ call adr=wait_15 ]
+        [ go_cond=wr_dat adr=wr100z ]
+        [       ]
+        [ shift reg_en adr=wr1001 return ]
+:wr100z [ go_cond=mark adr=wr100m ]
+        [ shift reg_en adr=wr1000 return ]
+:wr100m [ shift reg_en adr=wr100o return ]
+
+% -----
+:wr101  [ call adr=wait_16 ]
+        [ go_cond=wr_dat adr=wr101z ]
+        [ shift reg_en adr=wr011 return ]
+:wr101z [ shift reg_en adr=wr010 return ]
+
+% *---- 4
+:wr0000 [ call adr=wait_2 ]
+        [ wr_pulse call adr=wait_13 ]
+        [ go_cond=wr_dat adr=wr0000z ]
+        [ shift reg_en adr=wr0001 return ]
+:wr0000z[ shift reg_en adr=wr0000 return ]
+
+% *---- 4
+:wr1001 [ call adr=wait_2 ]
+        [ wr_pulse call adr=wait_13 ]
+        [ go_cond=wr_dat adr=wr1001z ]
+        [ shift reg_en adr=wr011 return ]
+:wr1001z[ shift reg_en adr=wr010 return ]
+
+        [ goto adr=start ]
+        [ goto adr=start ]
+        [ goto adr=start ]
+        [ goto adr=start ]
+        [ goto adr=start ]
+        [ goto adr=start ]
+        [ goto adr=start ]
+        [ goto adr=start ]
+:end    [ goto adr=start ]
+
+$

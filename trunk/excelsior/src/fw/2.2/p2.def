@@ -1,0 +1,255 @@
+
+
+% R0, R1 - TOP OF STACK
+% R8 - F+PC
+% R9 - F, R10 - MASK, R11 - P
+% R12 - L, R13 - G, R14 - S, R15 - H
+
+FIELD  F 37:00=0FFFFFFFFFFFFFF     % Free microword
+
+FIELD D      23 27 22 28 2A 29 2D 26 25 21 20 % Constant generater
+FIELD ADR    20 23 26 22 27 25 21 2A 28 29 2D % Microjamp address
+FIELD ALU    05 10 19 1F 1E 18 00 14 1A 01    % ALU operation code
+  CONST  A          1D5   % A+CARRYIN !
+  CONST  B          1DE
+  CONST  A+1        0D5
+  CONST  A-1        1D1
+  CONST  A+B        1D6
+  CONST  A-B        0DC
+  CONST  A-B-1      1DC
+  CONST  A+B+1      0D6
+  CONST  A_OR_B     1DB
+  CONST  A_AND_B    1D0
+  CONST  A_XOR_B    1DD
+  CONST  A_BIC_B    1D9
+  CONST  NE(A)      1D2
+  CONST  NE(B)      1D8
+  CONST  NEG(A)     0D2
+  CONST  ROL(A)     145
+  CONST  ROR(A)     1C5
+  CONST  ROL(B)     14E
+  CONST  ROR(B)     1CE
+  CONST  ROL(A-B)   04C
+  CONST  ROL(A_AND_B)  140
+  CONST  ROR(A_BIC_B)  1C9
+  CONST  ROR(A_AND_B)  1C0
+  CONST  ROR(A_OR_B)   1CB
+  CONST  ASL(A)     105
+  CONST  B->P       12E
+  CONST  A&NP+B&P   1FE
+
+%           WSTK RSTK WRGA RRGA A3 A2 A1 A0
+%             1    1    1    1   1  1  1  1
+FIELD BUS_A  06   04   13   02  08 09 0A 0B
+
+  CONST         R0              4E0
+  CONST         R1              4E1
+  CONST         R2              4E2
+  CONST         R3              4E3
+  CONST         R4              4E4
+  CONST         R5              4E5
+  CONST         R6              4E6
+  CONST         R7              4E7
+   CONST         mLd             4E0     % Leo
+   CONST         mLu             4E1     % Leo
+   CONST         mRd             4E2     % Leo
+   CONST         mRu             4E3     % Leo
+   CONST         sL              4E4     % Leo
+   CONST         sR              4E5     % Leo
+   CONST         eL              4E6     % Leo
+   CONST         eR              4E7     % Leo
+  CONST         R8              4E8
+  CONST         R9              4E9
+  CONST         R10             4EA
+  CONST         R11             4EB
+  CONST         R12             4EC
+  CONST         R13             4ED
+  CONST         R14             4EE
+  CONST         R15             4EF
+  CONST         WR_R0           4D0
+  CONST         WR_R1           4D1
+  CONST         WR_R2           4D2
+  CONST         WR_R3           4D3
+  CONST         WR_R4           4D4
+  CONST         WR_R5           4D5
+  CONST         WR_R6           4D6
+  CONST         WR_R7           4D7
+   CONST         WR_mLd          4D0     % Leo
+   CONST         WR_mLu          4D1     % Leo
+   CONST         WR_mRd          4D2     % Leo
+   CONST         WR_mRu          4D3     % Leo
+   CONST         WR_sL           4D4     % Leo
+   CONST         WR_sR           4D5     % Leo
+   CONST         WR_eL           4D6     % Leo
+   CONST         WR_eR           4D7     % Leo
+  CONST         WR_R8           4D8
+  CONST         WR_R9           4D9
+  CONST         WR_R10          4DA
+  CONST         WR_R11          4DB
+  CONST         WR_R12          4DC
+  CONST         WR_R13          4DD
+  CONST         WR_R14          4DE
+  CONST         WR_R15          4DF
+  CONST         RW_R0           4C0
+  CONST         RW_R1           4C1
+  CONST         RW_R2           4C2
+  CONST         RW_R3           4C3
+  CONST         RW_R4           4C4
+  CONST         RW_R5           4C5
+  CONST         RW_R6           4C6
+  CONST         RW_R7           4C7
+   CONST         RW_mLd          4C0     % Leo
+   CONST         RW_mLu          4C1     % Leo
+   CONST         RW_mRd          4C2     % Leo
+   CONST         RW_mRu          4C3     % Leo
+   CONST         RW_sL           4C4     % Leo
+   CONST         RW_sR           4C5     % Leo
+   CONST         RW_eL           4C6     % Leo
+   CONST         RW_eR           4C7     % Leo
+  CONST         RW_R8           4C8
+  CONST         RW_R9           4C9
+  CONST         RW_R10          4CA
+  CONST         RW_R11          4CB
+  CONST         RW_R12          4CC
+  CONST         RW_R13          4CD
+  CONST         RW_R14          4CE
+  CONST         RW_R15          4CF
+
+FIELD      R0->STACK       06 04 13 02 08 09 0A 0B=60
+FIELD      R1->STACK       06 04 13 02 08 09 0A 0B=61
+FIELD      R2->STACK       06 04 13 02 08 09 0A 0B=62
+FIELD      R3->STACK       06 04 13 02 08 09 0A 0B=63
+FIELD      R4->STACK       06 04 13 02 08 09 0A 0B=64
+FIELD      R5->STACK       06 04 13 02 08 09 0A 0B=65
+FIELD      R6->STACK       06 04 13 02 08 09 0A 0B=66 % Leo
+FIELD      R7->STACK       06 04 13 02 08 09 0A 0B=67 % Leo
+FIELD      R12->STACK      06 04 13 02 08 09 0A 0B=6C
+
+FIELD      mLd->STACK      06 04 13 02 08 09 0A 0B=60 % Leo
+FIELD      mLu->STACK      06 04 13 02 08 09 0A 0B=61 % Leo
+FIELD      mRd->STACK      06 04 13 02 08 09 0A 0B=62 % Leo
+FIELD      mRu->STACK      06 04 13 02 08 09 0A 0B=63 % Leo
+FIELD      sL->STACK       06 04 13 02 08 09 0A 0B=64 % Leo
+FIELD      sR->STACK       06 04 13 02 08 09 0A 0B=65 % Leo
+FIELD      eL->STACK       06 04 13 02 08 09 0A 0B=66 % Leo
+FIELD      eR->STACK       06 04 13 02 08 09 0A 0B=67 % Leo
+
+FIELD      STACK->R0       06 04 13 02 08 09 0A 0B=90
+FIELD      STACK->R1       06 04 13 02 08 09 0A 0B=91
+FIELD      STACK->R2       06 04 13 02 08 09 0A 0B=92
+FIELD      STACK->R3       06 04 13 02 08 09 0A 0B=93
+FIELD      STACK->R4       06 04 13 02 08 09 0A 0B=94
+FIELD      STACK->R5       06 04 13 02 08 09 0A 0B=95
+FIELD      STACK->R6       06 04 13 02 08 09 0A 0B=96
+FIELD      STACK->R7       06 04 13 02 08 09 0A 0B=97
+FIELD      STACK->R12      06 04 13 02 08 09 0A 0B=9C
+
+FIELD      STACK->mLd      06 04 13 02 08 09 0A 0B=90
+FIELD      STACK->mLu      06 04 13 02 08 09 0A 0B=91
+FIELD      STACK->mRd      06 04 13 02 08 09 0A 0B=92
+FIELD      STACK->mRu      06 04 13 02 08 09 0A 0B=93
+FIELD      STACK->sL       06 04 13 02 08 09 0A 0B=94
+FIELD      STACK->sR       06 04 13 02 08 09 0A 0B=95
+FIELD      STACK->eL       06 04 13 02 08 09 0A 0B=96
+FIELD      STACK->eR       06 04 13 02 08 09 0A 0B=97
+
+FIELD      IDLE_LIGHT      06 04 13 02 08 09 0A 0B=3F
+
+
+%         CONST WINS RINS1 RINS0 WMASK WPC WRGB RRGB A3 A2 A1 A0
+%            0    1    0     0      1    1   1    1   1  1  1  1
+FIELD BUS_B 24   36   37    30     34   32  12   03  0E 0F 0C 0D
+
+CONST           WR_CASH    0FF
+FIELD      CONST      24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CFF
+FIELD      CONST->R0  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CD0
+FIELD      CONST->R1  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CD1
+FIELD      CONST->R2  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CD2
+FIELD      CONST->R3  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CD3
+FIELD      CONST->R4  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CD4
+FIELD      CONST->R5  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CD5
+FIELD      CONST->R6  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CD6
+FIELD      CONST->R7  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CD7
+FIELD      CONST->R8  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CD8
+FIELD      CONST->R9  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CD9
+FIELD      CONST->R10 24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CDA
+FIELD      CONST->R11 24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CDB
+FIELD      CONST->R12 24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CDC
+FIELD      CONST->R13 24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CDD
+FIELD      CONST->R14 24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CDE
+FIELD      CONST->R15 24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CDF
+FIELD      CONST->PC  24 36 37 30 34 32 12 03 0E 0F 0C 0D=0CBF
+FIELD      CASH0      24 36 37 30 34 32 12 03 0E 0F 0C 0D=5FF
+FIELD      CASH1      24 36 37 30 34 32 12 03 0E 0F 0C 0D=6FF
+FIELD      CASH0->R0  24 36 37 30 34 32 12 03 0E 0F 0C 0D=5D0
+FIELD      CASH0->R2  24 36 37 30 34 32 12 03 0E 0F 0C 0D=5D2
+FIELD      CASH0->R3  24 36 37 30 34 32 12 03 0E 0F 0C 0D=5D3
+FIELD      CASH0->R4  24 36 37 30 34 32 12 03 0E 0F 0C 0D=5D4
+FIELD      CASH0->R5  24 36 37 30 34 32 12 03 0E 0F 0C 0D=5D5
+FIELD      CASH0->R6  24 36 37 30 34 32 12 03 0E 0F 0C 0D=5D6
+FIELD      CASH0->R7  24 36 37 30 34 32 12 03 0E 0F 0C 0D=5D7
+FIELD      CASH1->R2  24 36 37 30 34 32 12 03 0E 0F 0C 0D=6D2
+FIELD      R10->MASK  24 36 37 30 34 32 12 03 0E 0F 0C 0D=46A
+FIELD      R8->PC     24 36 37 30 34 32 12 03 0E 0F 0C 0D=4A8
+FIELD   CONST->MASK   24 36 37 30 34 32 12 03 0E 0F 0C 0D=0C7F
+
+
+FIELD FLAG  15 17 16
+
+  CONST  OWR        2
+  CONST  Z          3
+  CONST  ZERO       1
+  CONST  STACK_EMPTY 6
+  CONST  CASH_FULL  5
+  CONST  A20        7
+  CONST  CARRY      4
+
+
+FIELD  SAVE_CARRY 11=0
+
+FIELD  CARRYIN<-PC2 33 23 26=3
+
+FIELD  MAP   2C 1D 1C 31=3
+
+FIELD  RESET_Q_BUS    2B=0
+
+FIELD  Q_BUS 35=0
+
+FIELD  OLD   07=0
+
+%                  wu  QBUS rgn ppr wyw A1-1 wwod A1-0 dsp
+%                   0    1    0   0   0   1    0    1   0
+FIELD  RD_Q_BUS0   29   35   20  21  22  23   25   26  28=8C
+FIELD  RD_Q_BUS1   29   35   20  21  22  23   25   26  28=86
+FIELD  WR_Q_BUS0   29   35   20  21  22  23   25   26  28=98
+FIELD  WR_Q_BUS1   29   35   20  21  22  23   25   26  28=92
+FIELD  RD_Q_BUS_PC 29   35   20  21  22  23   25   26  28=8E
+FIELD  RD_Q_BUS1_P 29   35   20  21  22  23   25   26  28=87
+FIELD  REF_Q_BUS0  29   35   20  21  22  23   25   26  28=0CC
+FIELD  REF_Q_BUS1  29   35   20  21  22  23   25   26  28=0C6
+FIELD  INP_Q_BUS0  29   35   20  21  22  23   25   26  28=18C
+FIELD  INP_Q_BUS1  29   35   20  21  22  23   25   26  28=186
+FIELD  OUT_Q_BUS0  29   35   20  21  22  23   25   26  28=198
+FIELD  OUT_Q_BUS1  29   35   20  21  22  23   25   26  28=192
+FIELD  RD_VECTOR   29   35   20  21  22  23   25   26  28=0AE
+
+FIELD  UPDATE_CASH  31 2F 2C 2A:25 23:20 1D:1B 17:15 2D=7
+
+FIELD  REG_EN   2E=0
+
+%                  FILE COND S1 S0 NEG MAP
+%                  1   1   1  1   1   0
+FIELD  GOTO        1B  1C  2C 1D  2F  31=32
+FIELD  GO_TRUE     1B  1C  2C 1D  2F  31=22
+FIELD  GO_FALSE    1B  1C  2C 1D  2F  31=20
+FIELD  CALL        1B  1C  2C 1D  2F  31=12
+FIELD  CALL_TRUE   1B  1C  2C 1D  2F  31=02
+FIELD  CALL_FALSE  1B  1C  2C 1D  2F  31=00
+FIELD  RETURN      1B  1C  2C 1D  2F  31=16
+FIELD  RETURN_TRUE 1B  1C  2C 1D  2F  31=06
+FIELD RETURN_FALSE 1B  1C  2C 1D  2F  31=04
+FIELD  GO_REG      1B  1C  2C 1D  2F  31=3A
+FIELD  CALL_REG    1B  1C  2C 1D  2F  31=1A
+FIELD  POP         1B  1C  2C 1D  2F  31=1E
+FIELD GO_REG_FALSE 1B  1C  2C 1D  2F  31=28
+FIELD GO_REG_TRUE  1B  1C  2C 1D  2F  31=2A 

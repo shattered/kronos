@@ -1,0 +1,18 @@
+WAKE_UP port
+  out   00h - reset interrupt
+        01h - start operation
+        02h - reset controller, after that must be 00h
+
+
+fields
+
+  wake_up, adr=adr(WAKE_UP)*10h
+    word    01h
+    word    offset(channel_control)
+    word    segment(channel_control)
+
+  channel_control
+    byte    01h - i/o processor program in ROM
+            03h - i/o processor program in main memory
+    byte    00h - idle
+           0FFh - controller busy

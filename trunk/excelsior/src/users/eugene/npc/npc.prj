@@ -1,0 +1,7 @@
+make DOS EXE
+option +case +map +pack +check +vid
+model Large
+include %N initexe
+
+import %O%M_mlib
+

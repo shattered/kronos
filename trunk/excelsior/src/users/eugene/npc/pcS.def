@@ -1,0 +1,86 @@
+DEFINITION MODULE pcS; (* Ned 14-Apr-89. (c) KRONOS *)
+                       (* Ned 06-Jan-90. (c) KRONOS *)
+
+IMPORT pcK;
+
+TYPE Symbol = (
+  ident, literal,
+
+  equ,  neq,  lss,  gtr,  leq, geq, times, slash,
+  minus, plus, sep, semic, bar, period,
+  colon,  lbr,  rbr,  lpar, rpar, lbrace, rbrace,
+  coma, becomes, range,
+
+  and,  array,
+  begin,  by,
+  case,  code,  const,
+  definition,  div, do, dynarr,
+  else, elsif, end, exit,
+  for,   forward,
+  if, implementation,  import, in, is,
+  loop,
+  mod, module,
+  nil, not,
+  of, or,
+  pointer,  procedure,
+  record,  rem, repeat,  return,
+  seq, set,
+  then, to, type,
+  until,
+  val, var,
+  while, with
+);
+
+CONST
+  intval  = 0;
+  charval = 1;
+  realval = 2;
+  lrlval  = 3;
+  strval  = 4;
+
+CONST (* options - bits in opts *)
+  all_errors = 0;  (* A *)
+  index_check= 1;  (* R *)
+  range_check= 2;  (* T *)
+  nil_check  = 3;  (* P *)
+  proc_check = 4;  (* N *)
+  type_check = 5;  (* G *)
+  external   = 6;  (* E *)
+
+CONST max_str = 255;
+
+TYPE STRING = ARRAY [0..max_str] OF CHAR;
+
+VAR
+  name   : pcK.NAME;
+  lit    : INTEGER;          (* вид литерала              *)
+  int    : LONGINT;          (* значение intval константы *)
+  real   : REAL;             (*                           *)
+  double : LONGREAL;         (*                           *)
+  string : STRING;           (* значение строки           *)
+  len    : INTEGER;          (* длина строки              *)
+  no_errs: INTEGER;          (* число ошибок              *)
+  txtpos : LONGINT;          (* line*10000h+col           *)
+  opts   : BITSET;           (*                           *)
+  fault  : BOOLEAN;          (* была фатальная ошибка     *)
+
+PROCEDURE get(VAR sy: Symbol);
+
+(*----------------------------------------------------------------*)
+
+PROCEDURE err(no: INTEGER);
+(* Выдача строки и сообщения об ошибке. (error) *)
+
+PROCEDURE expc(s: Symbol);
+(* Сообщение о пропуске символа *)
+
+PROCEDURE err_id(no: INTEGER; name: ARRAY OF CHAR);
+(* Сообщение об ошибке связанной с использованием идентификатора *)
+
+PROCEDURE Fault(no: INTEGER; message: ARRAY OF CHAR);
+(* Сообщение о фатальной ошибке и прекращение компиляции *)
+
+PROCEDURE Ini;
+
+END pcS.
+

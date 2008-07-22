@@ -1,0 +1,1 @@
+{mxOUT="*=/sys" SYM=". /sys /sym" CD=/sys/lib} mx CPD.d Time.d strEditor.d Heap.d Terminal.d BIO.d exeCut.d Shell.d Keyboard.d tskArgs.d tskEnv.d myEditor.d Signals.d Threads.d Tasks.d StdIO.d Lexicon.d Printer.d Exceptions.d Statistics.d Plotter.d{mxOUT="*=/sys" SYM=". /sys /sym" CD=/sys/lib} mx Execute.d Shell.d ttyWindows.d ttyMenus.d

@@ -1,0 +1,24 @@
+DEFINITION MODULE inGen; (* Ned 04-Apr-91. (c) KRONOS *)
+
+IMPORT  pcK;
+
+CONST WORDs = pcK.Forms{pcK.invtype,pcK.integer,pcK.bitset,pcK.set};
+
+PROCEDURE eval(expr: pcK.NODE; VAR val: LONGINT; VAR e: ADDRESS);
+
+PROCEDURE literal(node: pcK.NODE);
+
+PROCEDURE prepare(tree: pcK.NODE);
+
+PROCEDURE put_object(o: pcK.OBJECT);
+PROCEDURE put_struct(s: pcK.STRUCT);
+
+PROCEDURE get_object(o: pcK.OBJECT);
+PROCEDURE get_struct(s: pcK.STRUCT);
+
+PROCEDURE compile(tree: pcK.NODE; check_nil,check_proc,check_type: BOOLEAN);
+
+PROCEDURE ini;
+
+END inGen.
+

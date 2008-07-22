@@ -1,0 +1,1487 @@
+
+
+
+
+
+
+ utwervden
+
+ predw.0010-01 13 01-lu
+
+
+
+
+
+
+
+
+
+                sistema awtomatizacii proektirowaniq
+                      programmnogo obespe~eniq
+                         mikro-|wm k1816we48
+
+                             s a p r 4 8
+
+
+
+                          opisanie programm
+
+
+
+
+                         predw.0010-01 13 01
+
+                              listow 15
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                               1 9 8 5
+
+                               - 2 -
+
+                         predw.0010-01 13 01
+
+
+
+
+
+
+                              annotaciq
+
+
+
+
+      dokument     sodervit     opisanie     primeneniq      programm
+ kross-assemblera, redaktora swqzej,  |mulqtora  i  diz-assemblera  w
+ sostawe   sistemy    awtomatizacii    proektirowaniq    programmnogo
+ obespe~eniq mikro-|wm k1816we48.
+
+      w dokumente priwoditsq nabor tehni~eskih  sredstw,  neobhodimyj
+ dlq funkcionirowaniq sapr48.
+
+      opisany whodnye i wyhodnye dannye kavdoj iz programm i  sistemy
+ w celom.
+
+
+
+
+
+      w_n_i_m_a_n_i_e: zapre}aetsq pereda~a programmnogo  obespe~eniq
+ sapr48 drugim organizaciqm bez soglasowaniq s razrabot~ikom.
+      osnowanie: postanowlenie gknt N 41 ot 1984 g.
+
+                               - 3 -
+
+                         predw.0010-01 13 01
+
+
+
+
+
+
+                             sodervanie
+
+
+
+     annotaciq ...................................................  2
+
+
+ 1.  ob}ie swedeniq...............................................  4
+
+
+ 2.  ispolxzuemye tehni~eskie sredstwa............................  4
+
+
+ 3.  razrabotka programmnogo obespe~eniq mikro-|wm................  4
+
+
+ 4.  opisanie logi~eskoj struktury sapr48.........................  5
+
+ 4.1.   programma kross-assembler.................................  5
+ 4.2.   programma redaktor swqzej.................................  6
+ 4.3.   programma |mulqtor........................................  7
+ 4.4.   programma diz-assembler...................................  8
+
+ 5.  whodnye i wyhodnye nabory dannyh.............................  9
+
+ 5.1.   format ob'ektnogo modulq.................................. 10
+ 5.1.1.   struktura zapisej GSD................................... 10
+ 5.1.1.1. imq modulq.............................................. 11
+ 5.1.1.2. adres zapuska........................................... 11
+ 5.1.1.3. wne{nij simwol.......................................... 11
+ 5.1.1.4. ob}ij simwol............................................ 11
+ 5.1.2.   struktura zapisi ENDGSD................................. 12
+ 5.1.3.   struktura zapisej TXT................................... 12
+ 5.1.4.   struktura zapisej RLD................................... 12
+ 5.1.5.   struktura zapisi ENDMOD................................. 13
+ 5.2.   format zagruzo~nogo modulq................................ 13
+
+ prilovenie.    komandy otladki..................................  14
+
+                               - 4 -
+
+                         predw.0010-01 13 01
+
+
+                          1. ob}ie swedeniq
+
+
+
+
+      sistema awtomatizacii proektirowaniq  programmnogo  obespe~eniq
+ mikro-|wm k1816we48 (sapr48)  qwlqetsq  mo}nym  sredstwom  powy{eniq
+ |ffektiwnosti i sniveniq wremeni razrabotki sistem  i  ustrojstw  na
+ baze mikro-|wm.
+
+      sapr48   qwlqetsq   ~isto   krossowoj    sistemoj    razrabotki
+ programmnogo obespe~eniq mikro-|wm. ona rabotaet pod uprawleniem SJ-
+ ili FB-monitora bazowoj operacionnoj sistemy (os) tipa rafos (fodos,
+ os dwk).  pod  uprawleniem  FB-monitora  sapr48  rabotaet  tolxko  w
+ operatiwnom revime.
+
+      sistemnoe  programmnoe  obespe~enie  sapr48  oformleno  w  wide
+ otdelxno wyzywaemyh programm w sootwetstwii s  trebowaniqmi  bazowoj
+ os k sistemnym programmam
+
+      razrabotka    programmnogo    obespe~eniq    mikro-|wm    takve
+ proizwoditsq w ramkah bazowoj os s ispolxzowaniem  programm  sapr48.
+ sistemnoe programmnoe obespe~enie sapr48 i razrabatywaemye programmy
+ dlq  mikro-|wm  hranqtsq  w  wide  fajlow  na  wne{nih   ustrojstwah
+ instrumentalxnoj  |wm.  fajlowaq  struktura  na  wne{nih   nositelqh
+ informacii polnostx` podderviwaetsq bazowoj os.
+
+      ishodnyj  tekst  sistemnogo  programmnogo  obespe~eniq   sapr48
+ napisan na qzyke MACRO-11 i sodervit okolo 20.5 tys. operatorow.
+
+
+
+
+
+
+                2. ispolxzuemye tehni~eskie sredstwa
+
+
+
+
+      instrumentalxnoj |wm dlq sapr48 sluvit odna iz sledu`}ih |wm:
+
+        - sm-4;
+        - "|lektronika 100/25";
+        - "|lektronika 79";
+        - "|lektronika 60";
+        - dwk-2;
+
+ s ob'emom  operatiwnoj  pamqti  ne  menee  64  kbajt  i  minimalxnym
+ komplektom wne{nih ustrojstw w sostawe:
+
+        - ngmd tipa "|lektronika 7012" (ili "|lektronika  6022")  ili
+          nmd tipa "izot 1370";
+        - alfawitno-cifrowoj displej;
+        - pe~ata`}ee ustrojstwo.
+
+      dopolnitelxno dlq zapisi otlavennyh programm wo wnutrennee  ili
+ wne{nee pzu mikro-|wm ispolxzuetsq programmator.
+
+
+
+
+          3. razrabotka programmnogo obespe~eniq mikro-|wm
+
+
+
+
+      algoritm raboty mikro-|wm zapisywaetsq  w  wide  programmy  ili
+ nabora podprogramm na qzyke  assemblera  mikro-|wm.  fajly  ishodnyh
+ modulej na wne{nih  nositelqh  instrumentalxnoj  |wm  formiru`tsq  s
+ pomo}x` programm redaktor teksta (EDIT,  TECO  i  t.  p.  )  bazowoj
+ operacionnoj  sistemy.  ishodnye  moduli   ispolxzu`tsq   programmoj
+ kross-assembler MAC48 dlq  polu~eniq  ob'ektnyh  fajlow.  dlq  swqzi
+ razdelxno transliruemyh ishodnyh modulej  movno  ispolxzowatx  ob}ie
+ (PUBLIC)  i  wne{nie  (EXTRN)  simwoli~eskie  imena.  sintaksi~eskie
+ o{ibki,  obnaruvennye  wo  wremq  translqcii,   isprawlq`tsq   putem
+ wneseniq sootwetstwu`}ih izmenenij w ishodnyj modulx. zatem  process
+ sozdaniq ob'ektnogo modulq powtorqetsq.
+
+      posle uspe{nogo zawer{eniq translqcii polxzowatelx pristupaet k
+ sozdani` zagruzo~nogo modulq s  pomo}x`  programmy  redaktor  swqzej
+ LINK48, kotoraq swqzywaet i nastraiwaet ob'ektnye moduli.
+
+      posle  polu~eniq  zagruzo~nogo  modulq   movno   pristupatx   k
+ dinami~eskoj  dialogowoj  otladke  programmy  mikro-|wm  s   pomo}x`
+ programmy |mulqtora EMUL48.  |ta  programma  pozwolqet  osu}estwlqtx
+ nishodq}ee   modulxnoe   testirowanie    programmnogo    obespe~eniq
+ mikro-|wm. pri  obnaruvenii  programmnyh  o{ibok  neobhodimo  wnesti
+ izmeneniq w  ishodnyj  modulx  i  powtoritx  wse  operacii  sozdaniq
+ zagruzo~nogo modulq programmy.
+
+      programma   diz-assembler   DIS48   pozwolqet   wosstanawliwatx
+ ishodnyj  modulx  programmy   iz   zagruzo~nogo   modulq   i   movet
+
+                               - 5 -
+
+                         predw.0010-01 13 01
+
+
+ ispolxzowatxsq  dlq  izu~eniq  programm  mikro-|wm,  na  kotorye  ne
+ imeetsq dostato~no polnoj dokumentacii.
+
+
+
+
+               4. opisanie logi~eskoj struktury sapr48
+
+
+
+
+      sistemnoe programmnoe obespe~enie sapr48 sostoit  iz  sledu`}ih
+ programm:
+
+        - translqtor (kross-assembler) s qzyka  assemblera  mikro-|wm
+          k1816we48 (programma MAC48);
+
+        - redaktor swqzej, ispolxzuemyj dlq swqzi ob'ektnyh modulej i
+          polu~eniq zagruzo~nogo modulq (programma LINK48);
+
+        - |mulqtor, primenqemyj dlq dinami~eskoj  dialogowoj  otladki
+          razrabatywaemogo   programmnogo    obespe~eniq    mikro-|wm
+          (programma EMUL48);
+
+        - diz-assembler, preobrazu`}ij zagruzo~nyj  modulx  w  format
+          ishodnogo modulq (programma DIS48).
+
+      krome  programm  sapr48  dlq   raboty   potrebu`tsq   sledu`}ie
+ sistemnye programmy bazowoj operacionnoj sistemy:
+
+        - redaktor teksta (programmy EDIT, TECO i t.p.); ispolxzu`tsq
+          dlq   sozdaniq   i    redaktirowaniq    ishodnyh    modulej
+          razrabatywaemogo programmnogo obespe~eniq mikro-|wm;
+
+        - sredstwa raboty s fajlami, poddervki  i  prowerki  fajlowoj
+          struktury na wne{nih nositelqh (programmy PIP, DUP,  DIR  i
+          t. p. ).
+
+      takve  mogut   ponadobitxsq   programmy   ~teniq/zapisi   ppzu,
+ postawlqemye w komplekte s programmatorom.
+
+
+
+       4.1. programma kross-assembler
+
+
+
+      programma  kross-assembler  MAC48  prednazna~ena  dlq  perewoda
+ programmy  na  qzyke  asssemblera  (ishodnyj  modulx)  w  programmu,
+ soderva}u` ma{innye kody komand (ob'ektnyj  modulx).  parallelxno  s
+ sozdaniem  ob'ektnogo  modulq  formiruetsq  fajl  listinga,  kotoryj
+ sodervit rezulxtaty translqcii ishodnogo modulq.  wmesto  ob'ektnogo
+ modulq polxzowatelx movet srazu polu~itx  zagruzo~nyj  modulx  qwnym
+ zadaniem specifikacii zagruzo~nogo fajla.
+
+      programma MAC48 wypolnqet sledu`}ie funkcii:
+
+        - wwod  ishodnogo  modulq  iz  neskolxkih  fajlow,   zadannyh
+
+
+
+
+
+
+          polxzowatelem;
+        - obrabotka wlovennyh ishodnyh modulej;
+        - wy~islenie wyravenij w processe translqcii;
+        - obrabotka direktiw uslownoj translqcii;
+        - obrabotka makrosredstw (makrokomandy i bloki powtorenij);
+        - sintaksi~eskij i semanti~eskij analiz predlovenij ishodnogo
+          modulq s wyda~ej soob}enij ob o{ibkah;
+        - wywod w ob'ektnyj modulx  informacii  ob  ob}ih  i  wne{nih
+          imenah, opredelennyh polxzowatelem;
+        - wywod  w  ob'ektnyj  modulx  ma{innyh  kodow  mikro-|wm   i
+          informacii dlq ih nastrojki;
+        - wywod listinga rezulxtatow translqcii ishodnogo modulq;
+        - wywod  w  fajl   listinga   tablicy   simwoli~eskih   imen,
+          opredelennyh polxzowatelem, w alfawitnom porqdke;
+        - wywod w fajl listinga tablicy perekrestnyh ssylok.
+
+      programma  MAC48  realizuet  oby~nyj   dwuhprohodnyj   algoritm
+ translqtorow s qzyka assemblera, sostoq}ij iz sledu`}ih |tapow:
+
+        - |tap raspredeleniq pamqti: zagruva`tsq neobhodimye drajwery
+          ustrojstw    wwoda-wywoda,     inicializiru`tsq     tablicy
+          simwoli~eskih imen, makroopredelenij i perekrestnyh ssylok;
+
+        - |tap  perwogo  prohoda:  predloveniq   ishodnoj   programmy
+          posledowatelxno  s~itywa`tsq  iz   ishodogo   modulq.   pri
+          neobhodimosti zapomina`tsq i ras{irq`tsq  makroopredeleniq.
+          metki zanosqtsq w tablicu simwoli~eskih imen.
+
+        - |tap  okon~aniq  perwogo  prohoda:   w   ob'ektnyj   modulx
+          wywoditsq tablica wne{nih i ob}ih simwolow.
+
+        - |tap wtorogo prohoda: predloveniq ishodnoj programmy  wnowx
+          s~itywa`tsq iz ishodnogo modulq; zapomina`tsq i ras{irq`tsq
+          makroopredeleniq. prowerqetsq, ne izmenili li simwoli~eskie
+          imena  swoih  zna~enij.  proizwoditsq  generaciq   ma{innyh
+          kodow; ma{innye kody i informaciq ob ih nastrojke wywodqtsq
+          w ob'ektnyj modulx. odnowremenno  formiruetsq  i  wywoditsq
+          fajl listinga.
+
+        - |tap okon~aniq wtorogo prohoda: w fajl  listinga  wywodqtsq
+          tablicy simwoli~eskih imen i perekrestnyh ssylok.
+
+      zagruzo~nyj modulx programmy kross-assembler zapisan w  fajl  s
+ imenem MAC48.SAV. dlq zagruzki i zapuska programmy  neobhodimo  datx
+ sledu`}u` komandu monitora operacionnoj sistemy:
+
+
+         .R MAC48
+
+ ili
+
+         .RUN DEV:MAC48
+
+ esli zagruzo~nyj fajl nahoditsq ne na sistemnom ustrojstwe  (DEV:  -
+ imq ustrojstwa).
+
+      posle zagruzki i zapuska kross-assemblera na terminal wywoditsq
+ simwol  "*",  ozna~a`}ij  gotownostx  programmy  k  wwodu  komandnoj
+
+                               - 6 -
+
+                         predw.0010-01 13 01
+
+
+ stroki.
+
+      w komandnoj stroke ukazywa`tsq specifikacii whodnyh i  wyhodnyh
+ naborow dannyh:
+
+        OBJ-SPC , LST-SPC = SRC-SPC , ... , SRC-SPC  <wk>,
+
+ gde
+
+  OBJ-SPC
+        - specifikaciq ob'ektnogo fajla.  movet  bytx  opu}ena,  esli
+          ob'ektnyj fajl ne trebuetsq.
+
+  LST-SPC
+        - specifikaciq fajla listinga. movet bytx opu}ena, esli  fajl
+          listinga ne trebuetsq.
+
+  SRC-SPC
+        - specifikaciq ishodnogo fajla.
+
+ specifikacii fajlow zada`tsq w sootwetstwii s prawilami bazowoj os.
+
+      w odnoj komandnoj stroke movet bytx ukazano do  {esti  ishodnyh
+ fajlow; fajly budut ottranslirowany kak odin fajl: tekst wo wtorom i
+ posledu`}ih  fajlah  budet  wosprinimatxsq  kak  prodolvenie  teksta
+ perwogo ishodnogo fajla.
+
+      fajly ishodnyh modulej dolvny raspolagatxsq  na  ustrojstwah  s
+ katalogowoj organizaciej.
+
+      dlq wyhoda iz programmy kross-assembler i  pereda~i  uprawleniq
+ monitoru operacionnoj sistemy neobhodimo navatx <CTRL/C>, esli MAC48
+ ovidaet wwoda s terminala, ili dwavdy navatx  <CTRL/C>,  esli  MAC48
+ nahoditsq w revime translqcii.
+
+      posle  zawer{eniq  translqcii  ishodnyh  fajlow,  ukazannyh   w
+ komandnoj stroke, programma MAC48 wywodit na terminal simwol  "*"  i
+ ovidaet wwoda nowoj komandnoj stroki.
+
+      kross-assembler  MAC48   rabotaet   pod   uprawleniem   bazowoj
+ operacionnoj sistemy i ispolxzuet ee  sistemnye  resursy.  programma
+ zanimaet okolo 20  kbajt  operatiwnoj  pamqti,  ostalxnaq  swobodnaq
+ ~astx pamqti dinami~eski wydelqetsq pod drajwery  ustrojstw,  bufera
+ wwoda-wywoda i rabo~ie tablicy, neobhodimye pri translqcii.
+
+
+
+
+
+
+       4.2. programma redaktor swqzej
+
+
+
+      redaktor swqzej LINK48 preobrazuet ob'ektnye moduli,  sozdannye
+ programmoj kross-assembler MAC48, w moduli absol`tnoj zagruzki.  pri
+ |tom LINK48 wypolnqet sledu`}ie funkcii:
+
+        - soedinqet otdelxnye ob'ektnye moduli;
+        - otyskiwaet globalxnye simwoly, kotorye opredeleny w  raznyh
+          modulqh, i osu}estwlqet swqzx;
+        - sozdaet absol`tnyj zagruzo~nyj modulx;
+        - sozdaet kartu zagruzki.
+
+      programma  LINK48  realizuet  oby~nyj  dwuhprohodnyj   algoritm
+ redaktora swqzej, sostoq}ij iz sledu`}ih |tapow:
+
+        - |tap   raspredeleniq   pamqti:   zagruva`tsq    neobhodimye
+          drajwery, inicializiru`tsq tablicy simwolow;
+
+        - |tap perwogo prohoda: w kavdom ob'ektnom module sozdaetsq i
+          obrabatywaetsq tablica globalxnyh simwolow;
+
+        - |tap okon~aniq  perwogo  prohoda:  stroitsq  ob}aq  tablica
+          globalxnyh simwolow;
+
+        - |tap wtorogo prohoda:  proizwoditsq  wy~islenie  zame}a`}ih
+          wyravenij  i  nastrojka  adresnyh   konstant;   parallelxno
+          formiruetsq i wywoditsq zagruzo~nyj modulx;
+
+        - |tap  okon~aniq  wtorogo  prohoda:  wywoditsq  fajl   karty
+          pamqti.
+
+      dlq wyzowa programmy redaktor  swqzej  s  sitemnogo  ustrojstwa
+ neobhodimo w otwet na to~ku, nape~atannu` monitorom, zadatx komandu:
+
+                .R LINK48
+
+ ili
+
+                .RUN DEV:LINK48
+
+ esli zagruzo~nyj modulx nahoditsq ne na sistemnom  ustrojstwe,  DEV:
+ -imq ustrojstwa.
+
+      komandnaq  stroka   redaktora   swqzej   dolvna   udowletworqtx
+ trebowaniqm formata CSI. wyhodnymi fajlami redaktora swqzej qwlq`tsq
+ (w porqdke ukazaniq w komandnoj stroke) fajly tipow:
+
+ .L48
+        - fajl programmy polxzowatelq w formate absol`tnoj zagruzki;
+
+ .MAP
+        - karta raspredeleniq pamqti.
+
+      wyhodnye fajly mogut bytx wywedeny na l`boe wne{nee ustrojstwo.
+ esli imq ustrojstwa w komandnoj stroke ne ukazano,  redaktor  swqzej
+ ispolxzuet po umol~ani` ustrojstwo DK:. esli w lewoj ~asti komandnoj
+
+                               - 7 -
+
+                         predw.0010-01 13 01
+
+
+ stroki otsutstwu`t specifikacii wyhodnyh fajlow,  to  |ti  fajly  ne
+ sozda`tsq.
+
+      whodnym naborom dannyh dlq programmy  LINK48  sluvat  ob'ektnye
+ fajly, sozdannye translqtorom MAC48.
+
+ .O48
+        - ras{irenie (po umol~ani`) whodnyh fajlow.
+
+ ~islo whodnyh ob'ektnyh  fajlow  ne  ograni~eno:  pri  neobhodimosti
+ komandnaq  stroka  razbiwaetsq  na  neskolxko  strok  prodolveniq  s
+ pomo}x` sootwetstwu`}ih kl`~ej.
+
+      dlq wyhoda iz redaktora swqzej i pereda~i  uprawleniq  monitoru
+ sleduet navatx  <CTRL>/C,  esli  redaktor  swqzej  ovidaet  wwoda  s
+ terminala, ili  dwavdy  <CTRL>/C,  esli  redaktor  swqzej  wypolnqet
+ redaktirowanie.
+
+      posle zawer{eniq raboty programma pe~ataet simwol '*' i ovidaet
+ wwoda nowoj komandnoj stroki.
+
+      programma  LINK48   funkcioniruet   pod   uprawleniem   bazowoj
+ operacionnoj sistemy. dlq raboty redaktoru swqzej neobhodimo minimum
+ 32 kbajt  operatiwnoj   pamqti.   ob'ektnye   moduli,   ispolxzuemye
+ programmoj  w  ka~estwe  whodnyh  dannyh,  dolvny  raspolagatxsq  na
+ wne{nih nositelqh informacii s katalogowoj organizaciej.
+
+
+
+       4.3. programma |mulqtor
+
+
+
+      programma |mulqtor  EMUL48  prednazna~ena  dlq  testirowaniq  i
+ otladki programmnogo obespe~eniq mikro-|wm  K1816BE48  w  dialogowom
+ revime. realizuet sledu`}ie wozmovnosti:
+
+        - zadanie konfiguracii modeli mikro-|wm;
+        - zagruzka otlaviwaemoj programmy w modeliruemu` pamqtx;
+        - inicializaciq sostoqniq modeli mikro-|wm;
+        - na~alxnyj zapusk modeli mikro-|wm;
+        - prodolvenie  wypolneniq  programmy  s  l`bogo   zadawaemogo
+          adresa;
+        - prerywanie raboty modeli mikro-|wm;
+        - razli~nye revimy po{agowogo wypolneniq programmy;
+        - ustanowlenie  to~ek  kontrolxnogo  ostanowa   po   uslowiqm
+          adres/dannoe, ~tenie/zapisx;
+        - kontrolx realxnogo wremeni wypolneniq programmy;
+        - raspe~atka  sodervimogo  modeliruemyh  oblastej   adresnogo
+          prostranstwa modeli mikro-|wm i ih modifikaciq;
+        - modifikaciq   wnutrennih   resursow,   sodervimogo   portow
+          wwoda-wywoda i  signalow  na  whodah  INT,  T0,  T1  modeli
+          mikro-|wm;
+        - sozdanie i  raspe~atka  "istori~eskoj  pamqti"  -  sredstwa
+          opredeleniq  situacii,  priwed{ej  k  o{ibo~nomu  sostoqni`
+          modeli mikro-|wm;
+        - formirowanie i wyda~a diagnosti~eskih soob}enij;
+        - sohranenie otlavennoj programmy w fajle  na  l`bom  wne{nem
+
+
+
+
+
+
+          ustrojstwe;
+        - formirowanie i wyda~a protokola otladki.
+
+      dlq  zagruzki  programmy  EMUL48  w   pamqtx   dlq   ispolneniq
+ neobhodimo datx odnu iz sledu`}ih komand monitora:
+
+                    .RUN DEV:EMUL48
+
+ gde DEV: - imq ustrojstwa, na kotorom nahoditsq  zagruzo~nyj  modulx
+ programmy |mulqtor; ili
+
+                    .R EMUL48
+
+ esli programma EMUL48 nahoditsq na sistemnom ustrojstwe.
+
+      kogda programma |mulqtor zagruvena w pamqtx i gotowa k  rabote,
+ ona wywodit na |kran displeq nazwanie, nomer wersii i simwol  "*"  -
+ priznak ovidaniq wwoda komandnoj stroki.
+
+
+      p_r_i_m_e_~_a_n_i_e.   zagruzku   programmy   EMUL48    sleduet
+ prowoditx pri wkl`~ennom sistemnom tajmere.
+      pri nesobl`denii |togo trebowaniq podaetsq zwukowoj signal i na
+ |krane displeq poqwlqetsq sootwetswu`}ee soob}enie.
+
+      komandnaq stroka wwoditsq w otwet na simwol  "*",  nape~atannyj
+ programmoj |mulqtor. ob}ij wid komandnoj stroki:
+
+                *S48-SPC,PRT-SPC=L48-SPC/m:oooooo
+
+ gde
+
+ S48-SPC
+        - specifikaciq fajla otlavennogo zagruzo~nogo modulq;
+
+ PRT-SPC
+        - specifikaciq fajla protokola otladki;
+
+ L48-SPC
+        - specifikaciq fajla otlaviwaemogo zagruzo~nogo modulq;
+
+ /M:OOOOOO
+        - edinstwenno  dopustimyj  kl`~  komandnoj  stroki.  zna~enie
+          kl`~a  oooooo  ispolxzuetsq  dlq  zapolneniq   oblasti   op
+          instrumentalxnoj |wm, modeliru`}ej ozu mikro-|wm k1816we48.
+          kl`~ movet bytx ukazan w l`bom meste komandnoj stroki. esli
+          kl`~  opu}en,  oblastx  modeliruemoj   pamqti   zapolnqetsq
+          slu~ajnymi zna~eniqmi (imitaciq wkl`~eniq mikro-|wm).
+
+      specifikacii naborow dannyh zada`tsq s u~etom ob}ih  prawil  os
+ rafos. l`boj nabor dannyh movet bytx opu}en takve  s  u~etom  prawil
+ operacionnoj sistemy.
+
+      posle obrabotki komandnoj stroki programma EMUL48  perehodit  w
+ dialogowyj revim otladki, pe~ataq  na  |krane  displeq  simwol  '#'.
+ polxzowatel` dostupen opredelennyj nabor komand dialoga  (priwoditsq
+ w prilovenii), s  pomo}x`  kotorogo  on  sozdaet  i  realizuet  swoj
+ algoritm otladki. komandy otladki zada`tsq w otwet na simwol '#'.
+
+                               - 8 -
+
+                         predw.0010-01 13 01
+
+
+      w ka~estwe whodnyh dannyh programma |mulqtor ispolxzuet:
+
+        - fajl zagruzo~nogo modulq  programmy,  sozdannyj  programmoj
+          redaktor swqzej LINK48, tip fajla .L48;
+        - fajl zadaniq konfiguracii mikro-|wm, tip fajla .PAR.
+
+      fajl  zagruzo~nogo  modulq  sformirowan  w  formate  absol`tnoj
+ zagruzki.  sostoit  iz  dwoi~nyh  zapisej,  kavdaq  zapisx  sodervit
+ absol`tnyj  adres  zagruzki  i  ma{innye   kody   komand   mikro-|wm
+ k1816we48.
+
+      fajl zadaniq konfiguracii modeli mikro-|wm sodervit  simwolxnyj
+ tip informacii.  on  sozdaetsq  polxzowatelem  s  pomo}x`  redaktora
+ teksta os rafos (EDIT, TECO i t.p.).
+
+      rezulxtatom raboty programmy EMUL48 qwlq`tsq:
+
+        - fajl otlavennogo zagruzo~nogo modulq, tip .S48;
+        - fajl protokola otladki, tip .PRT.
+
+      fajl  tipa  .S48  sodervit  izmenennyj   w   processe   otladki
+ zagruzo~nyj modulx, sostoq}ij iz dwoi~nyh zapisej. fajl  otlavennogo
+ zagruzo~nogo  modulq  predstawlqet  soboj  obraz  modeliruemogo  pzu
+ mikro-|wm w formate absol`tnoj zagruzki.
+
+      fajl protokola  otladki  sodervit  simwolxnyj  tip  informacii.
+ movet bytx wyweden na |kran displeq ili  na  pe~ata`}ee  ustrojstwo.
+ fajl predstawlqet soboj kopi` protokola otladki, wywodimogo na |kran
+ displeq w processe otladki.
+
+      programma |mulqtor funkcioniruet pod  uprawleniem  operacionnoj
+ sistemy rafos i ispolxzuet ee sistemnye resursy.  programma  trebuet
+ ne menee 32 kbajt operatiwnoj pamqti.
+
+      dlq zawer{eniq raboty  s  programmoj  |mulqtor  sleduet  wwesti
+ kombinaci` <CTRL/C>. uprawlenie peredaetsq monitoru sistemy.
+
+
+
+       4.4. programma diz-assembler
+
+
+
+      programma diz-assembler DIS48 prednazna~ena dlq  preobrazowaniq
+ programmy  w  ma{innyh  kodah  mikro-|wm  (zagruzo~nyj   modulx)   w
+ udobno~itaemyj  dokument   (ishodnyj   modulx),   soderva}ij   tekst
+ programmy mikro-|wm w assemblernom (mnemoni~eskom) formate.
+
+      diz-assembler  movet  ispolxzowatxsq  dlq  prowerki   struktury
+ zagruzo~nogo modulq  -  opredeleniq  segmentow  perekrytij  ili  dlq
+ polu~eniq ishodnogo modulq programmnogo  obespe~eniq  mikro-|wm,  na
+ kotoroe ne imeetsq dostato~noj dokumentacii.
+
+      wo   wremq   formirowaniq   ishodnogo   modulq    diz-assembler
+ interpretiruet  zagruzo~nyj  modulx  kak  posledowatelxnostx  komand
+ mikro-|wm. dlq  zadaniq  oblastej  diz-assemblirowaniq  i  wydeleniq
+ segmentow  komand  i   dannyh   ispolxzuetsq   modulx   opredelenij,
+ sozdawaemyj polxzowatelem.
+
+
+
+
+
+
+      programma DIS48 wypolnqet sledu`}ie funkcii:
+
+        - wwod zagruzo~nogo modulq iz neskolxkih zagruzo~nyh  fajlow,
+          ukazannyh polxzowatelem;
+        - prowerka  struktury  zagruzo~nogo  modulq   -   opredelenie
+          segmentow perekrytij;
+        - wwod i obrabotka modulq opredelenij  iz  neskolxkih  fajlow
+          opredelenij, ukazannyh polxzowatelem;
+        - formirowanie diz-assemblernoj raspe~atki w formate listinga
+          ili ishodnogo fajla;
+        - wydelenie oblastej diz-assemblirowaniq w zagruzo~nom fajle;
+        - wydelenie w zagruzo~nom module segmentow komand i dannyh;
+        - priswoenie simwoli~eskih  imen  metkam  i  neposredstwennym
+          dannym;
+        - raspe~atka tablic simwoli~eskih imen;
+        - wyda~a diagnosti~eskih soob}enij.
+
+      programma     DIS48      realizuet      sledu`}ij      algoritm
+ diz-assemblirowaniq:
+
+        - na  |tape  raspredeleniq  pamqti  zagruva`tsq   neobhodimye
+          drajwery,  inicializiru`tsq   tablicy   segmentow,   metok,
+          neposredstwennyh dannyh;
+
+        - posledowatelxno ~ita`tsq i obrabatywa`tsq operatory  modulq
+          opredelenij; w tablicy  zanositsq  neobhodimaq  informaciq;
+          parallelxno w fajl diz-assemblirowaniq wywodqtsq rezulxtaty
+          obrabotki modulq opredelenij;
+
+        - wywoditsq i obrabatywaetsq zagruzo~nyj  modulx:  wydelq`tsq
+          segmenty komand i dannyh; w tablicy zanositsq informaciq ob
+          adresah pereda~i uprawleniq i neposredstwennyh dannyh;
+
+        - powtorno wwoditsq i diz-assembliruetsq zagruzo~nyj  modulx,
+          formiruetsq  i  wywoditsq  fajl  w  formate  listinga   ili
+          ishodnogo modulq;
+
+        - w fajl  diz-assemblirowaniq  wywodqtsq  tablicy  segmentow,
+          metok i neposredstwennyh dannyh.
+
+      programma DIS48 w formate zagruzki nahoditsq w fajle  s  imenem
+ DIS48.SAV.  dlq  zagruzki  i  zapuska  programmy   neobhodimo   datx
+ sledu`}u` komandu monitora operacionnoj sistemy:
+
+        .R DIS48
+
+ ili
+
+        .RUN DEV:DIS48
+
+      posle zapuska programmy na  terminale  poqwlqetsq  simwol  "*",
+ ozna~a`}ij gotownostx programmy k wwodu komandnoj stroki.
+
+      w komandnoj stroke ukazywa`tsq specifikacii whodnyh i  wyhodnyh
+ naborow dannyh; movno ne  ukazywatx  specifikacii  wyhodnyh  naborow
+ dannyh w sootwetstwii s prawilami bazowoj os.
+
+      programma diz-assembler obrabatywaet sledu`}ie  whodnye  nabory
+
+                               - 9 -
+
+                         predw.0010-01 13 01
+
+
+ dannyh:
+
+        - zagruzo~nyj    modulx,     soderva}ij     ma{innye     kody
+          diz-assembliruemoj programmy; movet sostoqtx iz  neskolxkih
+          zagruzo~nyh fajlow;
+        - modulx  opredelenij,  soderva}ij   uprawlq`}u`   informaci`
+          diz-assemblera;  movet  sostoqtx   iz   neskolxkih   fajlow
+          opredelenij.
+
+      wyhodnymi naborami dannyh qwlq`tsq:
+
+        - ishodnyj fajl, soderva}ij  diz-assembliruemu`  programmu  w
+          assemblernom formate;
+        - fajl listinga, soderva}ij  diz-assembliruemu`  programmu  w
+          assemblernom formate s ukazaniem kodow komand i adresow  ih
+          zagruzki;
+        - fajl  diz-assemblirowaniq,  soderva}ij  protokol  obrabotki
+          modulq opredelenij i zagruzo~nogo modulq.
+
+      rezulxtatom odnogo progona programmy diz-assembler qwlq`tsq dwa
+ wyhodnyh  fajla:  ishodnyj   fajl   ili   fajl   listinga   i   fajl
+ diz-assemblirowaniq.
+
+      komandaq stroka dolvna sootwetstwowatx CSI-formatu, prinqtomu w
+ bazowoj operacionnoj sisteme:
+
+OUT-SPC, DIS-SPC = IN-SPC, . . . , IN-SPC <wk>
+
+ gde
+
+    OUT-SPC
+        - specifikaciq osnownogo wyhodnogo fajla (ishodnogo ili fajla
+          listinga).
+
+    DIS-SPC
+        - specifikaciq fajla diz-assemblirowaniq.
+
+    IN-SPC
+        - specifikaciq whodnyh fajlow (zagruzo~nyh fajlow ili  fajlow
+          opredelenij).
+
+ specifikacii fajlow takve ukazywa`tsq  w  sootwetstwii  s  prawilami
+ bazowoj os.
+
+      dlq wyhoda iz programmy  diz-assembler  i  pereda~i  uprawleniq
+ monitoru operacionnoj sistemy neobhodimo navatx <CTRL/C>, esli DIS48
+ ovidaet wwoda s terminala; ili dwavdy navatx  <CTRL/C>,  esli  DIS48
+ nahoditsq w revime raboty. posle zawer{eniq raboty programma wywodit
+ na terminal simwol "*" i ovidaet wwoda nowoj komandnoj stroki.
+
+      programma DIS48 rabotaet pod uprawleniem  bazowoj  operacionnoj
+ sistemy i ispolxzuet ee sistemnye resursy. programma zanimaet  okolo
+ 12 kbajt  operatiwnoj  pamqti.  ostalxnaq  swobodnaq  ~astx   pamqti
+ dinami~eski wydelqetsq pod drajwery ustrojstw, bufera wwoda-wywoda i
+ tablicy, neobhodimye dlq raboty diz-assemblera.
+
+      zagruzo~nye fajly i  fajly  opredelenij  dolvny  nahoditxsq  na
+ wne{nih ustrojstwah s katalogowoj organizaciej.
+
+
+
+
+
+
+                 5. whodnye i wyhodnye nabory dannyh
+
+
+
+
+      whodnye   i   wyhodnye   nabory   dannyh   sapr48    neobhodimo
+ rassmatriwatx w razreze re{aemyh sistemoj zada~.  pri  ispolxzowanii
+ sistemy w ka~estwe sredstwa sozdaniq otlavennyh zagruzo~nyh  modulej
+ programmnogo  obespe~eniq   mikro-|wm   whodnymi   naborami   dannyh
+ qwlq`tsq:
+
+        - fajly ishodnyh modulej  (tip  .M48),  postupa`}ie  na  whod
+          kross-assemblera MAC48 dlq translqcii;
+        - fajly zadaniq konfiguracii  modeli  mikro-|wm  (tip  .PAR),
+          ispolxzuemye  |mulqtorom  EMUL48  pri  otladke  zagruzo~nyh
+          modulej.
+
+ fajly oboih tipow  sozda`tsq  s  pomo}x`  redaktora  teksta  bazowoj
+ operacionnoj sistemy.
+
+      wyhodnymi naborami dannyh qwlq`tsq:
+
+        - fajly  zagruzo~nyh  modulej  (tip  .L48),  sozdannye   libo
+          redaktorom  swqzej  LINK48,   libo   programmoj   MAC48   w
+          specialxnom revime raboty;
+        - fajly otlavennyh zagruzo~nyh modulej (tip .S48), polu~aemye
+          w rezulxtate raboty programmy EMUL48.
+
+ wyhodnye fajly gotowy k zapisi  w  pzu  mikro-|wm  k1816we48  ili  w
+ mikroshemy wne{nih pzu.
+
+      promevuto~nymi i wspomogatelxnymi dannymi qwlq`tsq:
+
+        - fajly ob'ektnyh  modulej  (tip  .O48)  -  rezulxtat  raboty
+          kross-assemblera MAC48;
+        - fajly listinga (tip .LST);
+        - fajly kart pamqti (tip .MAP);
+        - fajly protokolow otladki (tip .PRT).
+
+      sapr48 movet ispolxzowatxsq takve dlq sozdaniq ishodnyh modulej
+ putem  diz-assemblirowaniq   zagruzo~nyh   modulej,   polu~ennyh   w
+ rezulxtate ~teniq pzu mikro-|wm k1816we48. w  |tom  slu~ae  whodnymi
+ naborami dannyh qwlq`tsq:
+
+        - fajly w formate absol`tnoj  zagruzki,  podawaemye  na  whod
+          diz-assemblera DIS48;
+        - fajly opredelenij (tip .DEF), sozdannye s pomo}x` redaktora
+          teksta    i    primenqemye     programmoj     DIS48     pri
+          diz-assemblirowanii.
+
+      wyhodnymi naborami dannyh qwlq`tsq:
+
+        - fajly ishodnyh modulej (tip .M48) libo fajly listinga  (tip
+          .LST), polu~ennye w rezulxtate diz-assemblirowaniq.
+
+      wspomogatelxnymi dannymi qwlq`tsq:
+
+        - simwolxnye fajly diz-assemblirowaniq (tip .DIS).
+
+                               - 10 -
+
+                         predw.0010-01 13 01
+
+
+       5.1. format ob'ektnogo modulq
+
+
+
+      ob'ektnyj modulx sodervit programmu mikro-|wm w ma{innyh  kodah
+ i dopolnitelxnu` informaci`, neobhodimu` dlq ob'edineniq  nezawisimo
+ transliruemyh ishodnyh modulej.
+
+
+      dannye,  soderva}iesq  w  dwoi~noj  zapisi  ob'ektnogo  modulq,
+ opredelq`tsq tipom zapisi. kod tipa zapisi nahoditsq w tretxem slowe
+ dwoi~noj zapisi (ris.1).
+
+
+          !-------------------------!------
+        0 !            1            !    :
+          !-----               -----!    :
+        1 !            0            !    :
+          !-------------------------! zagolowok
+        2 !    s~et~ik          L O ! zapisi
+          !-----               -----!    :
+        3 !                     H I !    Y
+          !-------------------------!------
+        4 !          k o d          !    :
+          !-----               -----! tip zapisi
+        5 !            0            !    Y
+          !-------------------------!------
+          !                         !
+          .                         .
+          .       d a n n y e       .
+          .                         .
+          !                         !
+          !-------------------------!
+          !    kontrolxnaq summa    !
+          !-------------------------!
+
+        ris.1. zapisx ob'ektnogo modulq.
+
+      w ob'ektnom module ime`tsq zapisi sledu`}ih tipow:
+
+        - informaciq o globalxnyh simwolah modulq:
+               - tip zapisi - GSD;
+               - kod - 1;
+
+        - priznak konca zapisej GSD:
+               - tip zapisi - ENDGSD;
+               - kod - 2;
+
+        - ma{innye   kody   programmy    mikro-|wm;    operandy    ne
+          modificirowany i trebu`t nastrojki:
+               - tip zapisi - TXT;
+               - kod - 3;
+
+        - informaciq o nastrojke zapisej TXT:
+               - tip zapisi - RLD;
+               - kod - 4;
+
+        - priznak konca ob'ektnogo modulq:
+
+
+
+
+
+
+               - tip zapisi - ENDMOD;
+               - kod - 6;
+
+      wse zapisi GSD dolvny raspolagatxsq w na~ale ob'ektnogo  modulq
+ pered zapisx` ENDGSD (priznak konca zapisej GSD).
+
+      zapisi TXT movet pred{estwowatx odna ili neskolxko zapisej RLD,
+ kotorye sodervat informaci` o nastrojke |toj zapisi TXT. esli zapisx
+ TXT  ne  trebuet  nastrojki,  to  pred{estwu`}ie  zapisi  RLD  mogut
+ otsutstwowatx. zapisi TXT i  RLD  mogut  otsutstwowatx  w  ob'ektnom
+ module.
+
+      zapisx ENDMOD (priznak konca  ob'ektnogo  modulq)  dolvna  bytx
+ poslednej w ob'ektnom module.
+
+
+
+     5.1.1. struktura zapisej GSD
+
+
+
+      zapisi GSD sodervat informaci` ob imeni modulq, adrese zapuska,
+ ob}ih (PUBLIC) i wne{nih (EXTRN) simwolah.
+
+      zapisi GSD  sostoqt  iz  |lementow,  kavdyj  iz  kotoryh  imeet
+ sledu`}ij format (ris.2).
+
+
+          -----------------------
+        0 !               !    :
+          !---         ---!    :
+        1 !               !    :
+          !---         ---!    :
+        2 !               !    imq
+          !---         ---! w kode  ASCII
+        3 !               ! 6 bajtow
+          !---         ---!    :
+        4 !               !    :
+          !---         ---!    :
+        5 !               !    Y
+          -----------------------
+        6 !               ! priznaki
+          -----------------------
+        7 !               ! kod opisatelq
+          -----------------------
+       10 !           L O !    :
+          !---         ---! zna~enie
+       11 !           H I !    Y
+          -----------------------
+
+        ris.2. format |lementa zapisi GSD.
+
+      w  bajte  "kod"  sodervitsq  kod  |lementa,  zna~enie  kotorogo
+ ukazywaet na tip soderva}ejsq informacii:
+
+        - imq modulq: kod = 0
+
+        - adres zapuska: kod = 2;
+
+                               - 11 -
+
+                         predw.0010-01 13 01
+
+
+        - imq wne{nego (EXTRN) simwola: kod = 3;
+
+        - imq ob}ego (PUBLIC) simwola: kod = 4;
+
+      ne dopuskaetsq "perenos" (prodolvenie)  |lementa  na  sledu`}u`
+ zapisx GSD. porqdok sledowaniq |lementow w zapisi GSD proizwolxnyj.
+
+
+
+   5.1.1.1. imq modulq
+
+
+
+      |lement zapisi "imq modulq" sodervit sledu`}u` informaci`:
+
+ bajty 0-5:
+        - imq ob'ektnogo modulq w kode ASCII -  sootwetstwuet  perwym
+          {esti simwolam argumenta  uprawlq`}ej  direktiwy  "$TITLE".
+          esli   direktiwa   "$TITLE"   w    ishodnom    module    ne
+          ispolxzowalasx, to po umol~ani` imq modulq - ".MAIN.";
+
+ bajt 6:
+        - 0;
+
+ bajt 7:
+        - 0;
+
+ bajty 10-12:
+        - 0.
+
+
+
+   5.1.1.2. adres zapuska
+
+
+
+      |lement zapisi "adres zapuska" sodervit sledu`}u` informaci`:
+
+ bajty 0-5:
+        - ne su}estwenno (probely);
+
+ bajt 6:
+        - 2;
+
+ bajt 7:
+        - 50;
+
+ bajty 10-12:
+        - adres  zapuska,  ukazannyj  w  direktiwe  "END"   ishodnogo
+          modulq.
+
+
+
+
+
+
+   5.1.1.3. wne{nij simwol
+
+
+
+      |lement zapisi  "wne{nij  simwol"  (EXTRN)  sodervit  sledu`}u`
+ informaci`:
+
+ bajty 0-5:
+        - imq wne{nego  simwola  w  kode  ASCII,  dopolnqetsq  sprawa
+          probelami;
+
+ bajt 6:
+        - 3;
+
+ bajt 7:
+        - 0;
+
+ bajty 10-12:
+        - otsutstwu`t.
+
+
+      p_r_i_m_e_~_a_n_i_e. w ob'ektnom  module  wse  wne{nie  simwoly
+ modulq pronumerowany (na~inaq s edinicy),  nomera  wne{nih  simwolow
+ opredelq`tsq porqdkom sledowaniq ih opisatelej w ob'ektnom module. w
+ odnom module dopuskaetsq ne bolee ~em 255 wne{nih simwolow.
+
+
+
+   5.1.1.4. ob}ij simwol
+
+
+
+      |lement  zapisi  "ob}ij  simwol"  (PUBLIC)  sodervit  sledu`}u`
+ informaci`:
+
+ bajty 0-5:
+        - imq  ob}ego  simwola  w  kode  ASCII,  dopolnqetsq   sprawa
+          probelami;
+
+ bajt 6:
+        - 4;
+
+ bajt 7:
+        - 0;
+
+ bajty 10-11:
+        - zna~enie ob}ego simwola.
+
+                               - 12 -
+
+                         predw.0010-01 13 01
+
+
+     5.1.2. struktura zapisi ENDGSD
+
+
+
+      zapisx  ENDGSD  qwlqetsq  priznakom  konca  opisatelxnoj  ~asti
+ ob'ektnogo modulq (zapisej GSD). dannye w zapisi ENDGSD otsutstwu`t,
+ dlina zapisi - 6 bajtow (bez bajta kontrolxnoj summy).
+
+
+
+     5.1.3. struktura zapisej TXT.
+
+
+
+      zapisi TXT sodervat ma{innye kody mikro-|wm  (tekst),  operandy
+ ne modificirowany i trebu`t nastrojki.
+
+      format zapisi TXT predstawlen na ris.3.
+
+
+          !-------------------------!------
+        0 !            1            !    :
+          !-----               -----!    :
+        1 !            0            !    :
+          !-------------------------! zagolowok
+        2 !    s~et~ik          L O ! zapisi
+          !-----               -----!    :
+        3 !                     H I !    Y
+          !-------------------------!------
+        4 !            3            !    :
+          !-----               -----! tip zapisi
+        5 !            0            !    Y
+          !-------------------------!------
+        6 !    adres            L O ! adres
+          !-----               -----! zagruzki
+        7 !                     H I ! teksta
+          !-------------------------!------
+          !                         !
+          .                         .
+          .        t e k s t        .
+          .                         .
+          !                         !
+          !-------------------------!
+          !    kontrolxnaq summa    !
+          !-------------------------!
+
+        ris.3. format zapisi TXT.
+
+
+
+
+
+
+     5.1.4. struktura zapisej RLD.
+
+
+
+      zapisi RLD sodervat informaci` o  nastrojke  operandow  zapisej
+ TXT. zapisx RLD "nastraiwaet" odnu zapisx  TXT.  zapisi  RLD  dolvny
+ pred{estwowatx  sootwetstwu`}ej  zapisi  TXT.  esli  zapisx  TXT  ne
+ trebuet nastrojki, to pred{estwu`}aq zapisx RLD otsutstwuet.
+
+      zapisi RLD ime`t format, predstawlennyj na ris.4.
+
+
+          !-------------------------!------
+        0 !            1            !    :
+          !-----               -----!    :
+        1 !            0            !    :
+          !-------------------------! zagolowok
+        2 !    s~et~ik          L O ! zapisi
+          !-----               -----!    :
+        3 !                     H I !    Y
+          !-------------------------!------
+        4 !            4            !    :
+          !-----               -----! tip zapisi
+        5 !            0            !    Y
+          !-------------------------!------
+        6 !            0            !    :
+          !-----               -----! rezerw
+        7 !            0            !    Y
+          !-------------------------!------
+          !                         !    :
+          .    n a s t r o j k a    . blok nastrojki 1
+          !                         !    Y
+          !-------------------------!------
+          .                         .
+          .                         .
+          !-------------------------!------
+          !                         !    :
+          .    n a s t r o j k a    . blok nastrojki N
+          !                         !    Y
+          !-------------------------!------
+          !    kontrolxnaq summa    !
+          !-------------------------!
+
+        ris.4. format zapisi RLD.
+
+      bloki nastrojki sostoqt iz komand, pozwolq`}ih redaktoru swqzej
+ nastraiwatx (modificirowatx) sootwetstwu`}ie ~asti  zapisej  TXT.  w
+ odnoj  zapisi  RLD  movet  bytx  neskolxko  blokow   nastrojki.   ne
+ dopuskaetsq "perenos" (prodolvenie)  bloka  nastrojki  na  sledu`}u`
+ zapisx RLD.
+
+      format blokow nastrojki predstawlen na ris.5.
+
+                               - 13 -
+
+                         predw.0010-01 13 01
+
+
+          -----------------
+       0  !     t i p     !
+          -----------------
+       1  !s m e } e n i e!
+          -----------------
+          !               !
+          .               .
+          .   wyravenie   .
+          .   nastrojki   .
+          .               .
+          !               !
+          -----------------
+
+        ris.5. format blokow nastrojki.
+
+
+
+
+     5.1.5. struktura zapisi ENDMOD
+
+
+
+      zapisx  ENDMOD  qwlqetsq  priznakom  konca  ob'ektnogo  modulq.
+ dannye w zapisi ENDMOD otsutstwu`t, dlina zapisi  -  6  bajtow  (bez
+ bajta kontrolxnoj summy).
+
+
+
+       5.2. format zagruzo~nogo modulq
+
+
+
+      zagruzo~nyj modulx sodervit programmu w kodah mikro-|wm gotowu`
+ k wypolneni` (|mulqcii) ili programmirowani` pzu.
+
+      zagruzo~nyj modulx sostoit iz dwoi~nyh zapisej. zapisi sodervat
+ ma{innye kody mikro-|wm i adresa zagruzki  kodow  w  pzu  mikro-|wm.
+ poslednqq zapisx modulq dlinoj {estx bajtow sodervit startowyj adres
+ programmy mikro-|wm i qwlqetsq priznakom konca modulq.
+
+      struktura zapisej zagruzo~nogo modulq predstawlena na ris.6.
+
+
+
+
+
+
+          !-------------------------!------
+        0 !            1            !    :
+          !-----               -----!    :
+        1 !            0            !    :
+          !-------------------------! zagolowok
+        2 !    s~et~ik          L O ! zapisi
+          !-----               -----!    :
+        3 !                     H I !    Y
+          !-------------------------!------
+        4 !    adres            L O ! adres
+          !-----               -----! zagruzki
+        5 !                     H I ! kodow mikro-|wm
+          !-------------------------!------
+          !                         !
+          .                         .
+          .         k o d y         .
+          .                         .
+          !                         !
+          !-------------------------!
+          !    kontrolxnaq summa    !
+          !-------------------------!
+
+        ris.6. struktura zapisi zagruzo~nogo modulq.
+
+
+      p_r_i_m_e_~_a_n_i_e. w poslednej zapisi modulq dannye (ma{innye
+ kody)  otsutstwu`t,  a  wmesto  adresa  zagruzki  ukazywaetsq  adres
+ zapuska (kak prawilo 0).
+
+                               - 14 -
+
+                         predw.0010-01 13 01
+
+
+                                                     prilovenie
+
+
+
+                           komandy otladki
+
+
+
+
+      ---------------------------------------------------------
+      !                           !                           !
+      !       mnemonika           !        nazna~enie         !
+      !                           !                           !
+      !---------------------------!---------------------------!
+      !           1               !             2             !
+      !---------------------------!---------------------------!
+      !                           !                           !
+      !PAR [PAR_SPC]              !zadanie konfiguracii modeli!
+      !                           !mikro-|wm;                 !
+      !                           !PAR_SPC-specifikaciq fajla !
+      !                           !        zadaniq parametrow,!
+      !                           !        sodervit direktiwy !
+      !                           !        komandy;           !
+      !   RAM XXX-YYY/C           !direktiwa zadaniq oblasti  !
+      !                           !ozu;                       !
+      !   ROM XXX-YYY/C           !direktiwa zadaniq oblasti  !
+      !                           !pzu;                       !
+      !   PRT N                   !direktiwa zadaniq urownq   !
+      !                           !wedeniq protokola;         !
+      !   LST                     !direktiwa raspe~atki para- !
+      !                           !metrow.                    !
+      !                           !XXX,YYY-{esnadcateri~nye   !
+      !                           !        adresa;            !
+      !                           !C=U-wnutrennqq oblastx     !
+      !                           !C=E=wne{nqq oblastx        !
+      !                           !0<=N<=3                    !
+      !                           !                           !
+      !ACC                        !raspe~atka ob}ego sostoqniq!
+      !                           !modeli mikro-|wm           !
+      !                           !                           !
+      !BPT N[:CCCC][/<str. usl.>] !zadanie to~ki ostanowa     !
+      !                           !0<=N<=7                    !
+      !                           !CCCC:                      !
+      !                           !MXXX-q~ejka wnutr. ozu     !
+      !                           !CXXX-q~ejka pzu            !
+      !                           !EXXX-q~ejka wne{nego ozu   !
+      !                           !BUS-{ina dannyh            !
+      !                           !PN -port,N=1,2             !
+      !                           !R0N-registr banka 0, N=0-7 !
+      !                           !R1N-registr banka 1        !
+      !                           !SN -|lement steka, 0<=N<=7 !
+      !                           !<str.usl.>-stroka uslowij, !
+      !                           !dwa simwola iz sledu`}ih:  !
+      !                           !  A-adres                  !
+      !                           !  D-dannoe                 !
+      !                           !  R-~tenie                 !
+      !                           !  W-zapisx                 !
+      !---------------------------!---------------------------!
+
+
+
+
+
+
+
+                                                         prodolvenie
+
+      !---------------------------!---------------------------!
+      !           1               !             2             !
+      !---------------------------!---------------------------!
+      !CHK [XXX][:CCC1[,...,CCCN]]!prodolvenie raboty s adresa!
+      !                           !XXX w revime trassirowki   !
+      !                           !1<=N<=16                   !
+      !                           !CCC1,...,CCCN:             !
+      !                           !MXXX-q~ejka wnutr. ozu     !
+      !                           !CXXX-q~ejka pzu            !
+      !                           !EXXX-q~ejka wne{nego ozu   !
+      !                           !BUS-{ina dannyh            !
+      !                           !PN -port,N=1,2             !
+      !                           !R0N-registr banka 0, N=0-7 !
+      !                           !R1N-registr banka 1        !
+      !                           !SN -|lement steka, 0<=N<=7 !
+      !                           !A  -akkumulqtor            !
+      !                           !CNT-tajmer / s~et~ik       !
+      !                           !PSW-slowo sostoqniq        !
+      !                           !PC -s~et~ik komand         !
+      !                           !                           !
+      !CON [DDD]                  !prodolvenie raboty posle   !
+      !                           !ostanowa                   !
+      !                           !DDD-~islo wozniknowenij us-!
+      !                           !    lowij ostanowa         !
+      !                           !1<=DDD<=256                !
+      !                           !                           !
+      !DIS CCC                    !snqtie urownq prerywaniq po!
+      !                           !whodu CCC                  !
+      !                           !CCC=T0,T1,INT              !
+      !                           !                           !
+      !DMP CXXX,CYYY              !raspe~atka oblastej pamqti !
+      !                           !C:                         !
+      !                           ! M-wnutrennee ozu          !
+      !                           ! C-wnutr. i wne{. pzu      !
+      !                           ! e-wne{nee ozu             !
+      !                           !XXX,YYY-{estnadcateri~nyye !
+      !                           !        adresa             !
+      !                           !                           !
+      !ENB CCC                    !zadanie urownq prerywaniq  !
+      !                           !po whodu CCC (sm."DIS CCC")!
+      !                           !                           !
+      !END                        !zawer{enie otladki         !
+      !                           !                           !
+      !GET                        !zagruzka programmy w pzu   !
+      !                           !                           !
+      !GO                         !na~alxnyj zapusk           !
+      !                           !                           !
+      !HIS                        !raspe~atka "istori~eskoj   !
+      !                           !pamqti"                    !
+      !                           !                           !
+      !---------------------------!---------------------------!
+
+                               - 15 -
+
+                         predw.0010-01 13 01
+
+
+                                                         prodolvenie
+
+      !---------------------------!---------------------------!
+      !           1               !             2             !
+      !---------------------------!---------------------------!
+      !moD <resurs>               !modifikaciq resursow modeli!
+      !                           !mikro-|wm                  !
+      !                           !<resurs>:                  !
+      !                           !MXXX-q~ejka wnutr. ozu     !
+      !                           !CXXX-q~ejka pzu            !
+      !                           !EXXX-q~ejka wne{nego ozu   !
+      !                           !BUS-{ina dannyh            !
+      !                           !PN -port,N=1,2             !
+      !                           !R0N-registr banka 0, N=0-7 !
+      !                           !R1N-registr banka 1        !
+      !                           !SN -|lement steka, 0<=N<=7 !
+      !                           !A  -akkumulqtor            !
+      !                           !CNT-tajmer / s~et~ik       !
+      !                           !PSW-slowo sostoqniq        !
+      !                           !PC -s~et~ik komand         !
+      !                           !F0 -flag 0                 !
+      !                           !F1 -flag 1                 !
+      !                           !TF -flag tajmera           !
+      !                           !                           !
+      !RB0                        !pe~atx registrow banka 0   !
+      !                           !                           !
+      !RB1                        !pe~atx registrow banka 1   !
+      !                           !                           !
+      !RES                        !ob}ij sbros                !
+      !                           !                           !
+      !RUN [XXX]                  !prodolvenie raboty s       !
+      !                           !adresa XXX                 !
+      !                           !                           !
+      !SAV [XXX1-YYY1,]           !sohranenie otlavennoj pro- !
+      !    ------------           !grammy ili segmentow (XXX1-!
+      !    [XXXN-YYYN]            !YYY1,...,XXXN-YYYN] program!
+      !                           !my w fajle                 !
+      !                           !                           !
+      !STK                        !pe~atx q~eek steka         !
+      !                           !                           !
+      !TIM [DDD[CCC]]             !raspe~atka realxnogo ili   !
+      !                           !interwalxnogo wremeni rabo-!
+      !                           !ty modeli mikro-|wm, libo  !
+      !                           !zadanie interwala wremeni  !
+      !                           !DDD-desqti~noe zna~enie    !
+      !                           !CCC:                       !
+      !                           !     M  -minuty            !
+      !                           !     S  -sekundy           !
+      !                           !     MS -milisekundy       !
+      !                           !     MKS-mikrosekundy      !
+      !                           !                           !
+      !TRC [XXX][:YYY1[,...,YYYN]]!prodolvenie raboty s adre- !
+      !                           !sa XXX do komandy perehoda !
+      !                           !libo do komandy, kod koTO- !
+      !                           !roj zadan w komande (YYY1, !
+      !                           !...,YYYN)                  !
+      !                           !1<=N<=16                   !
+      ---------------------------------------------------------

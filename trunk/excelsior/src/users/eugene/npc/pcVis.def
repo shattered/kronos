@@ -1,0 +1,17 @@
+DEFINITION MODULE pcVis; (* Ned 03-Apr-91. (c) KRONOS *)
+
+IMPORT  pcK;
+
+PROCEDURE vis(root: pcK.NODE);
+
+PROCEDURE node(n: pcK.NODE);
+
+PROCEDURE obj(o: pcK.OBJECT);
+
+PROCEDURE struct(t: pcK.STRUCT);
+
+PROCEDURE locs(o: pcK.OBJECT);   (* object tree *)
+
+PROCEDURE stat(root: pcK.NODE);
+
+END pcVis.

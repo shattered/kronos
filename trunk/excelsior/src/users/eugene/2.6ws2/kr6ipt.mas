@@ -1,0 +1,251 @@
+:INIT0
+% Init memory
+        [ CONST->R1 D=128. ]
+        [ CONST->R2 D=0 ALU=NE(B) ]
+:INIT3  [ WR_MEM_A bus_A=RW_R1 ALU=A-1 FLAG=Z ]
+        [ WR_MEM_D bus_B=R2 GO_FALSE ADR=INIT3 ]
+        [ CONST->R1 D=2 SHIFT_EN ]
+        [ bus_B=RW_R1   SHIFT_EN ]
+:INIT2  [ WR_MEM_A bus_A=RW_R1 ALU=A-1 FLAG=Z ]
+        [ WR_MEM_D bus_B=R2 GO_FALSE ADR=INIT2 ]
+% Reset Q-bus
+        [ CALL ADR=RESET_SUB ]
+
+% Registers test
+:REG_TEST
+        [ CONST->Etop   D=055 ]
+        [ CONST->R1     D=0AA ]
+        [ CONST->R2     D=0FF ]
+        [ ALU=A_OR_B    bus_A=RW_Etop   bus_B=R1 ]
+        [ ALU=A-B       bus_A=Etop      bus_B=R2   FLAG=Z ]
+          [ GO_TRUE ADR=RT1 ]
+:RT_ERR0  [ bus_A=Etop bus_B=R2 GOTO ADR=RT_ERR0 ]
+
+:RT1
+        [ CONST->R1 D=1 ]
+        [ CONST->R2 D=16. ]
+:RT2    [ ALU=ROL(A) bus_A=RW_R1 ]
+        [ ALU=ROL(A) bus_A=RW_R1 ]
+        [ ALU=A_OR_B bus_A=RW_R1 CONST D=1 ]
+        [ ALU=A-1    bus_A=RW_R2 FLAG=Z ]
+        [ GO_FALSE ADR=RT2 ]
+
+        [ ALU=ROL(A) bus_A=R1    bus_B=WR_R2 ]
+        [ ALU=ROL(A) bus_A=RW_R2 ]
+        [ ALU=A-B    bus_A=R2    bus_B=R1  FLAG=Z ]
+          [ GO_TRUE ADR=RT3 ]
+          % R1 # 101010101010101010
+:RT_ERR1  [ bus_A=R1   bus_B=R1 GOTO ADR=RT_ERR1 ]
+
+:RT3    % R1 = 101010101....
+
+        [ bus_A=R1->STACK ]
+        [ CONST->R2 D=20  ]
+        [ bus_A=R2->STACK ]
+
+:RT_LOOP
+        [ bus_A=STACK->R2 ]
+        [ bus_A=STACK->R1 ]
+        [ ALU=B->P bus_B=R1 bus_A=R1->STACK ]
+        [ ALU=A-1  bus_A=RW_R2 FLAG=Z ]
+        [ bus_A=R2->STACK ]
+        [ GO_TRUE ADR=RT_OK ]
+
+        [ ALU=A_AND_B  bus_A=R2 CONST D=1 FLAG=Z ]
+        [ GO_TRUE ADR=RT4 ]
+        [ ALU=NE(A)    bus_A=RW_R1 ]
+        [ ALU=B->P     bus_B=R1    ]
+
+:RT4    [ ALU=P bus_A=WR_Etop   bus_B=WR_R1   ]
+        [ ALU=P bus_A=WR_R2     bus_B=WR_R3   ]
+        [ ALU=P bus_A=WR_R4     bus_B=WR_R5   ]
+        [ ALU=P bus_A=WR_R6     bus_B=WR_Time ]
+
+        [ ALU=P bus_A=WR_P      bus_B=WR_M    ]
+        [ ALU=P bus_A=WR_PC     bus_B=WR_G    ]
+        [ ALU=P bus_A=WR_L      bus_B=WR_S    ]
+        [ ALU=P bus_A=WR_H      bus_B=WR_F    ]
+
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_R1   ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_R3   ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_R4   ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_R5   ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_R6   ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_Time ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_P    ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_M    ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_PC   ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_G    ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_L    ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_S    ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_H    ]
+        [ ALU=A_OR_B bus_A=RW_Etop   bus_B=RW_F    ]
+
+        [ ALU=P bus_B=WR_R1 ]
+        [ ALU=A-B bus_A=Etop bus_B=R1 FLAG=Z ]
+        [ GO_TRUE ADR=RT5 ]
+:RT_ERR2  [ bus_A=Etop bus_B=R1 GOTO ADR=RT_ERR2 ]
+
+:RT5    [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_R1   ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_R3   ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_R4   ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_R5   ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_R6   ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_Time ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_P    ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_M    ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_PC   ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_G    ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_L    ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_S    ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_H    ]
+        [ ALU=A_AND_B bus_A=RW_Etop   bus_B=RW_F    ]
+
+        [ ALU=P bus_B=WR_R1 ]
+        [ ALU=A-B bus_A=Etop bus_B=R1 FLAG=Z ]
+        [ GO_TRUE ADR=RT_LOOP ]
+:RT_ERR3  [ bus_A=Etop bus_B=R1 GOTO ADR=RT_ERR3 ]
+
+:RT_OK  [ bus_A=STACK->R1 ]
+        [ bus_A=STACK->R1 ]
+
+% E-stack test
+:STACK_TEST
+        [ CONST->R1 D=1 ]
+        [ CONST->R2 D=16. ]
+:ST1    [ ALU=ROL(A) bus_A=RW_R1 ]
+        [ ALU=ROL(A) bus_A=RW_R1 ]
+        [ ALU=A_OR_B bus_A=RW_R1 CONST D=1 ]
+        [ ALU=A-1    bus_A=RW_R2 FLAG=Z ]
+        [ GO_FALSE ADR=ST1 ]
+
+        [ ALU=ROL(A) bus_A=R1    bus_B=WR_R2 ]
+        [ ALU=ROL(A) bus_A=RW_R2 bus_B=WR_R2 ]
+        [ ALU=A-B    bus_A=R2    bus_B=R1  FLAG=Z ]
+          [ GO_TRUE ADR=ST2 ]
+          % R1 # 101010101010101010
+:ST_ERR1  [ bus_A=R1   bus_B=R1 GOTO ADR=ST_ERR1 ]
+
+:ST2    % R1 = 101010101....
+        [ CONST->R2 D=2 SHIFT_EN ]
+
+:ST_LOOP
+        [ ALU=A-1  bus_A=RW_R2 FLAG=Z ]
+        [ GO_TRUE ADR=ST_OK ]
+
+        [ ALU=A_AND_B  bus_A=R2 CONST D=1 FLAG=Z ]
+        [ GO_TRUE ADR=ST_3 ]
+        [ ALU=NE(A)    bus_A=RW_R1 ]
+:ST_3
+        [ CONST->R6 D=16. ]
+:ST3    [ ALU=A-1 bus_A=RW_R6 FLAG=Z ]
+        [ bus_A=R1->STACK GO_FALSE ADR=ST3 ]
+
+        [ CONST->R3 D=0 ]
+        [ ALU=A bus_A=R1 bus_B=WR_R4 ]
+
+        [ CONST->R6 D=16. ]
+:ST4    [ ALU=A-1 bus_A=RW_R6 FLAG=Z ]
+        [ bus_A=STACK->R5 ]
+        [ ALU=A_OR_B  bus_A=R5 bus_B=RW_R3 ]
+        [ ALU=A_AND_B bus_A=R5 bus_B=RW_R4
+          GO_FALSE ADR=ST4 ]
+
+:ST5    [ ALU=A-B bus_A=R1 bus_B=R3 FLAG=Z ]
+        [ GO_TRUE ADR=ST6 ]
+:ST_ERR3  [ bus_A=R3   bus_B=R1 GOTO ADR=ST_ERR3 ]
+
+:ST6    [ ALU=A-B bus_A=R1 bus_B=R4 FLAG=Z ]
+        [ GO_TRUE ADR=ST_LOOP ]
+:ST_ERR4  [ bus_A=R4   bus_B=R1 GOTO ADR=ST_ERR4 ]
+
+:ST_OK  [ CONST->R1 D=1 ]
+        [ CONST D=20 LOAD_CNT ]
+:ST7    [ bus_B=RW_R1 SHIFT=ST7 ]
+        [ ALU=A-B bus_A=R1 CONST D=1 FLAG=Z ]
+        [ GO_TRUE ADR=ST8 ]
+:ST_ERR5[ bus_A=R1 bus_B=R1 GOTO ADR=ST_ERR5 ]
+
+:ST8    [ RETURN ]
+
+
+
+:HARD_ERR
+        [ CALL ADR=DEC_PC ]
+:HARD_ERR1
+        [ bus_B=M RESET_HARD_ERR ]
+        [ CONST->R1 D=3 ]
+        [ GOTO ADR=INTERUPT ]
+
+:REQUEST
+        [ CALL ADR=DEC_PC ]
+        [ bus_B=M IDLE_OFF ]
+        [ CONST->R1 D=41  ]
+        [ GOTO ADR=TRAPED ]
+
+:DEBUG  [ CALL ADR=DEC_PC ]
+        [ bus_B=M RESET_DEBUG ]
+        [ CONST->R1 D=0B ]
+        [ GOTO ADR=INTERUPT ]
+
+:TIME   [ CALL ADR=DEC_PC ]
+        [ ALU=A+1 bus_A=RW_Time FLAG=Qbus ]
+        [ CALL_FALSE ADR=CHECK_HALT ]
+        [ CALL ADR=REFRESH ]
+        [ ALU=A_AND_B bus_A=M CONST D=2 FLAG=Z ]
+        [ GO_FALSE ADR=TIME_1 ]
+:TIME_2 [ FLAG=ZERO FINISH ]
+:TIME_1 [ ALU=A-B bus_A=Time CONST D=14 FLAG=CARRY ]
+        [ GO_FALSE ADR=TIME_2 ]
+        [ ALU=A-B bus_A=Time CONST D=0A0 FLAG=CARRY ]
+        [ GO_FALSE ADR=TIME_3 ]
+        [ CONST->Time D=14 ]
+:TIME_3 [ ALU=A-B bus_A=RW_Time CONST D=14 ]
+        [ CONST->R1 D=1 ]
+        [ GOTO ADR=INTERUPT ]
+
+:ACL    [ CALL ADR=DEC_PC ]
+        [ bus_B=M RESET_ACL ]
+        [ CONST->R1 D=4   ]
+        [ GOTO ADR=INTERUPT ]
+
+:CNSL   [ CALL ADR=DEC_PC ]
+        [ CONST->R1 D=3D ]
+        [ GOTO ADR=INTERUPT ]
+
+:BUS_CINT
+        [ CALL ADR=DEC_PC ]
+        [ CONST->R1 D=3E ]
+        [ GOTO ADR=INTERUPT ]
+
+:BUS_INT
+        [ CALL ADR=DEC_PC ]
+        [ bus_B=WR_R1 RD_VECTOR REG_EN ADR=BUS_INT_6 ]
+        [ ALU=A_AND_B bus_A=R1 CONST D=0FF FLAG=Z ]
+        [ GO_FALSE ADR=BUS_INT_Q
+          ALU=A bus_A=R1 bus_B=WR_R2 FLAG=Z ]
+        [ CONST->R1 D=20 GO_REG_TRUE ]
+:BUS_INT_L
+        [ ALU=A+B bus_A=R2 bus_B=RW_R2 FLAG=CARRY ]
+        [ ALU=A-1 bus_A=RW_R1 FLAG=Z GO_FALSE ADR=BUS_INT_L ]
+        [ GOTO ADR=INTERUPT ]
+
+:BUS_INT_6
+        [ CONST->R1 D=6 ]
+        [ GOTO ADR=INTERUPT ]
+:BUS_INT_Q
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=ASR(A) bus_A=RW_R1 REG_EN ADR=INTERUPT ]
+        [ ALU=A_AND_B bus_A=RW_R1 CONST D=3F GO_REG ]
+
+:REQ0=0FF8
+        [ GOTO ADR=BUS_INT  ]
+:REQ1   [ GOTO ADR=BUS_CINT ]
+:REQ2   [ GOTO ADR=CNSL     ]
+:REQ3   [ GOTO ADR=ACL      ]
+:REQ4   [ GOTO ADR=TIME     ]
+:REQ5   [ GOTO ADR=DEBUG    ]
+:REQ6   [ GOTO ADR=REQUEST  ]
+:REQ7   [ GOTO ADR=HARD_ERR ]
+$
+

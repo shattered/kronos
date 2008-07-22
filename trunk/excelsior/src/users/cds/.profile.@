@@ -1,0 +1,1 @@
+BIN=. /usr/cds/bin /bin /usr/binSYM=. /usr/cds/bin /sym /usr/symREF=. /usr/cds/bin /ref /usr/refmxFLAGS=N+

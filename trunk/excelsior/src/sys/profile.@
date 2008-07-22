@@ -1,0 +1,1 @@
+PROMPT="%t %/ ! "su%fschk /dev/xd1fsdb /dev/xd1echo Run fsdb +W /dev/xd1 if errors are found

@@ -1,0 +1,12 @@
+DEFINITION MODULE pcO2; (* m2: Ned 06-Dec-87. (c) KRONOS *)
+                        (* o2: Ned 11-May-91. (c) KRONOS *)
+IMPORT  pcK;
+
+VAR
+  vers: ARRAY [0.. 63] OF CHAR; (* версия компилятора *)
+  opts: BITSET;                 (* опции по умолчанию *)
+
+PROCEDURE compile(opts: BITSET; VAR cu: pcK.NODE);
+(* Выставляет pcObj: name, def, imp после разбора заголовка модуля *)
+
+END pcO2.

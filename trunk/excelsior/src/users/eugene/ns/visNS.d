@@ -1,0 +1,11 @@
+DEFINITION MODULE visNS; (* Ned 04-Jan-89. (c) KRONOS *)
+
+VAL cp: INTEGER;
+
+PROCEDURE vis_ins;
+
+TYPE GET_BYTE = PROCEDURE (): INTEGER;
+
+PROCEDURE ini(cp: INTEGER; next: GET_BYTE);
+
+END visNS.

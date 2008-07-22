@@ -1,0 +1,1643 @@
+:UPDATE_CASH_S
+        [ ALU=A+1 bus_A=RW_PC RD_MEM_A FLAG=ZERO ]
+        [ WR_CASH RD_MEM_D RETURN ]
+
+:TRAP4A [ CONST->R1 D=4A ]
+        [ GOTO ADR=TRAPED ]
+:TRAP41 [ CONST->R1 D=41 ]
+
+:TRAPED         % R1-Trap no.
+        [ ALU=A+B  bus_A=P CONST D=6 WR_MEM_A ]
+        [ bus_B=R1 WR_MEM_D ]
+:INTERUPT       % R1-Trap no.
+        [ ALU=A-B bus_A=R1 CONST D=3F FLAG=CARRY ]
+        [ ALU=A bus_A=R1 bus_B=WR_R4 GO_FALSE ADR=INT1 ]
+        [ CONST->R1 D=3F ]
+:INT1   % R1 - vector, R4 - trap no
+        [ ALU=A-B bus_A=R4 CONST D=0C FLAG=CARRY ]
+        [ GO_TRUE ADR=INT2 ALU=A bus_A=R1 bus_B=WR_R3 FLAG=Z ]
+        % Trap no < 0Ch
+        [ GO_TRUE ADR=INT5 ] % Go if trap no = 0
+        [ CONST->R2 D=1 ]
+:INT4   [ ALU=A-1 bus_A=RW_R3 FLAG=Z ]
+        [ ALU=ROL(A) bus_A=RW_R2 GO_FALSE ADR=INT4 ]
+:INT3   [ ALU=A_AND_B bus_A=M bus_B=R2 FLAG=Z REG_EN ADR=HALTED ]
+        [ GO_FALSE ADR=TRAP_S ]
+        [ ALU=A-B bus_A=R1 CONST D=02 FLAG=Z ]
+        [ ALU=A-B bus_A=R1 CONST D=03 FLAG=Z GO_REG_TRUE ]
+        [ ALU=A-B bus_A=R1 CONST D=04 FLAG=Z GO_REG_TRUE ]
+        [ ALU=A-B bus_A=R1 CONST D=05 FLAG=Z GO_REG_TRUE ]
+        [ ALU=A-B bus_A=R1 CONST D=06 FLAG=Z GO_REG_TRUE ]
+        [ ALU=A-B bus_A=R1 CONST D=07 FLAG=Z GO_REG_TRUE ]
+        [ GO_TRUE ADR=HALTED ]
+:INT5   [ FLAG=ZERO FINISH ]
+:INT2   % Trap no >= 0Ch
+        [ ALU=A-B bus_A=R4 CONST D=3F FLAG=CARRY ]
+        [ GO_FALSE ADR=TRAP_S ]% Go if trap no >= 0Ch & < 3F
+        [ ALU=A+B bus_A=M bus_B=M FLAG=CARRY ]
+        [ GO_TRUE ADR=TRAP_S ]
+        [ REG_EN ADR=HALTED ]
+        [ ALU=A-B bus_A=R4 CONST D=45 FLAG=Z ]
+        [ ALU=A-B bus_A=R4 CONST D=46 FLAG=Z GO_REG_TRUE ]
+        [ ALU=A-B bus_A=R4 CONST D=47 FLAG=Z GO_REG_TRUE ]
+        [ ALU=A-B bus_A=R4 CONST D=48 FLAG=Z GO_REG_TRUE ]
+        [ ALU=A-B bus_A=R4 CONST D=49 FLAG=Z GO_REG_TRUE ]
+        [ ALU=A-B bus_A=R4 CONST D=4A FLAG=Z GO_REG_TRUE ]
+        [ ALU=A-B bus_A=R4 CONST D=4B FLAG=Z GO_REG_TRUE ]
+        [ ALU=A-B bus_A=R4 CONST D=4C FLAG=Z GO_REG_TRUE ]
+        [ GO_FALSE ADR=INT5 ]
+
+:HALTED % R4 - Halt number
+        [ ALU=A_AND_B bus_A=M CONST D=4 FLAG=Z ]
+        [ ALU=A bus_A=R4 bus_B=WR_R6 GO_TRUE ADR=HALT1 ]
+        [ CONST->R1 D=2 ]
+        [ GOTO ADR=INTERUPT ]
+:HALT1  [ CALL ADR=SAVE_REGS ]
+        [ ALU=A bus_A=R6 bus_B=WR_R1 GOTO ADR=CONSOL ]
+
+:CHECK_H % ПРОВЕРКА НАЛИЧИЯ МЕСТА НА ПРОЦЕДУРНОМ СТЕКЕ
+         % R2-Size, Destroed R2, FLAG.
+        [ ALU=A+B bus_A=RW_R2 bus_B=S ]
+        [ ALU=A-B bus_A=R2 bus_B=H FLAG=CARRY ]
+        [ RETURN_FALSE ALU=A+B bus_A=M bus_B=M FLAG=CARRY ]
+        [ RETURN_FALSE ]
+:TRAP40 [ CALL ADR=DEC_PC ]
+:TRAP40S[ CONST->R1 D=40 ]
+        [ GOTO ADR=TRAPED ]
+
+:SAVE_STK       % T=5   Destroed R3, R4, FLAG.
+        [ ALU=A bus_A=S bus_B=WR_R3
+          FLAG=STK_EMPTY GO_IF_REQUEST ADR=SAVE_1 ]
+:SAVE_2 [ bus_A=STACK->R4 bus_B=S WR_MEM_A ]
+        [ bus_B=Etop WR_MEM_D ]
+        [ ALU=A+1 bus_A=RW_S FLAG=STK_EMPTY GO_IF_REQUEST ADR=SAVE_1 ]
+        [ bus_A=STACK->Etop bus_B=S WR_MEM_A ]
+        [ bus_B=R4 WR_MEM_D ]
+        [ ALU=A+1 bus_A=RW_S FLAG=STK_EMPTY GO_IF_NOT_REQUEST ADR=SAVE_2 ]
+:SAVE_1 [ ALU=A-B bus_A=S bus_B=RW_R3 ]
+        [ bus_B=S  WR_MEM_A ]
+        [ bus_B=R3 WR_MEM_D ]
+        [ ALU=A+1 bus_A=RW_S RETURN FLAG=ZERO ]
+
+:RESTORE_STK    % T=4   Destroed R3, FLAG.
+        [ ALU=A-1 bus_A=RW_S RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A_AND_B bus_A=RW_R3 CONST D=0F FLAG=Z ]
+:RES_1  [ ALU=A-1 bus_A=RW_R3 FLAG=Z RETURN_TRUE ]
+        [ ALU=A-1 bus_A=RW_S RD_MEM_A ]
+        [ bus_A=Etop->STACK bus_B=WR_Etop RD_MEM_D GOTO ADR=RES_1 ]
+
+:SAVE_REGS      % T=25  Destroed R3, R4.
+        [ ALU=ASL(A-B) bus_A=RW_PC bus_B=F CALL ADR=SAVE_STK ]
+        [ ALU=ASL(A) bus_A=RW_PC ]
+        [ ALU=A+B bus_A=RW_PC RW_CASH_PC ]
+        [ ALU=A+B bus_A=P CONST D=0 WR_MEM_A ]
+        [ bus_B=G WR_MEM_D ]
+        [ ALU=A+B bus_A=P CONST D=1 WR_MEM_A ]
+        [ bus_B=L WR_MEM_D ]
+        [ ALU=A+B bus_A=P CONST D=2 WR_MEM_A ]
+        [ bus_B=PC WR_MEM_D ]
+        [ ALU=A+B bus_A=P CONST D=3 WR_MEM_A ]
+        [ bus_B=M WR_MEM_D ]
+        [ ALU=A+B bus_A=P CONST D=4 WR_MEM_A ]
+        [ bus_B=S WR_MEM_D ]
+        [ CONST D=1 WR_MEM_A ]
+        [ bus_B=P WR_MEM_D RETURN ]
+
+:RESTORE_REGS   % T=28  Destroed R3, FLAG.
+        [ CONST D=0 WR_MEM_A ]
+        [ bus_B=P WR_MEM_D ]
+        [ ALU=A+B bus_A=P CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_G RD_MEM_D ]
+        [ ALU=A+B bus_A=P CONST D=1 RD_MEM_A ]
+        [ bus_B=WR_L RD_MEM_D ]
+        [ ALU=A+B bus_A=P CONST D=2 RD_MEM_A ]
+        [ bus_B=WR_PC RD_MEM_D ]
+        [ ALU=A+B bus_A=P CONST D=3 RD_MEM_A ]
+        [ bus_B=WR_M RD_MEM_D ]
+        [ ALU=A+B bus_A=P CONST D=4 RD_MEM_A ]
+        [ bus_B=WR_S RD_MEM_D ]
+        [ ALU=A+B bus_A=P CONST D=5 RD_MEM_A ]
+        [ bus_B=WR_H RD_MEM_D CALL ADR=RESTORE_STK ]
+        [ bus_B=G RD_MEM_A ]
+        [ bus_B=WR_F RD_MEM_D ]
+        [ ALU=A bus_A=PC RW_CASH_PC ]
+        [ ALU=ASR(A) bus_A=RW_PC ]
+        [ ALU=ASR(A) bus_A=RW_PC ]
+        [ ALU=A+B bus_A=RW_PC bus_B=F ]
+        [ bus_B=PC  RD_MEM_A ]
+        [ WR_CASH   RD_MEM_D ]
+        [ bus_B=M RESET_DEBUG ]
+        [ ALU=A-B bus_A=RW_H CONST D=10 RETURN ]
+
+:TRANSFER % R1-Pto, R2-Pfrom    T=59,   Exit by FINISH !!!
+        [ bus_B=R1 RD_MEM_A ]
+        [ bus_B=WR_R5 RD_MEM_D ]
+        [ bus_B=R2 WR_MEM_A ]
+        [ bus_B=P  WR_MEM_D CALL ADR=SAVE_REGS ]
+        [ ALU=A bus_A=R5 bus_B=WR_P CALL ADR=RESTORE_REGS ]
+        [ FLAG=ZERO FINISH ]
+
+:TRAP_S % R1 - vector                   Exit by FINISH !!!
+        [ ALU=A+B bus_A=RW_R1 bus_B=R1 ]
+        [ ALU=A+B bus_A=R1 CONST D=1 RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D GOTO ADR=TRANSFER ]
+
+
+:Call_External    % R4-Module no, R5-Procedure no.
+        [ bus_B=R4    RD_MEM_A ] % this dereference must be executed
+        [ bus_B=WR_R4 RD_MEM_D ] % before first writting in memory (see CM)
+        [ ALU=A   bus_A=S bus_B=WR_R2 WR_MEM_A ]
+        [         bus_B=G             WR_MEM_D CALL ADR=GET_PC ]
+        [ ALU=A+1 bus_A=RW_S WR_MEM_A ]
+        [ bus_B=L            WR_MEM_D ]
+        [ ALU=ROR(B) CONST->R3   D=1  ]
+        [ ALU=A_OR_B bus_A=RW_PC bus_B=R3 ]
+        [ ALU=A+1    bus_A=RW_S  WR_MEM_A ]
+        [            bus_B=PC    WR_MEM_D ]
+        [ ALU=A+B    bus_A=RW_S  CONST D=2  ]
+        [ ALU=A      bus_A=R2    bus_B=WR_L ]
+        [ bus_B=R4   RD_MEM_A    bus_A=WR_G ALU=B ]
+        [ bus_B=WR_F RD_MEM_D    GOTO ADR=MARK2 ]
+
+:Call_Global      % R5-Procedure no.
+
+        [ bus_A=L ALU=A bus_B=WR_R1 GOTO ADR=MARK ]
+
+:Call_Local       % R5-Procedure no.
+
+        [ ALU=A bus_A=Etop bus_B=WR_R1 ]
+        [ bus_A=STACK->Etop ]
+
+:MARK   % R1-X, Destroed R2,R3,PC
+        [ ALU=A bus_A=S bus_B=WR_R2 WR_MEM_A ]
+        [ bus_B=R1 WR_MEM_D CALL ADR=GET_PC ]
+        [ ALU=A+1 bus_A=RW_S WR_MEM_A ]
+        [ bus_B=L WR_MEM_D ]
+        [ ALU=A+1 bus_A=RW_S WR_MEM_A ]
+        [ bus_B=PC WR_MEM_D ]
+        [ ALU=A+B bus_A=RW_S CONST D=2 ]
+        [ ALU=A bus_A=R2 bus_B=WR_L ]
+:MARK2  [ ALU=A+B bus_A=R5 bus_B=F RD_MEM_A ]
+        [ bus_B=WR_PC RD_MEM_D CALL ADR=PUT_PC ]
+        [ ALU=A-B bus_A=S bus_B=H FLAG=CARRY ]
+        [ GO_TRUE ADR=TRAP40S ]
+        [ FLAG=ZERO  FINISH ]
+
+:IMUL   % R1*Etop->Etop     t=50
+        [ ALU=A bus_A=Etop FLAG=N ]
+        [ GO_TRUE ADR=IMUL1 ]
+        [ ALU=NEG(A) bus_A=RW_Etop FLAG=OVR ]
+        [ CALL_FALSE ADR=IMUL1 ]
+        [ ALU=NEG(A) bus_A=RW_Etop RETURN ]
+:IMUL1  [ CONST->R2 D=0 ]
+        [ CONST->R3 D=1 FLAG=ZERO ]
+
+:IMUL4  [ GO_TRUE ADR=IMUL5
+          ALU=A_AND_B bus_A=Etop bus_B=R3 FLAG=Z ]
+        [ ALU=ASR(A) bus_A=RW_Etop FLAG=Z GO_TRUE ADR=IMUL3 ]
+        [ ALU=A+B bus_A=RW_R2 bus_B=R1 FLAG=OVR ]
+        [ GO_TRUE ADR=IMUL5 ALU=A bus_A=Etop FLAG=Z ]
+:IMUL3  % Flag = (Etop=0)
+        [ GO_TRUE ADR=IMUL2 ]
+        [ ALU=ASL(A) bus_A=RW_R1 FLAG=OVR GOTO ADR=IMUL4 ]
+
+:IMUL5  % Overflow
+        [ ALU=A_XOR_B bus_A=RW_Etop bus_B=Etop FLAG=Z RETURN ]
+:IMUL2  [ ALU=A bus_A=R2 bus_B=WR_Etop FLAG=ZERO RETURN ]
+
+:IDIV   % R1/Etop->Etop,R1
+        [ ALU=A+B bus_A=R1 bus_B=R1 FLAG=CARRY ]
+        [ GO_TRUE ADR=DIV1
+          ALU=A+B bus_A=Etop bus_B=Etop FLAG=CARRY ]
+        [ GO_TRUE ADR=DIV2 ]
+        [ GOTO ADR=IDIV_SUB ]
+
+:DIV1   % делимое < 0
+        [ GO_TRUE ADR=DIV3 ]
+
+        % делимое < 0, делитель > 0
+        [ ALU=NEG(A) bus_A=RW_R1 ]
+        [ CALL ADR=IDIV_SUB ]
+        [ ALU=NEG(A) bus_A=RW_R1 ]
+:DIV4   [ ALU=NEG(A) bus_A=RW_Etop RETURN ]
+
+:DIV2   % делимое > 0, делитель < 0
+        [ ALU=NEG(A) bus_A=RW_Etop ]
+        [ CALL ADR=IDIV_SUB ]
+        [ ALU=NEG(A) bus_A=RW_Etop RETURN ]
+
+:DIV3   % делимое < 0, делитель < 0
+        [ ALU=NEG(A) bus_A=RW_R1 ]
+        [ ALU=NEG(A) bus_A=RW_Etop ]
+        [ CALL ADR=IDIV_SUB ]
+        [ ALU=NEG(A) bus_A=RW_R1 RETURN ]
+
+:IDIV_SUB % R1/Etop->Etop,R1 for cardinal.
+        [ CONST->R2 D=0 ]
+        [ ALU=A bus_A=Etop FLAG=Z ]
+        [ RETURN_TRUE CONST->R3 D=1 ]
+        [ ALU=A-B bus_A=Etop bus_B=R1 FLAG=CARRY ]
+        [ GO_TRUE ADR=DIV_LP ]
+:IDIV1  [ ALU=A+B bus_A=RW_Etop bus_B=Etop ]
+        [ ALU=A-B bus_A=Etop    bus_B=R1 FLAG=CARRY ]
+        [ ALU=A+B bus_A=RW_R3   bus_B=R3 GO_FALSE ADR=IDIV1 ]
+:DIV_LP [ ALU=A-B bus_A=R1      bus_B=Etop FLAG=CARRY ]
+        [ GO_FALSE ADR=DIV11 ]
+        [ ALU=A-B bus_A=RW_R1   bus_B=Etop ]
+        [ ALU=A_OR_B bus_A=RW_R2 bus_B=R3 ]
+:DIV11  [ ALU=ROR(A_BIC_B) bus_A=RW_R3   CONST D=1 FLAG=Z ]
+        [ ALU=ROR(A) bus_A=RW_Etop GO_FALSE ADR=DIV_LP ]
+        [ FLAG=ZERO ALU=A bus_A=R2 bus_B=WR_Etop RETURN ]
+
+:GET_PC [ ALU=ASL(A-B) bus_A=RW_PC bus_B=F ]
+        [ ALU=ASL(A)   bus_A=RW_PC ]
+        [ ALU=A+B      bus_A=RW_PC RW_CASH_PC RETURN ]
+
+:PUT_PC [ ALU=A bus_A=PC RW_CASH_PC ]
+        [ ALU=ASR(A) bus_A=RW_PC ]
+        [ ALU=ASR(A) bus_A=RW_PC ]
+        [ ALU=A+B bus_A=RW_PC bus_B=F RD_MEM_A ]
+        [ WR_CASH RD_MEM_D RETURN ]
+
+:NEXT2  % R1,R2 - Next2
+        [ UPDATE_CASH ]
+        [ bus_B=WR_R1 INC_PC ]
+        [ UPDATE_CASH ]
+        [ bus_B=WR_R2 INC_PC SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R1 bus_B=RW_R2 RETURN ]
+
+:NEXT4  % R2 - Next4. Destroed  R3
+        [ UPDATE_CASH ]
+        [ bus_B=WR_R2 INC_PC ]
+        [ UPDATE_CASH ]
+        [ bus_B=WR_R3 INC_PC SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R2 bus_B=R3 UPDATE_CASH ]
+        [ bus_B=WR_R3 INC_PC SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R2 bus_B=R3 UPDATE_CASH ]
+        [ bus_B=WR_R3 INC_PC SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R2 bus_B=R3 RETURN ]
+
+%%%%%%%%%%%%%% Specialy for C
+:SWAP_1 [ bus_A=R1->STACK FINISH ]
+
+:CHKZ_1 [ GO_FALSE ADR=TRAP4A ALU=A-B bus_A=R1 bus_B=Etop FLAG=CARRY ]
+        [ GO_FALSE ADR=TRAP4A FLAG=ZERO ]
+        [ FINISH ]
+:CHK_1  % r1 - high, r2 - low
+        [ bus_A=STACK->Etop ] % Etop - checked value
+
+        [ ALU=A-B bus_A=Etop  bus_B=RW_R2 FLAG=OVR ]
+        [ ALU=A-B bus_A=RW_R1 bus_B=Etop  FLAG=OVR GO_FALSE ADR=CHK_2 ]
+        [ ALU=NE(A) bus_A=RW_R2 GO_FALSE ADR=CHK_3 ]
+        [ ALU=NE(A) bus_A=RW_R1 GOTO ADR=CHK_3 ]
+:CHK_2  [ GO_FALSE ADR=CHK_3 ]
+        [ ALU=NE(A) bus_A=RW_R1 ]
+:CHK_3  [ ALU=A_OR_B bus_A=RW_R1 bus_B=R2 FLAG=N ]
+        [ GO_FALSE ADR=TRAP4A ]
+        [ FLAG=ZERO FINISH ]
+
+%%%%%%%%%%%%%% Floating point operations
+:F_RESTORE    %  Time = 5
+        [ bus_A=STACK->M  ]                           % restore M
+        [ bus_A=STACK->PC ]                           % restore PC
+        [ bus_A=STACK->L  ]                           % restore L
+        [ bus_A=STACK->G  ]                           % restore G
+        [ bus_A=STACK->Time FLAG=ZERO RETURN ]        % restore Time
+
+%%%%%%       UNPACK    Time = 60
+%%
+%      UNPACK Note! R1:=ROL(R1,1)   Etop:=ROL(Etop,1)
+%%
+%%%%%%
+:UNPACK % constFF=FF000000h
+        % const02=02000000h
+        [ bus_A=STACK->R1 ]             %  R1 - left operand
+        [ bus_A=Time->STACK ]           %  save Time(==s2)
+        [ bus_A=G->STACK ]              %  save G   (==constFF)
+        [ bus_A=L->STACK ]              %  save L   (==const02)
+        [ bus_A=PC->STACK ]             %  save PC  (==tmp1)
+        [ bus_A=M->STACK ]              %  save M   (==tmp2)
+        [ ALU=ROL(A)  bus_A=RW_R1 REG_EN ADR=ROR(R2,8) ] % left:=ROL(left,1)
+        [ ALU=ROL(A)  bus_A=RW_Etop ]  % REG=adr(ROR(R2,8) rght:=ROL(rght,1)
+        [ ALU=A_AND_B bus_A=R1   CONST->s1 D=1 ] % s1:=left & 1 (*31 bit on*)
+        [ ALU=A_AND_B bus_A=Etop CONST->s2 D=1 ] % s2:=rght & 1 (*31 bit on*)
+
+        [ CONST->e1 D=02  CALL_REG ]        % e1:=ROR(2,8) (* e1==R2 *)
+        [ ALU=A bus_A=e1 bus_B=WR_const02 ] % const02:=e1  (* {25}   *)
+        [ CONST->e1 D=0FF CALL_REG ]        % e1:=ROR(FF,8)
+        [ ALU=A bus_A=e1 bus_B=WR_constFF ] % constFF:=e1  (* e1=e2=constFF *)
+
+        [ ALU=A_AND_B bus_A=Etop bus_B=RW_e1 CALL ADR=ROL(R2,8) ]
+                                            % e1:=ROL(rght*{24..31},8)
+        [ ALU=A bus_A=e1    bus_B=WR_e2   ] % e2:=e1
+        [ ALU=B bus_A=WR_e1 bus_B=constFF ] % e1:=constFF
+        [ ALU=A_AND_B bus_A=R1   bus_B=RW_e1 CALL ADR=ROL(R2,8) ]
+                                            % e1:=ROL(left*{24..31},8)
+
+        [ ALU=A_OR_B  bus_A=constFF CONST->m1 D=1 ] % m1:=FF000001
+        [ ALU=A_OR_B  bus_A=constFF CONST->m2 D=1 ] % m2:=FF000001
+        [ ALU=ROL(A_BIC_B) bus_A=R1   bus_B=RW_m1 ] % m1:=ROL(left - m1, 1)
+        [ ALU=ROL(A_BIC_B) bus_A=Etop bus_B=RW_m2 ] % m2:=ROL(rght - m2, 1)
+        [ ALU=A bus_A=R1 FLAG=Z ]
+        [ ALU=A_OR_B bus_A=RW_m1 bus_B=const02 GO_FALSE ADR=UNPACK_1 ]
+        [ CONST->m1 D=00 ] % if left=0 then m1:=0 else m1:=m1+{25}
+:UNPACK_1
+        [ ALU=A bus_A=Etop FLAG=Z ]
+        [ ALU=A_OR_B bus_A=RW_m2 bus_B=const02 RETURN_FALSE ]
+        [ CONST->m2 D=00 RETURN ] % if left=0 then m2:=0 else m2:=m2+{25}
+
+        % s1:=ROL(left,1)*{0};       (* s1:=31 IN left *)
+        % s2:=ROL(rght,1)*{0};       (* s2:=31 IN rght *)
+        % e1:=ROL(ROL(left,1)*{24..31},8)
+        % e2:=ROL(ROL(rght,1)*{24..31},8)
+        % m1:=ROL(ROL(left,1)-{0,24..31},1)+{25}
+        %                            (* m1:={25}+ROL(left,2)*{2..25} *)
+        % if ROL(left,1)=0 then m1:=0 end
+        % m2:=ROL(ROL(rght,1)-{0,24..31},1)+{25}
+        % if ROL(rght,1)=0 then m2:=0 end
+        % left:=ROL(left,1);
+        % rght:=ROL(rght,1);
+        % RETURN
+
+:UNPACK_FFCT
+        [ bus_A=Time->STACK ]                   %  save Time(==s2)
+        [ bus_A=G->STACK ]                      %  save G   (==constFF)
+        [ bus_A=L->STACK ]                      %  save L   (==const02)
+        [ bus_A=PC->STACK ]                     %  save PC  (==tmp1)
+        [ bus_A=M->STACK REG_EN ADR=ROR(R2,8) ] %  save M   (==tmp2)
+
+        [ CONST->e1 D=02  CALL_REG ]            % e1:=ROR(2,8)  (* e1==R2 *)
+        [ ALU=A bus_A=e1 bus_B=WR_const02 ]     % const02:=e1   (* {25}   *)
+        [ CONST->e1 D=0FF CALL_REG ]            % e1:=ROR(FF,8)
+        [ ALU=A bus_A=e1 bus_B=WR_constFF ]     % constFF:=e1
+        [ RETURN ]
+
+
+%%%%%     NORMAL   Time = max 118  min 18  avg 62
+%%%%%     NORMAL 0 Time = 4
+%%%%%     FLAG if uderflow
+
+:NORMAL [ ALU=A bus_A=m1 FLAG=Z ] % if m1=0 then Push(0)
+        [ ALU=ROL(A) bus_A=const02 bus_B=WR_tmp1 GO_FALSE ADR=NORM_1 ]
+        [ CONST->e1 ALU=B bus_A=WR_s1 D=0 RETURN FLAG=ZERO ]
+:NORM_1 [ ALU=A-B bus_A=m1 bus_B=tmp1 FLAG=CARRY ]
+        [ GO_FALSE ADR=NORM_2 ]                    % while m1>=INTEGER({26}) do
+        [ ALU=A+1 bus_A=RW_e1 ]                    %   inc(e1); m1:=shr(m1,1)
+        [ ALU=ASR(A) bus_A=RW_m1 GOTO ADR=NORM_1 ] % end (max=2)
+:NORM_2 [ ALU=A-B bus_A=m1 bus_B=const02 FLAG=CARRY ]
+        [ GO_TRUE ADR=NORM_3 ]                     % while m1<INTEGER({25}) do
+        [ ALU=A-1 bus_A=RW_e1 ]                    %   dec(e1); m1:=shl(m1,1)
+        [ ALU=ASL(A) bus_A=RW_m1 GOTO ADR=NORM_2 ] % end (max=24)
+:NORM_3 [ ALU=A+B bus_A=RW_m1 CONST D=2 ]          % loop  m1:=m1+2
+        [ ALU=A_AND_B bus_A=m1 bus_B=tmp1 FLAG=Z ] %   if 26 & m1 = 0 then
+        [ GO_TRUE ADR=NORM_4 ]                     %     exit
+        [ ALU=A+1 bus_A=RW_e1 ]                    %   else inc(e1)
+        [ ALU=ASR(A) bus_A=RW_m1 GOTO ADR=NORM_3 ] %     m1:=shr(m1,1)
+                                                   % end loop (max=2)
+:NORM_4 [ ALU=B-A bus_A=e1 CONST D=0FF FLAG=CARRY ] % if 0FF>=e1 then
+        [ GO_FALSE ADR=TRAP42 ]                     % else goto TRAP42 end
+        [ ALU=A+B bus_A=e1 bus_B=e1 FLAG=CARRY      % FLAG:= e1<0
+                               RETURN ]
+
+:NORMAL_ADD
+        [ CALL ADR=NORMAL ]
+        [ GO_FALSE ADR=PACK ]
+        [ ALU=A-B bus_A=RW_Etop bus_B=Etop GOTO ADR=F_RESTORE ]
+
+:NORMAL_MUL
+        [ CALL ADR=NORMAL ]
+        [ GO_TRUE ADR=TRAP43 ]
+
+%%%%          PACK     Time = 14
+:PACK   [ ALU=A_AND_B bus_A=RW_e1 CONST D=0FF ]
+        [ bus_B=RW_e1 SHIFT_EN ]
+        [ bus_B=RW_e1 SHIFT_EN ]
+        [ bus_B=RW_e1 SHIFT_EN ]
+        [ ALU=A_BIC_B bus_A=RW_m1 CONST D=3 ]          % m1:=m1-{0,1}
+        [ ALU=ROR(A_BIC_B) bus_A=RW_m1 bus_B=const02 ] % m1:=ROR(m1-{25},1)
+        [ ALU=A_OR_B  bus_A=RW_e1 bus_B=m1  ]          % e1:=e1+m1
+        [ ALU=A_OR_B  bus_A=RW_e1 bus_B=s1  ]          % e1:=e1+s1
+        [ ALU=ROR(A)  bus_A=e1    bus_B=WR_Etop        % Push(ror(e1,1))
+          GOTO ADR=F_RESTORE                ]
+
+%%%%   UNPACK+PACK+NORM  Time avg 142
+
+:TRAP42 [ CALL ADR=F_RESTORE ]
+        [ CONST->Etop D=0 ]
+        [ CONST->R1 D=42 ]
+        [ GOTO ADR=TRAPED ]
+:TRAP43 [ CALL ADR=F_RESTORE ]
+        [ CONST->R1 D=43 ]
+        [ CONST->Etop D=0 ]
+        [ GOTO ADR=TRAPED ]
+
+%%%%%     FADD_SUB  Time  min     max    avg
+%%%%%               Time        best 69
+
+
+:FSUB_SUB
+        [ CALL ADR=FNEG_SUB ]
+:FADD_SUB
+        [ CALL ADR=UNPACK ]
+        [ ALU=A-B bus_A=e1 bus_B=e2 FLAG=CARRY ]% tmp2:=e1>=e2 if tmp2 then
+        [ ALU=A+FLAG bus_A=WR_tmp2 GO_TRUE ADR=FADD_1 ] %      goto FADD_1
+        [ bus_A=e1->STACK ][ ALU=A bus_A=e2 bus_B=WR_e1 ][ bus_A=STACK->e2 ]
+        % swap(e1,e2)
+        [ bus_A=m1->STACK ][ ALU=A bus_A=m2 bus_B=WR_m1 ][ bus_A=STACK->m2 ]
+        % swap(m1,m2)
+        [ bus_A=s1->STACK ][ ALU=A bus_A=s2 bus_B=WR_s1 ][ bus_A=STACK->s2 ]
+        % swap(s1,s2)
+
+:FADD_1 [ ALU=A bus_A=e1 bus_B=WR_tmp1             ] % tmp1:=e1;
+        [ ALU=A-B bus_A=RW_tmp1 bus_B=e2           ] % tmp1:=tmp1-e2
+        [ ALU=A-B bus_A=tmp1 CONST D=1B FLAG=CARRY ] % if tmp1>=27 then
+        [ GO_FALSE ADR=FADD_8 ]                      % else goto FADD_8 end
+
+        [ ALU=A bus_A=tmp2 FLAG=Z ]                  % if e1<e2 then
+        [ ALU=ROR(A)  bus_A=RW_Etop                  %   Etop:=ROR(Etop,1)
+          GO_TRUE  ADR=F_RESTORE ]                   %   goto F_RESTORE
+        [ ALU=ROR(A)  bus_A=RW_R1   ]                % else R1:=ROR(R1)
+        [ ALU=A bus_A=R1 bus_B=WR_Etop               %   Etop:=R1
+          GOTO ADR=F_RESTORE        ]                %   goto F_RESTORE
+
+:FADD_8 [ ALU=A bus_A=tmp1 FLAG=Z ]     % m2:=shr(m2,e1-e2)  (* tmp1=e1-e2*)
+:FADD_4 [ ALU=A-1 bus_A=RW_tmp1  FLAG=Z GO_TRUE ADR=FADD_3 ]
+        [ ALU=ASR(A) bus_A=RW_m2 FLAG=ZERO GO_FALSE ADR=FADD_4 ]
+
+:FADD_3 [ ALU=A-B bus_A=s1 bus_B=s2 FLAG=Z ]             % if s1=s2 then
+        [ GO_FALSE ADR=FADD_5 ]
+        [ ALU=A+B bus_A=RW_m1 bus_B=m2 GOTO ADR=NORMAL_ADD ] %   m1:=m1+m2;
+:FADD_5 [ ALU=A-B bus_A=m2 bus_B=m1 FLAG=CARRY ]         % elsif m2<m1 then
+        [ GO_TRUE ADR=FADD_6 ]
+        [ ALU=A-B bus_A=RW_m1 bus_B=m2 GOTO ADR=NORMAL_ADD ] %   m1:=m1-m2
+:FADD_6 [ ALU=A-B bus_A=m2 bus_B=RW_m1 ]                 % else m1:=m2-m1
+        [ ALU=A bus_A=s2 bus_B=WR_s1   GOTO ADR=NORMAL_ADD ] %   s1:=s2
+
+
+%%%%    Time 238
+:FMUL_SUB
+        [ CALL ADR=UNPACK ]
+        [ ALU=A+B bus_A=RW_e1 bus_B=e2 ]                %  e1:=e1+e2
+        [ ALU=A-B bus_A=RW_e1 CONST D=80 ]              %  e1:=e1+80
+        [ ALU=A_XOR_B bus_A=RW_s1 bus_B=s2 ]            %  s1:=s1 xor s2
+        [ ALU=A bus_A=m1 bus_B=WR_tmp1 ]                %  tmp1:=m1
+        [ CONST->m1 D=0 ]                               %  m1:=0
+
+:FMUL_1 [ ALU=A_AND_B bus_A=m2 CONST D=1 FLAG=Z ]       % repeat nz:=0 IN m2
+        [ ALU=ASR(A)  bus_A=RW_m2  FLAG=Z               %   m2:=shr(m2,1)
+                                                        %   z:=(m2=0)
+                      GO_TRUE ADR=FMUL_2 ]              %   if nz then
+        [ ALU=A+B bus_A=RW_m1 bus_B=tmp1 ]              %     m1:=m1+tmp1
+                                                        %   end
+:FMUL_2 [ ALU=ASR(A) bus_A=RW_m1 GO_FALSE ADR=FMUL_1 ]  %   m1:=shr(m1,1)
+                                                        % until z
+        [ GOTO ADR=NORMAL_MUL ]
+
+%%%%  FDIV_SUB   Time  252
+
+:FDIV_SUB
+        [ CALL ADR=UNPACK ]
+        [ ALU=A bus_A=m2 FLAG=Z ]                       % if m2=0 then
+        [ GO_TRUE ADR=TRAP42                            %   goto TRAP42
+          ALU=A-B bus_A=RW_e1 bus_B=e2 ]                % end; e1:=e1-e2
+        [ ALU=A+B bus_A=RW_e1 CONST D=80 ]              % e1:=e1+80
+        [ ALU=A_XOR_B bus_A=RW_s1 bus_B=s2 ]            % s1:=s1 xor s2
+        [ ALU=A bus_A=m1 bus_B=WR_tmp1 ]                % tmp1:=m1
+        [ CONST->m1 D=0 ]                               % m1:=0
+
+:FDIV_1 [ ALU=A-B bus_A=tmp1 bus_B=m2 FLAG=CARRY ]      % repeat z:=tmp1>=m2
+        [ GO_FALSE ADR=FDIV_2 ]                         %   if z then
+        [ ALU=A-B bus_A=RW_tmp1 bus_B=m2 ]              %     tmp1:=tmp1-m2
+        [ ALU=A+1 bus_A=RW_m1 ]                         %     m1:=m1+1
+:FDIV_2 [ ALU=ASR(A) bus_A=RW_m2 FLAG=Z ]               %   end m2:=shr(m2,1)
+        [ ALU=ROL(A) bus_A=RW_m1 GO_FALSE ADR=FDIV_1 ]  %   m1:=rol(m1,1)
+                                                        % until m2=0
+        [ GOTO ADR=NORMAL_MUL ]
+
+
+:FCMP_SUB % EXIT by FINISH !
+       [ ALU=A-B bus_A=Etop bus_B=R1 FLAG=Z ]   % if Etop=R1 then
+       [ ALU=A   bus_A=Etop FLAG=Z GO_FALSE ADR=FCMP_1 ]
+:FCM_EQU
+       [ CONST->Etop D=0 ]                      %  Push(0); Puh(0);
+       [ bus_A=Etop->STACK  FLAG=ZERO FINISH ]  %  FINISH
+:FCMP_1
+       [ ALU=A bus_A=R1 FLAG=Z     GO_FALSE ADR=FCMP_2 ]
+       [ ALU=A bus_A=R1 bus_B=WR_Etop GOTO ADR=FCMP_3 ]
+:FCMP_2
+       [ ALU=A+B bus_A=Etop bus_B=Etop FLAG=CARRY GO_FALSE ADR=FCMP_fsub ]
+       [ GO_TRUE  ADR=FCMP_GTR ]
+       [ GO_FALSE ADR=FCMP_LSS ]
+:FCMP_fsub
+       [ bus_A=R1->STACK    CALL ADR=FSUB_SUB ]
+:FCMP_3
+       [ ALU=A+B bus_A=Etop bus_B=Etop FLAG=CARRY ]
+       [ GO_TRUE ADR=FCMP_LSS ]
+:FCMP_GTR
+       [ CONST->Etop D=1 ]
+       [ bus_A=Etop->STACK  CONST->Etop D=0 ] [ FLAG=ZERO FINISH ]
+:FCMP_LSS
+       [ CONST->Etop D=0 ]
+       [ bus_A=Etop->STACK  CONST->Etop D=1 ] [ FLAG=ZERO FINISH ]
+
+:FFCT_SUB
+      [ UPDATE_CASH ]
+      [ ALU=B INC_PC bus_B=WR_R1 FLAG=Z ]
+      [ GO_TRUE ADR=FFCT_FLOAT ]
+      [ ALU=B-A bus_A=R1 CONST D=1 FLAG=Z ]
+      [ GO_TRUE ADR=FFCT_TRUNC ]
+      [ CALL ADR=DEC_PC ]
+      [ CONST->R1 D=7 ]
+      [ GOTO ADR=TRAPED ]
+:FFCT_FLOAT
+      [ CALL ADR=UNPACK_FFCT ]
+      [ CONST->e1 D=9A ]
+      [ CONST->s1 D=00 ]
+      [ ALU=A+B bus_A=Etop bus_B=Etop FLAG=CARRY ]
+      [ GO_FALSE ADR=FLOAT_1 ]
+      [ ALU=NEG(A) bus_A=RW_Etop ]
+      [ CONST->s1 D=1 ]
+:FLOAT_1
+      [ ALU=A bus_A=Etop bus_B=WR_m1 GOTO ADR=NORMAL_MUL ]
+
+:FFCT_TRUNC
+      [ bus_A=Etop->STACK  CALL ADR=UNPACK ]     %      Push(Etop) UNPACK
+      [ ALU=A-B bus_A=RW_e1 CONST D=80 FLAG=N ]  %      if e1<80 then
+      [ GO_TRUE ADR=TRUNC_1 ]
+      [ ALU=A-B bus_A=Etop bus_B=RW_Etop GOTO ADR=F_RESTORE ] % Etop:=0
+:TRUNC_1
+      [ ALU=B-A CONST D=1A bus_A=RW_e1 FLAG=N ]
+      [ GO_FALSE ADR=TRUNC_2 ]
+      % shift right
+      [ ALU=A bus_A=e1 FLAG=Z ]
+:TRUNC_4
+      [ ALU=A-1 bus_A=RW_e1 FLAG=Z GO_TRUE ADR=TRUNC_3 ]
+      [ ALU=ASR(A) bus_A=RW_m1 FLAG=ZERO GO_FALSE ADR=TRUNC_4 ]
+:TRUNC_3
+      [ ALU=A bus_A=s1 FLAG=Z ]
+      [ ALU=A bus_A=m1 bus_B=WR_Etop GO_TRUE ADR=F_RESTORE ]
+      [ ALU=NEG(A) bus_A=RW_Etop ]
+      [ GOTO ADR=F_RESTORE ]
+:TRUNC_2  % shift left
+      [ ALU=A bus_A=s1 FLAG=Z ]
+      [ ALU=B bus_A=WR_Etop bus_B=m1 FLAG=ZERO GO_TRUE ADR=TRUNC_5 ]
+      [ ALU=NEG(A) bus_A=RW_Etop ]
+:TRUNC_5
+      [ ALU=A+1 bus_A=RW_e1 FLAG=Z GO_TRUE ADR=TRUNC_6 ]
+      [ ALU=A+B bus_A=RW_Etop bus_B=Etop FLAG=OVR GO_FALSE ADR=TRUNC_5 ]
+      [ GO_FALSE ADR=F_RESTORE ]
+:TRUNC_6
+      [ CALL ADR=F_RESTORE ]
+      [ GOTO ADR=TRAP41 ]
+
+:FNEG_SUB
+        [ ALU=A bus_A=Etop FLAG=Z ]
+        [ ALU=ROR(B) CONST->R1 D=1 FLAG=ZERO RETURN_TRUE ]
+        [ ALU=A_XOR_B bus_A=RW_Etop bus_B=R1 RETURN ]
+
+:FABS_SUB
+        [ ALU=ROR(B) CONST->R1 D=1 ]
+        [ ALU=A_BIC_B bus_A=RW_Etop bus_B=R1 RETURN ]
+
+%%%%%%% Bit block operations
+
+:UNBPK_1
+        [ bus_A=STACK->R1 ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R2 D=1F ] % R2:=offset MOD 32
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=A+B bus_A=STACK->R1 bus_B=R1 RD_MEM_A ]
+        [ bus_B=WR_R3                      RD_MEM_D ]
+
+        [ ALU=A-1 bus_A=RW_Etop ]
+        [ ALU=A_BIC_B bus_A=Etop CONST D=1F FLAG=Z ]
+        [ GO_FALSE ADR=TRAP4A ALU=A+1 bus_A=RW_Etop bus_B=WR_R5 ]
+        % if not size in {1..32} then trap(4Ah) end
+        % R5:=size
+
+        [ ALU=A+B bus_A=RW_R5 bus_B=R2 ]
+        [ ALU=B-A CONST D=20  bus_A=R5 FLAG=CARRY ]
+        [ ALU=A-B bus_A=RW_R4 bus_B=R4 GO_TRUE ADR=UNBPK_2 ]
+        [ ALU=A+1 bus_A=R1                 RD_MEM_A ]
+        [ bus_B=WR_R4                      RD_MEM_D ]
+        % R3:=(a+offset DIV 32)^
+        % if offset+size>32 then R4:=(a+offset DIV 32 +1)^ else R4:=0 end
+:UNBPK_2
+        [ CONST->R5 D=0 ] % mask:=0
+        [ ALU=A bus_A=R2 FLAG=Z ]
+:UNBPK_3
+        [ ALU=A-1 bus_A=RW_R2 FLAG=Z GO_TRUE ADR=UNBPK_4 ]
+        [ ALU=ROR(A) bus_A=RW_R3 ]
+        [ ALU=ROR(A) bus_A=RW_R4 ]
+        [ ALU=ROR(A+1) bus_A=RW_R5 FLAG=ZERO GO_FALSE ADR=UNBPK_3 ]
+:UNBPK_4
+        [ ALU=A_BIC_B bus_A=RW_R3 bus_B=R5 ]
+        [ ALU=A_AND_B bus_A=RW_R5 bus_B=R4 ]
+        [ ALU=A_OR_B  bus_A=RW_R3 bus_B=R5 ]
+        [ CONST->R5 D=0 ]
+:UNBPK_5
+        [ ALU=A-1 bus_A=RW_Etop FLAG=Z ]
+        [ ALU=A+B+1 bus_A=RW_R5 bus_B=R5 GO_FALSE ADR=UNBPK_5 ]
+
+        [ ALU=A_AND_B bus_A=RW_R3  bus_B=R5 ]
+        [ FLAG=ZERO ALU=A bus_A=R3 bus_B=WR_Etop FINISH ]
+
+:BPK_1  [ ALU=A-1 bus_A=STACK->R6 ]  % R6:=size-1
+        [ ALU=A_BIC_B bus_A=R6 CONST D=1F FLAG=Z  ]
+        [ GO_FALSE ADR=TRAP4A ALU=A+1 bus_A=RW_R6 ]
+        % if not size in {1..32} then trap(4Ah) end
+        % R6:=size
+        [ bus_A=STACK->R1 ]  % R1:=offset
+        [ ALU=A_AND_B bus_A=R1 CONST->R2 D=1F ] % R2:=offset MOD 32
+
+% R6 = size
+% R2 = offset MOD 32
+% R1 = offset
+% Etop = data
+:BPK_2
+        [ CONST->R5 D=0 ] % mask:={}
+:BPK_5
+        [ ALU=A-1 bus_A=RW_R6 FLAG=Z ]
+        [ ALU=A+B+1 bus_A=RW_R5 bus_B=R5 GO_FALSE ADR=BPK_5 ]
+
+        [ ALU=A bus_A=R2 FLAG=Z ]
+        [ GO_TRUE ADR=BPK_4 ALU=ASR(A) bus_A=RW_R1 ]
+:BPK_3
+        [ ALU=A+B      bus_A=RW_R5   bus_B=R5 FLAG=CARRY ]
+        [ ALU=A+B+FLAG bus_A=RW_R6   bus_B=R6 ]
+        [ ALU=A-1 bus_A=RW_R2 FLAG=Z ]
+        [ ALU=ROL(A)   bus_A=RW_Etop GO_FALSE ADR=BPK_3 ]
+:BPK_4
+% R5,R6 = {offset..offset+size-1}
+% Etop = ROL(data,offset);
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=A+B bus_A=STACK->R1 bus_B=R1 RD_MEM_A ]
+        [ bus_B=WR_R3                      RD_MEM_D ]
+        [ ALU=A_BIC_B bus_A=RW_R3 bus_B=R5 ]
+        [ ALU=A_AND_B bus_A=RW_R5 bus_B=Etop ]
+        [ ALU=A_OR_B  bus_A=RW_R3 bus_B=R5 ]
+        [ ALU=A bus_A=R6 FLAG=Z ]
+        [ bus_B=R1 WR_MEM_A ]
+        [ bus_B=R3 WR_MEM_D GO_TRUE ADR=BPK_7 ]
+        [ ALU=A+1 bus_A=R1 RD_MEM_A ]
+        [ bus_B=WR_R3      RD_MEM_D ]
+        [ ALU=A_BIC_B bus_A=RW_R3 bus_B=R6 ]
+        [ ALU=A_AND_B bus_A=RW_R6 bus_B=Etop ]
+        [ ALU=A_OR_B  bus_A=RW_R3 bus_B=R6 ]
+        [ ALU=A+1 bus_A=R1 WR_MEM_A ]
+        [ bus_B=R3         WR_MEM_D ]
+:BPK_7  [ bus_A=STACK->Etop FLAG=ZERO FINISH ]
+
+:LID_1  [ UPDATE_CASH ]
+        [ bus_B=WR_R2 INC_PC SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_Etop bus_B=R2 FINISH ]
+:LEA_1  [ bus_B=WR_R1 RD_MEM_D UPDATE_CASH ]
+        [ bus_B=R1 RD_MEM_A ]
+        [ bus_B=WR_Etop RD_MEM_D ]
+        [ ALU=A+B bus_A=RW_Etop INC_PC ]
+        [ FINISH ]
+:JFLC_1 [ bus_A=STACK->Etop GO_FALSE ADR=SKIP2 ]
+:JFL_1  [ bus_B=WR_R1 INC_PC ]
+        [ UPDATE_CASH ]
+        [ bus_B=WR_R2 INC_PC SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R1 bus_B=R2 ]
+:JUMP % R1 - смещение
+        [ ALU=A+B bus_A=RW_R1 RW_CASH_PC ]
+:JUMP1  [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=A+B bus_A=RW_R1 bus_B=RW_PC RD_MEM_A ]
+        [ WR_CASH   RD_MEM_D ]
+        [ FLAG=ZERO FINISH ]
+:SKIP2  [ INC_PC ]
+        [ UPDATE_CASH ]
+        [ INC_PC ]
+:SKIP   [ FLAG=ZERO FINISH ]
+:JFSC_1 [ bus_A=STACK->Etop bus_B=WR_R1 INC_PC GO_TRUE ADR=JUMP ]
+        [ FLAG=ZERO FINISH ]
+:JBLC_1 [ bus_A=STACK->Etop GO_FALSE ADR=SKIP2 ]
+:JBL_1  [ bus_B=WR_R1 INC_PC ]
+        [ UPDATE_CASH ]
+        [ bus_B=WR_R2 INC_PC SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R1 bus_B=R2 ]
+        [ ALU=NEG(A) bus_A=RW_R1 GOTO ADR=JUMP ]
+
+:JBSC_1 [ bus_A=STACK->Etop bus_B=WR_R1 INC_PC GO_FALSE ADR=SKIP ]
+        [ ALU=B-A bus_A=RW_R1 RW_CASH_PC GOTO ADR=JUMP1 ]
+
+:ROL(R2,8)
+        [ bus_B=RW_R2 SHIFT_EN RETURN ]
+:ROR(R2,8)
+        [ bus_B=RW_R2 SHIFT_EN ]
+        [ bus_B=RW_R2 SHIFT_EN ]
+        [ bus_B=RW_R2 SHIFT_EN RETURN ]
+
+:LEW_1  [ bus_B=WR_Etop RD_MEM_D ]
+        [ bus_B=Etop    RD_MEM_A ]
+        [ bus_B=WR_Etop RD_MEM_D UPDATE_CASH ]
+        [ ALU=A+B bus_A=RW_Etop INC_PC RD_MEM_A ]
+:LLW_1  [ bus_B=WR_Etop RD_MEM_D FINISH ]
+:SEW_1  [ bus_B=WR_R1 RD_MEM_D ]
+        [ bus_B=R1    RD_MEM_A ]
+        [ bus_B=WR_R1 RD_MEM_D UPDATE_CASH ]
+        [ ALU=A+B bus_A=R1 INC_PC WR_MEM_A ]
+:SLW_1  [ bus_A=STACK->Etop bus_B=R2 WR_MEM_D FLAG=ZERO FINISH ]
+:SLW_2  [ bus_A=STACK->Etop FLAG=ZERO FINISH ]
+:LXB_1  [ ALU=ASR(A) bus_A=RW_Etop ]
+        [ ALU=A+B bus_A=STACK->Etop bus_B=Etop RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D GO_TRUE ADR=LXB_2 ]
+        [ ALU=B-A bus_A=RW_R1 CONST D=4 ]
+:LXB_3  [ ALU=A-1 bus_A=RW_R1 FLAG=Z ]
+        [ GO_FALSE ADR=LXB_3 bus_B=RW_R2 SHIFT_EN ]
+:LXB_2  [ FLAG=ZERO ALU=A_AND_B bus_A=R2 CONST->Etop D=0FF FINISH ]
+:SXB_1  [ ALU=A_AND_B bus_A=Etop CONST->R1 D=3 FLAG=Z ]
+        [ CONST->R4 D=0FF ]
+        [ ALU=ASR(A) bus_A=RW_Etop ]
+        [ ALU=ASR(A) bus_A=RW_Etop ]
+        [ ALU=A+B bus_A=STACK->Etop bus_B=Etop RD_MEM_A ]
+        [ bus_B=WR_R5 RD_MEM_D GO_TRUE ADR=SXB_2 ]
+:SXB_3  [ ALU=A-1 bus_A=RW_R1 FLAG=Z ]
+        [ bus_B=RW_R4 SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN GO_FALSE ADR=SXB_3 ]
+:SXB_2  [ ALU=A_BIC_B bus_A=RW_R5 bus_B=R4 ]
+        [ ALU=A_OR_B  bus_A=RW_R5 bus_B=R3 ]
+        [ bus_B=Etop WR_MEM_A ]
+        [ bus_A=STACK->Etop bus_B=R5 WR_MEM_D FLAG=ZERO FINISH ]
+:SXW_1  [ bus_B=Etop WR_MEM_D ]
+        [ bus_A=STACK->Etop FINISH ]
+:TRA_1  [ bus_A=STACK->Etop GOTO ADR=TRANSFER ]
+:TR_1   [ bus_B=R2  WR_MEM_A ]
+        [ CONST D=0 WR_MEM_D ]
+        [ FINISH ]
+:IDLE_1 [ CALL ADR=DEC_PC ]
+        [ IDLE_ON bus_B=M ]
+:IDLE_3 [ GO_IF_ANY_INT ADR=IDLE_2 ]
+        [ GOTO ADR=IDLE_3 ]
+:IDLE_2 [ IDLE_OFF bus_B=M ]
+        [ FLAG=ZERO FINISH ]
+:ROL_1  [ SHIFT=ROL_1 bus_B=RW_Etop ]
+        [ FLAG=ZERO FINISH ]
+:SHR_1  [ GO_TRUE ADR=SHR_2 ]
+        [ ALU=A-B bus_A=R1 CONST D=20 FLAG=CARRY ]
+        [ ALU=A bus_A=Etop FLAG=N GO_TRUE ADR=SHR_4 ]
+:SHR_3  [ ALU=A+NE_FLAG bus_A=RW_Etop ]
+        [ ALU=A-1 bus_A=RW_R1 FLAG=Z ]
+        [ ALU=ASR(A) bus_A=RW_Etop FLAG=N GO_FALSE ADR=SHR_3 ]
+:SHR_2  [ FLAG=ZERO FINISH ]
+:SHR_4  [ CONST->Etop D=0 FLAG=ZERO FINISH ]
+:SHL_1  [ GO_TRUE ADR=SHL_2 ALU=A bus_A=Etop FLAG=Z ]
+        [ GO_TRUE ADR=SHL_2 FLAG=ZERO ]
+:SHL_3  [ GO_TRUE ADR=TRAP41 ALU=A-1 bus_A=RW_R1 FLAG=Z ]
+        [ ALU=ASL(A) bus_A=RW_Etop FLAG=OVR GO_FALSE ADR=SHL_3 ]
+        [ FINISH ]
+:SHL_2  [ FLAG=ZERO FINISH ]
+
+:STOFV_1
+        [ CALL ADR=CHECK_H ALU=A bus_A=Etop bus_B=WR_R5 ]
+        [ bus_A=STACK->Etop CALL ADR=SAVE_STK ]
+        [ bus_B=S   WR_MEM_A ]
+        [ bus_B=R5  WR_MEM_D ]
+        [ ALU=A+1 bus_A=RW_S FLAG=ZERO FINISH ]
+:STORE_1
+        [ CALL ADR=CHECK_H ]
+        [ CALL ADR=SAVE_STK ]
+        [ FLAG=ZERO FINISH ]
+:LODFV_1
+        [ CALL ADR=RESTORE_STK ]
+        [ bus_A=Etop->STACK ]
+        [ ALU=A bus_A=R4 bus_B=WR_Etop FLAG=ZERO FINISH ]
+:DECS_1
+        [ FLAG=ZERO bus_A=STACK->Etop FINISH ]
+:BIT_1
+        [ GO_TRUE ADR=TRAP4A ]
+        [ FINISH ]
+:IN_1   [ ALU=A bus_A=Etop bus_B=WR_R1 FLAG=Z CALL ADR=BIT_SF ]
+        [ ALU=A_AND_B bus_A=Etop bus_B=R4 FLAG=Z ]
+        [ ALU=B+NE_FLAG CONST->Etop D=0 FLAG=ZERO FINISH ]
+
+:BIT_S  [ ALU=A bus_A=Etop bus_B=WR_R1 FLAG=Z ]
+:BIT_SF [ CONST->Etop D=1 FLAG=ZERO RETURN_TRUE ]
+        [ ALU=A-B bus_A=R1 CONST D=20 FLAG=CARRY ]
+        [ bus_A=R1 ALU=A LOAD_CNT GO_TRUE ADR=BIT_S1 ]
+:BIT_S2 [ bus_B=RW_Etop SHIFT=BIT_S2 ]
+        [ RETURN FLAG=ZERO ]
+:BIT_S1 [ CONST->Etop D=0 RETURN ]
+
+
+:CL_2   [ UPDATE_CASH ] [ bus_B=WR_R5 INC_PC ] [ GOTO ADR=Call_Global ]
+:CF_1   [ ALU=A-1 bus_A=RW_S RD_MEM_A ]
+        [ bus_B=WR_R4 RD_MEM_D REG_EN ADR=Call_External ]
+        [ ALU=A bus_A=R4 bus_B=WR_R2 CALL ADR=ROL(R2,8) ]
+        [ CONST->R1 D=0FF SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ ALU=A_BIC_B bus_A=RW_R4 bus_B=R1 ]
+        [ ALU=A_AND_B bus_A=R2 CONST->R5 D=0FF GO_REG ]
+:CI_1   [ UPDATE_CASH ] [ bus_B=WR_R5 INC_PC ] [ GOTO ADR=Call_Local ]
+:CX_1   [ UPDATE_CASH ] [ bus_B=WR_R4 INC_PC ]
+        [ UPDATE_CASH ] [ bus_B=WR_R5 INC_PC ]
+        [ ALU=A-B-1 bus_A=G bus_B=R4 RD_MEM_A ]
+        [ bus_B=WR_R4 RD_MEM_D GOTO ADR=Call_External ]
+
+:LPC_1  [ ALU=A-B-1 bus_A=G INC_PC RD_MEM_A ]
+        [ bus_B=WR_Etop RD_MEM_D UPDATE_CASH ]
+        [ REG_EN ADR=ROR(R2,8) ]
+        [ CONST->R2 D=0FF CALL_REG ]
+        [ ALU=A_BIC_B bus_A=RW_Etop bus_B=R2 ]
+        [ bus_B=WR_R2 INC_PC CALL_REG ]
+        [ ALU=A_OR_B bus_A=RW_Etop bus_B=R2 FLAG=ZERO FINISH ]
+
+:STOT_1 [ bus_A=STACK->Etop ]
+        [ ALU=A+1 bus_A=RW_S ]
+        [ ALU=A-B bus_A=S bus_B=H FLAG=CARRY ]
+        [ ALU=A+B bus_A=M bus_B=M FLAG=CARRY GO_TRUE ADR=STOT_2 ]
+:STOT_3 [ FLAG=ZERO FINISH ]
+:STOT_2 [ GO_FALSE ADR=STOT_3 ]
+        [ GOTO ADR=TRAP40S ]
+
+:PCOP_1 % Etop - high, R1 - adr
+        [ ALU=A+1 bus_A=RW_Etop UPDATE_CASH ]
+        [ ALU=A+B bus_A=L INC_PC WR_MEM_A ]
+        [ bus_B=S WR_MEM_D ]
+        [ ALU=A bus_A=Etop FLAG=Z ]
+        [ GO_TRUE ADR=PCOP_2 ]
+        [ ALU=A-1 bus_A=RW_S ]
+        [ ALU=A-1 bus_A=RW_R1 ]
+:PCOP_3 [ ALU=A-1 bus_A=RW_Etop FLAG=Z ]
+        [ ALU=A+1 bus_A=RW_R1 RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A+1 bus_A=RW_S WR_MEM_A ]
+        [ bus_B=R2    WR_MEM_D GO_FALSE ADR=PCOP_3 ]
+        [ ALU=A+1 bus_A=RW_S ]
+:PCOP_2 [ bus_A=STACK->Etop FLAG=ZERO FINISH ]
+
+:CPCOP_1[ ALU=A+B bus_A=Etop CONST->R1 D=4 ]
+        [ ALU=ROR(A_BIC_B) bus_A=RW_R1 CONST D=3 ]
+        [ ALU=ROR(A) bus_A=RW_R1 bus_B=WR_R2 CALL ADR=CHECK_H ]
+        [ ALU=A-1    bus_A=R1 bus_B=WR_Etop ]
+        [ bus_A=STACK->R1 GOTO ADR=PCOP_1 ]
+
+:DEC_1  [ bus_B=Etop  RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A-B bus_A=RW_R3 bus_B=R2 FLAG=OVR ]
+        [ bus_B=Etop  WR_MEM_A ]
+        [ bus_B=R3    WR_MEM_D bus_A=STACK->Etop FINISH ]
+
+:INC_1  [ bus_B=Etop  RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A+B bus_A=RW_R3 bus_B=R2 FLAG=OVR ]
+        [ bus_B=Etop  WR_MEM_A ]
+        [ bus_B=R3    WR_MEM_D bus_A=STACK->Etop FINISH ]
+
+:EXCL_1 [ GO_TRUE ADR=TRAP4A ]
+        [ bus_B=R1    RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A_BIC_B bus_A=RW_R2 bus_B=Etop ]
+        [ bus_B=R1    WR_MEM_A ]
+        [ bus_B=R2    WR_MEM_D bus_A=STACK->Etop FINISH ]
+
+:INCL_1 [ GO_TRUE ADR=TRAP4A ]
+        [ bus_B=R1    RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A_OR_B  bus_A=RW_R2 bus_B=Etop ]
+        [ bus_B=R1    WR_MEM_A ]
+        [ bus_B=R2    WR_MEM_D bus_A=STACK->Etop FINISH ]
+
+:ORJP_1 [ FLAG=NEG(FLAG) ]
+:ANDJP_1[ bus_B=WR_R1 INC_PC ]
+        [ GO_TRUE ADR=JUMP ]
+        [ bus_A=STACK->Etop FINISH ]
+
+:ALLOC_1[ ALU=A bus_A=S bus_B=RW_Etop ]
+        [ ALU=A+B bus_A=R2 bus_B=RW_S FLAG=ZERO FINISH ]
+
+:ENTR_1 [ bus_B=WR_R1 INC_PC ]
+        [ ALU=A+B bus_A=RW_R1 bus_B=S ]
+        [ ALU=A-B bus_A=R1 bus_B=H FLAG=CARRY ]
+        [ GO_TRUE ADR=ENTER_2 ALU=A+B bus_A=M bus_B=M FLAG=CARRY ]
+:ENTER_3[ ALU=A bus_A=R1 bus_B=WR_S FLAG=ZERO FINISH ]
+:ENTER_2[ GO_FALSE ADR=ENTER_3 ]
+        [ CALL ADR=DEC_PC ]
+        [ GOTO ADR=TRAP40 ]
+
+:DEC_PC [ ALU=A+B bus_A=RW_PC bus_B=PC ]
+        [ ALU=A+B bus_A=RW_PC bus_B=PC ]
+        [ ALU=A-1 bus_A=RW_PC ]
+        [ ALU=A+B bus_A=RW_PC RW_CASH_PC ]
+        [ ALU=ROR(A_BIC_B) bus_A=RW_PC CONST D=3 ]
+        [ ALU=ROR(A) bus_A=RW_PC RD_MEM_A ]
+        [ WR_CASH RD_MEM_D RETURN ]
+
+:CHECK_FOR
+        % R6 - high, R4 - low, FLAG - step >= 0
+        % Return TRUE in FLAG if may continue
+        [ RETURN_TRUE  ALU=A-B bus_A=R6 bus_B=R4 FLAG=N_XOR_OVR LONG ]
+        [ RETURN       ALU=A-B bus_A=R4 bus_B=R6 FLAG=N_XOR_OVR LONG ]
+
+
+:FOR1_1 [ CALL ADR=CHECK_H ]
+        [ UPDATE_CASH ]
+        [ bus_B=WR_R3 INC_PC CALL ADR=NEXT2 ]
+        [ ALU=A bus_A=R3 FLAG=Z ]           % R1 - offset in code
+        [ bus_A=STACK->R4 ]
+        [ bus_A=STACK->R5 ]
+        % Etop - high, R4 - low, R5 - address, FLAG - step positiv
+        [ ALU=A bus_A=Etop bus_B=WR_R6 CALL ADR=CHECK_FOR ]
+        [ bus_B=R5 WR_MEM_A ]
+        [ bus_B=R4 WR_MEM_D GO_FALSE ADR=ABORT_FOR1 ]
+        [ bus_B=S  WR_MEM_A ]
+        [ bus_B=R5 WR_MEM_D ]
+        [ ALU=A+1 bus_A=RW_S WR_MEM_A ]
+        [ bus_A=STACK->Etop bus_B=R6 WR_MEM_D ]
+        [ ALU=A+1 bus_A=RW_S FLAG=ZERO FINISH ]
+
+:ABORT_FOR1
+        [ bus_A=STACK->Etop FLAG=ZERO GOTO ADR=JUMP ]
+
+:FOR2_1 [ ALU=A-B bus_A=S CONST D=1 RD_MEM_A ]
+        [ bus_B=WR_R6               RD_MEM_D REG_EN ADR=FOR2_2 ]
+        [ ALU=A-B bus_A=S CONST D=2 RD_MEM_A ]
+        [ bus_B=WR_R5               RD_MEM_D UPDATE_CASH ]
+        [ bus_B=WR_R3 INC_PC ]
+        [ ALU=A-B bus_A=R3 CONST D=80 FLAG=CARRY ]
+        [ ALU=NE(B) CONST->R4 D=0FF GO_REG_FALSE ]
+        [ ALU=A_OR_B bus_A=RW_R3 bus_B=R4 ]
+:FOR2_2 % R3 - step, R6 - high, R5 - address.
+        [ bus_B=R5    RD_MEM_A ]
+        [ bus_B=WR_R4 RD_MEM_D CALL ADR=NEXT2 ]
+        [ ALU=A+B bus_A=RW_R4 bus_B=R3 ]
+        [ ALU=A   bus_A=R3 FLAG=N CALL ADR=CHECK_FOR ]
+        [ GO_FALSE ADR=FOR2_3 ALU=NEG(A) bus_A=RW_R1 ]
+        [ bus_B=R5   WR_MEM_A ]
+        [ bus_B=R4   WR_MEM_D FLAG=ZERO GOTO ADR=JUMP ]
+:FOR2_3 [ ALU=A-B bus_A=RW_S CONST D=2 ]
+        [ FLAG=ZERO FINISH ]
+
+:RTN_1  [ ALU=A bus_A=L bus_B=WR_S ]
+        [ ALU=A+1 bus_A=S RD_MEM_A ]
+        [ bus_B=WR_L      RD_MEM_D ]
+        [ ALU=A+B bus_A=S RD_MEM_A CONST D=2 ]
+        [ bus_B=WR_PC     RD_MEM_D ]
+        [ ALU=ROR(B) CONST->R1 D=1 ]
+        [ ALU=A_AND_B bus_A=PC    bus_B=R1 FLAG=Z ]
+        [ ALU=A_BIC_B bus_A=RW_PC bus_B=R1 GO_TRUE ADR=RTN_2 ]
+        [ bus_B=S         RD_MEM_A ]
+        [ bus_B=WR_G      RD_MEM_D ]
+        [ bus_B=G         RD_MEM_A ]
+        [ bus_B=WR_F      RD_MEM_D ]
+:RTN_2  [ ALU=ROR(B) bus_B=RW_R1 ]
+        [ ALU=A_AND_B bus_A=PC     bus_B=R1 FLAG=Z ]
+        [ ALU=A_BIC_B bus_A=RW_PC  bus_B=R1 GO_TRUE ADR=RTN_3 ]
+        [ ALU=A+B bus_A=S RD_MEM_A CONST D=3 ]
+        [ bus_B=WR_M      RD_MEM_D ]
+        [ bus_B=M         IDLE_OFF ]
+:RTN_3  [ CALL ADR=PUT_PC ]
+        [ FLAG=ZERO FINISH ]
+
+:LSTA_1 [ ALU=A+1 bus_A=G RD_MEM_A ]
+        [ bus_A=Etop->STACK bus_B=WR_Etop RD_MEM_D ]
+        [ UPDATE_CASH ]
+        [ bus_B=WR_R1 INC_PC ]
+        [ UPDATE_CASH ]
+        [ bus_B=WR_R2 INC_PC ]
+        [ CALL ADR=ROL(R2,8) ]
+        [ ALU=A+B bus_A=RW_R1 bus_B=R2 ]
+        [ ALU=A+B bus_A=RW_Etop bus_B=R1 FLAG=ZERO FINISH ]
+
+:MOVE_1 [ bus_A=STACK->R1 ]
+        [ bus_A=STACK->R2 ]
+        [ ALU=A bus_A=Etop FLAG=Z ]
+        [ ALU=A-1 bus_A=RW_R1 GO_TRUE ADR=MOVE_2 FLAG=ZERO ]
+        [ ALU=A-1 bus_A=RW_R2 ]
+
+:MOVE_L [ ALU=A+1 bus_A=RW_R1 RD_MEM_A ]
+        [ bus_B=WR_R3         RD_MEM_D GO_IF_ANY_INT ADR=MOVE_3 ]
+        [ ALU=A-1 bus_A=RW_Etop FLAG=Z ]
+        [ ALU=A+1 bus_A=RW_R2 WR_MEM_A ]
+        [ bus_B=R3            WR_MEM_D  GO_FALSE ADR=MOVE_L FLAG=ZERO ]
+
+:MOVE_2 [ bus_A=STACK->Etop FLAG=ZERO FINISH ]
+
+:MOVE_3 [ ALU=A-1 bus_A=RW_Etop ]
+        [ ALU=A+1 bus_A=RW_R2 WR_MEM_A ]
+        [ bus_B=R3            WR_MEM_D CALL ADR=DEC_PC ]
+        [ ALU=A+1 bus_A=RW_R1 ]
+        [ ALU=A+1 bus_A=RW_R2 ]
+        [ bus_A=R2->STACK ]
+        [ bus_A=R1->STACK FLAG=ZERO FINISH ]
+
+
+:XIT_1  [ bus_B=WR_PC RD_MEM_D CALL ADR=PUT_PC ]
+        [ FLAG=ZERO FINISH ]
+
+:ENTC_1 [ CALL ADR=CHECK_H ]
+        [ CALL ADR=NEXT2 ]
+        [ CALL ADR=GET_PC ]
+        [ ALU=A+B bus_A=RW_PC bus_B=R1 CALL ADR=PUT_PC ]
+        [ CALL ADR=NEXT2 ]
+        [ ALU=A bus_A=R1 bus_B=WR_R3 CALL ADR=NEXT2 ]
+        % R1 - high, R3 - low
+        [ ALU=A bus_A=R1 bus_B=WR_R4 CALL ADR=GET_PC ]
+        [ ALU=A-B bus_A=RW_R4 bus_B=R3 ] % R4 = high-low
+        [ ALU=ASL(A) bus_A=RW_R4 ]
+        [ ALU=A+B bus_A=RW_R4 CONST D=4 ]
+        [ ALU=A+B bus_A=RW_R4 bus_B=PC ] % R4 = PC+(high-low)*2+4
+        [ bus_B=S  WR_MEM_A ]
+        [ bus_B=R4 WR_MEM_D ]
+        [ ALU=A+1 bus_A=RW_S ] % Mem[S]:=PC+(high-low)*2+4; Inc(S)
+        [ ALU=A+B bus_A=Etop bus_B=Etop FLAG=CARRY ]
+        [ GO_TRUE ADR=ENTC_2
+          ALU=A-B bus_A=Etop bus_B=R3 FLAG=CARRY ]
+        [ GO_FALSE ADR=ENTC_2
+          ALU=A-B bus_A=R1 bus_B=Etop FLAG=CARRY ]
+        [ GO_FALSE ADR=ENTC_2 ]
+        [ ALU=A-B bus_A=RW_Etop bus_B=R3 ]
+        [ ALU=A+1 bus_A=RW_Etop ]
+        [ ALU=ASL(A) bus_A=RW_Etop ]
+        [ ALU=A+B bus_A=RW_PC bus_B=Etop ]
+:ENTC_2 [ bus_A=STACK->Etop CALL ADR=PUT_PC ]
+        [ FLAG=ZERO GOTO ADR=JBL ]
+
+:NEXT_RIGHT
+        [ ALU=A-1 bus_A=RW_R1 FLAG=N ]
+        [ GO_TRUE ADR=NR1 ]
+        [ CONST->R1 D=3 ]
+        [ ALU=A+1 bus_A=RW_Etop RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D GOTO ADR=NR2 ]
+:NR1    [ CALL ADR=ROR(R2,8) ]
+:NR2    [ ALU=A_AND_B bus_A=R2 CONST->R3  D=0FF RETURN ]
+
+:NEXT_LEFT
+        [ ALU=A-1 bus_A=RW_R5 FLAG=N ]
+        [ GO_TRUE ADR=NL1 ]
+        [ CONST->R5 D=3 ]
+        [ ALU=A+1 bus_A=RW_R4 RD_MEM_A ]
+        [ bus_B=WR_R6 RD_MEM_D GOTO ADR=NL2 ]
+:NL1    [ ALU=ROR(A) bus_A=RW_R6 ]
+        [ ALU=ROR(A) bus_A=RW_R6 ]
+        [ ALU=ROR(A) bus_A=RW_R6 ]
+        [ ALU=ROR(A) bus_A=RW_R6 ]
+        [ ALU=ROR(A) bus_A=RW_R6 ]
+        [ ALU=ROR(A) bus_A=RW_R6 ]
+        [ ALU=ROR(A) bus_A=RW_R6 ]
+        [ ALU=ROR(A) bus_A=RW_R6 ]
+:NL2    [ ALU=A_AND_B bus_A=R6 CONST->Time  D=0FF RETURN ]
+
+:COMP_1 [ bus_A=STACK->R4 ]
+        [ bus_A=Time->STACK ]
+        [ ALU=B bus_A=WR_R1 CONST->R5 D=0 ]
+        [ ALU=A-1 bus_A=RW_Etop ]
+        [ ALU=A-1 bus_A=RW_R4 ]
+:COMP_L [ CALL ADR=NEXT_RIGHT ]
+        [ CALL ADR=NEXT_LEFT ]
+        [ ALU=A   bus_A=R3 FLAG=Z ]
+        [ GO_TRUE ADR=COMP_2
+          ALU=A-B bus_A=R3 bus_B=Time FLAG=Z ]
+        [ GO_TRUE ADR=COMP_L ]
+:COMP_2
+% Last bytes in Time,R3
+        [ ALU=A bus_A=R3 bus_B=WR_Etop ]
+        [ ALU=A bus_A=Time bus_B=WR_R1 ]
+        [ bus_A=STACK->Time ]
+        [ bus_A=R1->STACK FLAG=ZERO FINISH ]
+
+:SETM_1 [ ALU=A+B bus_A=L CONST D=2 RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A_AND_B bus_A=R2    bus_B=R1 FLAG=Z ]
+        [ ALU=A_OR_B  bus_A=RW_R2 bus_B=R1 GO_FALSE ADR=SETM_2 ]
+        [ ALU=A+B bus_A=L CONST D=2 WR_MEM_A ]
+        [ bus_B=R2 WR_MEM_D ]
+        [ ALU=A+B bus_A=L CONST D=3 WR_MEM_A ]
+        [ bus_B=M  WR_MEM_D ]
+:SETM_2 [ bus_B=Etop RESET_DEBUG ]
+        [ ALU=A bus_A=Etop bus_B=WR_M ]
+        [ bus_A=STACK->Etop FLAG=ZERO FINISH ]
+
+:GB_1   [ ALU=B bus_A=WR_R2 INC_PC FLAG=Z ]
+:GB_3   [ ALU=A-1 bus_A=RW_R2 FLAG=Z GO_TRUE ADR=GB_2 ]
+        [ bus_B=Etop    RD_MEM_A ]
+        [ bus_B=WR_Etop RD_MEM_D GOTO ADR=GB_3 ]
+:GB_2   [ FLAG=ZERO FINISH ]
+
+:ABS_1  [ GO_FALSE ADR=NOP ]
+        [ ALU=NEG(A) bus_A=RW_Etop FLAG=OVR FINISH ]
+
+:DOT_1  [ ALU=A bus_A=Etop bus_B=WR_R1 ]
+        [ bus_A=STACK->Etop CONST->R2 D=8 ]
+        [ CALL ADR=CRLF ]
+        [ CALL ADR=PUT_NUM ]
+        [ FLAG=ZERO FINISH ]
+
+:INP_1  [ CALL ADR=GET_IO_ADR ]
+        [ CONST->R2 D=0FF ]
+        [ CONST->R3 D=0FF SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R2 bus_B=R3 ]
+        [ bus_B=R1 RD_MEM_A ]
+        [ bus_B=WR_Etop FLAG=ZERO RD_MEM_D ]
+        [ ALU=A_AND_B bus_A=RW_Etop bus_B=R2 FINISH ]
+
+:OUT_1  [ ALU=A bus_A=Etop bus_B=WR_R2 ]
+        [ bus_A=STACK->Etop CALL ADR=GET_IO_ADR ]
+        [ bus_A=STACK->Etop bus_B=R1 WR_MEM_A ]
+        [ bus_B=R2 FLAG=ZERO WR_MEM_D FINISH ]
+
+:GET_IO_ADR
+        [ CONST->R1 D=0F SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R1 CONST D=0FF ]
+        [ ALU=A_AND_B bus_A=Etop bus_B=RW_R1 ]
+        [ ALU=A_AND_B bus_A=R1 CONST D=1 FLAG=Z ]
+        [ CONST->Etop D=68 SHIFT_EN ]
+        [ GO_TRUE ADR=GET_IO1 ]
+        [ CONST->Etop D=78 SHIFT_EN ]
+:GET_IO1[ ALU=A_OR_B bus_A=RW_Etop CONST D=038 ]
+        [ bus_B=RW_Etop SHIFT_EN ]
+        [ ALU=ASR(A) bus_A=RW_R1 ]
+        [ ALU=A_OR_B bus_A=Etop bus_B=RW_R1 RETURN ]
+
+:RESET_SUB
+        [ CONST->R1 D=20 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN RD_MEM_A ]
+        [ RD_MEM_D ]
+        [ CONST->R2 D=100. ]
+:RESET2 [ ALU=A-1 bus_A=RW_R2 FLAG=Z ]
+        [ GO_FALSE ADR=RESET2 ]
+        [ CONST D=0 RD_MEM_A ]
+        [ RD_MEM_D FLAG=ZERO RETURN ]
+
+:ROR(R3)
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN RETURN ]
+
+:SYS_SWITCH
+        [ ALU=A-B bus_A=R1 CONST D=0 FLAG=Z ]
+        [ GO_TRUE ADR=SYS0 ]
+        [ ALU=A-B bus_A=R1 CONST D=2 FLAG=Z ]
+        [ GO_TRUE ADR=SYS2 ]
+        [ ALU=A-B bus_A=R1 CONST D=1 FLAG=Z ]
+        [ GO_TRUE ADR=DOT_1 ]
+        [ CALL ADR=DEC_PC ]
+        [ CONST->R1 D=7 ]
+        [ GOTO ADR=TRAPED ]
+:SYS0   [ bus_A=Etop->STACK ]
+        [ CONST->Etop D=6 FLAG=ZERO FINISH ]
+:SYS2   [ bus_A=Etop->STACK ]
+        [ CONST->Etop D=9 FLAG=ZERO FINISH ]
+
+:BOOLEAN
+      [ ALU=B+FLAG CONST->Etop D=0 FLAG=ZERO ]
+      [ FINISH ]
+:FALSE->Etop
+        [ ALU=A_BIC_B bus_A=RW_Etop bus_B=Etop FLAG=ZERO FINISH ]
+
+:RCHKZ_1[ GO_FALSE ADR=FALSE->Etop
+          ALU=A FLAG=N bus_A=STACK->Etop ]
+        [ GO_FALSE ADR=FALSE->Etop
+          ALU=A-B  bus_A=R1 bus_B=Etop FLAG=CARRY ]
+        [ GOTO ADR=BOOLEAN ]
+
+:RCHK_1  % r1 - high, r2 - low
+        [ bus_A=STACK->Etop ] % Etop - checked value
+        [ ALU=A-B bus_A=Etop  bus_B=RW_R2 FLAG=OVR ]
+        [ ALU=A-B bus_A=RW_R1 bus_B=Etop  FLAG=OVR GO_FALSE ADR=RCHK_2 ]
+        [ ALU=NE(A) bus_A=RW_R2 GO_FALSE  ADR=RCHK_3 ]
+        [ ALU=NE(A) bus_A=RW_R1 GOTO      ADR=RCHK_3 ]
+:RCHK_2 [ GO_FALSE   ADR=RCHK_3 ]
+        [ ALU=NE(A) bus_A=RW_R1 ]
+:RCHK_3 [ ALU=A_OR_B bus_A=RW_R1 bus_B=R2 FLAG=N
+          GOTO ADR=BOOLEAN ]
+
+:CM_1   [ ALU=A-1 bus_A=RW_S  bus_B=WR_R4 GOTO ADR=Call_External ]
+
+:ADDPC_1[ ALU=ASL(A)   bus_A=RW_R1    ]
+        [ ALU=A+B      bus_A=RW_R1    RW_CASH_PC FLAG=ZERO ]
+        [ ALU=A+B      bus_A=RW_Etop  bus_B=R1   FINISH ]
+
+:ARR_CMP_1
+% Etop=size
+        [ ALU=A   bus_A=Etop FLAG=N ]
+        [ GO_FALSE ADR=ARR_FATAL
+          ALU=A   bus_A=Etop FLAG=Z ]
+        [ GO_TRUE ADR=ARR_CMP_EXIT0 ]
+:ARR_CMP_2
+        [ bus_B=R1    RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ bus_B=R2    RD_MEM_A ]
+        [ bus_B=WR_R4 RD_MEM_D ]
+        [ ALU=A-B bus_A=R3 bus_B=R4 FLAG=Z ]
+        [ GO_FALSE ADR=ARR_CMP_EXIT
+          ALU=A-1 bus_A=RW_Etop FLAG=Z ]
+        [ GO_TRUE  ADR=ARR_CMP_EXIT
+          ALU=A+1 bus_A=RW_R1 FLAG=ZERO ]                       % INC(adr1)
+        [ ALU=A+1 bus_A=RW_R2                                   % INC(adr2)
+          GO_IF_ANY_INT ADR=ARR_CMP_ON_IPT ]
+        [ GOTO ADR=ARR_CMP_2 ]
+:ARR_CMP_ON_IPT
+        [ bus_A=R2->STACK  CALL ADR=DEC_PC ]
+        [ bus_A=R1->STACK FLAG=ZERO FINISH ]
+:ARR_CMP_EXIT0
+        [ bus_A=Etop->STACK FLAG=ZERO FINISH ]
+:ARR_CMP_EXIT
+        [ bus_A=R4->STACK ]
+        [ ALU=A bus_A=R3 bus_B=WR_Etop FLAG=ZERO FINISH ]
+:ARR_FATAL
+        [ CONST->R1 D=4B ] [ GOTO ADR=TRAPED ]
+
+:BOX_CHK[ CONST->R2 D=0FF SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R2 CONST D=0FF ]
+        [ ALU=A+B bus_A=Etop CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A+B bus_A=R1   CONST D=1 RD_MEM_A ]
+        [ bus_B=WR_R4 RD_MEM_D ]
+% Etop - box1
+% R1   - box2
+% R2   - mask
+% R3   - A
+% R4   - D
+        [ ALU=A-B bus_A=R4 bus_B=R3 FLAG=CARRY ]
+        [ GO_FALSE ADR=BOX0
+          ALU=A_AND_B bus_A=RW_R3 bus_B=R2 ]
+        [ ALU=A_AND_B bus_A=RW_R4 bus_B=R2 ]
+        [ ALU=A-B bus_A=R4 bus_B=R3 FLAG=CARRY ]
+        [ GO_FALSE ADR=BOX0 ]
+        [ ALU=A+B bus_A=Etop CONST D=1 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A+B bus_A=R1   CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_R4 RD_MEM_D ]
+% R3   - B
+% R4   - C
+        [ ALU=A-B bus_A=R3 bus_B=R4 FLAG=CARRY ]
+        [ GO_FALSE ADR=BOX0
+          ALU=A_AND_B bus_A=RW_R3 bus_B=R2 ]
+        [ ALU=A_AND_B bus_A=RW_R4 bus_B=R2 ]
+        [ ALU=A-B bus_A=R3 bus_B=R4 FLAG=CARRY ]
+        [ GO_FALSE ADR=BOX0 ]
+        [ CONST->Etop D=1 FLAG=ZERO FINISH ]
+:BOX0   [ CONST->Etop D=0 FLAG=ZERO FINISH ]
+
+%-----------------------------------------------------------------------
+%-------------------------- WORD MOVE ----------------------------------
+%-----------------------------------------------------------------------
+%                                       (* Andy 10-Nov-88. (c) KRONOS *)
+%                                       (* Andy 15-Dec-88. (c) KRONOS *)
+
+:WM_1   % R1 - адрес источника
+        % R2 - адрес приемника
+        [ ALU=A bus_A=Etop FLAG=Z ]
+        [ GO_TRUE ADR=WM_EXIT
+          ALU=A-B bus_A=R1 bus_B=R2 FLAG=CARRY ]
+        [ CONST->R4 D=1 ]
+        [ GO_FALSE ADR=WM_right % R1<R2
+          ALU=A-B bus_A=R1 bus_B=R2 FLAG=Z ]
+:WM_left
+        [ GO_TRUE ADR=WM_EXIT % R1=R2
+          ALU=A-1 bus_A=RW_R1 ]
+        [ ALU=A-1 bus_A=RW_R2 GOTO ADR=WM_loop FLAG=ZERO ]
+:WM_right
+        [ ALU=NEG(A) bus_A=RW_R4 ]
+        [ ALU=A+B bus_A=RW_R1 bus_B=Etop ]
+        [ ALU=A+B bus_A=RW_R2 bus_B=Etop FLAG=ZERO ]
+:WM_loop
+        [ ALU=A+B bus_A=RW_R1 bus_B=R4 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D GO_IF_ANY_INT ADR=WM_int ]
+        [ ALU=A-1 bus_A=RW_Etop FLAG=Z ]
+        [ ALU=A+B bus_A=RW_R2 bus_B=R4 WR_MEM_A ]
+        [ bus_B=R3 WR_MEM_D GO_FALSE ADR=WM_loop FLAG=ZERO ]
+:WM_EXIT
+        [ bus_A=STACK->Etop FLAG=ZERO FINISH ]
+:WM_int [ ALU=A-1 bus_A=RW_Etop CALL ADR=DEC_PC ]
+        [ ALU=A+B bus_A=RW_R2 bus_B=R4 WR_MEM_A ]
+        [ bus_B=R3 WR_MEM_D ]
+        [ ALU=A-B bus_A=R4 CONST D=1 FLAG=Z ]
+        [ GO_TRUE ADR=WM_2 ]
+        [ ALU=A-B bus_A=RW_R2 bus_B=Etop ]
+        [ ALU=A-B bus_A=RW_R1 bus_B=Etop GOTO ADR=WM_fin ]
+:WM_2   [ ALU=A+1 bus_A=RW_R2 ]
+        [ ALU=A+1 bus_A=RW_R1 ]
+:WM_fin [ bus_A=R2->STACK ]
+        [ bus_A=R1->STACK FLAG=ZERO FINISH ]
+%-----------------------------------------------------------------------
+%----------------------- END OF WORD MOVE ------------------------------
+%-----------------------------------------------------------------------
+
+%-----------------------------------------------------------------------
+%---------------------- BIT BLOCK TRANSFER -----------------------------
+%-----------------------------------------------------------------------
+%                                       (* Andy 11-Nov-88. (c) KRONOS *)
+%                                       (* Andy 14-Nov-88. (c) KRONOS *)
+%                                       (* Andy 14-Dec-88. (c) KRONOS *)
+%                                       (* Andy 18-Dec-88. (c) KRONOS *)
+% Все сдвиги = 5 тактов
+% Выбор направления                  26 тактов
+% + обработка первого слова          85 тактов
+%   пересылка слова в основном цикле 15 тактов
+% + запись последнего слова и выход  35 тактов
+% Обработка прерывания               36 тактов
+
+:BM_start
+        [ GO_FALSE ADR=BM_enter ]
+        [ bus_A=STACK->Etop ]
+        [ bus_A=STACK->Etop ]
+        [ bus_A=STACK->Etop ]
+        [ bus_A=STACK->Etop ]
+        [ bus_A=STACK->Etop FLAG=ZERO FINISH ]
+
+:BM_enter % Etop#0
+        [ CALL ADR=get_pair ]           % R5 - координата источника.
+        [ ALU=A bus_A=R5 bus_B=WR_R4    % R4 - координата источника.
+          CALL ADR=get_pair ]           % R5 - координата приемника.
+% Спасаем регистры
+        [ bus_A=M->STACK ]
+        [ bus_A=P->STACK ]
+        [ bus_A=L->STACK ]
+        [ bus_A=G->STACK ]
+        [ bus_A=Time->STACK ]
+        [ bus_A=H->STACK ]
+        [ bus_A=PC->STACK CONST->H D=1 ]        % H:= 1
+% Выбираем направление
+        [ ALU=A-B bus_A=R5 bus_B=R4 FLAG=CARRY ]
+        [ GO_FALSE ADR=BMOVE_LEFT
+          ALU=A-B bus_A=R5 bus_B=R4 FLAG=Z ]
+        [ GO_FALSE ADR=BMOVE_RIGHT ]    % else R4=R5 - dummy move
+:BM_EXIT
+        [ CALL ADR=BM_rest_regs ]
+        [ bus_A=STACK->Etop FLAG=ZERO FINISH ]
+
+% На выбор направления - 26 тактов
+:BMOVE_LEFT
+% H=1
+% Etop - размер в битах
+        [ CALL ADR=BM_unpack ]
+        [ ALU=B-A bus_A=G CONST->R5 D=020 ] % R5:= емкость приемника
+        [ ALU=A-B bus_A=R5 bus_B=Etop FLAG=CARRY ]
+        [ GO_FALSE ADR=BM_1 ] % R5<Etop <==> слово не последнее
+        [ ALU=A bus_A=Etop bus_B=WR_R5 ]
+% R5 - число битов, которое нужно переписать в R3
+:BM_1   [ ALU=A bus_A=R5 bus_B=WR_R6 CALL ADR=BM_mkmask ]
+        % маска для R3 ->Time
+        [ ALU=A bus_A=G LOAD_CNT ]
+:BM_mv1 [ bus_B=RW_Time SHIFT=BM_mv1 ] % Time:= Time << G
+        [ ALU=A bus_A=Time bus_B=WR_PC ] % маска для R3 ->PC
+        [ ALU=A bus_A=L bus_B=WR_R6 CALL ADR=BM_mkmask ]
+        % маска для R2 ->Time
+        [ ALU=A bus_A=Time bus_B=WR_R4 CALL ADR=BM_first ]
+        [ ALU=A-B bus_A=RW_Etop bus_B=R5 FLAG=Z REG_EN ADR=BM_2 ]
+        [ GO_TRUE ADR=BM_EXIT
+% R5= число битов, записанных в R3.
+% Модифицируем ввод и готовим маски для основного цикла.
+          ALU=A+B bus_A=RW_L bus_B=R5 ]
+        [ ALU=A-B bus_A=L CONST D=020 FLAG=CARRY ]
+        [ ALU=A_AND_B bus_A=RW_L CONST D=01F FLAG=Z % L=0 <==> попали на
+                                                    % границу слова.
+% L - битовое смещение в очередном слове-источнике.
+% FLAG=TRUE, если R1 прочитано полностью.
+          GO_REG_FALSE ]
+        [ ALU=A bus_A=R2 bus_B=WR_R1
+          GO_TRUE ADR=BM_WM ] % Оптимизация словной пересылкой.
+        [ ALU=A+B bus_A=RW_M bus_B=H RD_MEM_A ]
+        [ bus_B=WR_R2                RD_MEM_D ]
+% (R1,L)+(R2=M^) - буфер ввода. Последнее слово записано по адресу P.
+:BM_2   [ ALU=A bus_A=L bus_B=WR_R6 CALL ADR=BM_mkmask ]
+        [ ALU=NE(A) bus_A=Time bus_B=WR_PC GOTO ADR=BM_loop ]
+% На выход к основному циклу 83 такта
+
+:BMOVE_RIGHT
+% Etop - размер в битах
+        [ ALU=A-1 bus_A=Etop bus_B=WR_R6 ]
+        [ ALU=A+B bus_A=RW_R4 bus_B=R6 ]
+        [ ALU=A+B bus_A=RW_R5 bus_B=R6 ]
+        [ ALU=NEG(A) bus_A=RW_H   % H:= -1;
+          CALL ADR=BM_unpack ]
+        [ ALU=A+1 bus_A=RW_G bus_B=WR_R5 ] % R5:= емкость приемника
+        [ ALU=A-B bus_A=R5 bus_B=Etop FLAG=CARRY ]
+        [ GO_FALSE ADR=BM_3 ] % R5<Etop <==> слово не последнее
+        [ ALU=A bus_A=Etop bus_B=WR_R5 ]
+% R5 - число битов, которое нужно переписать в R3
+:BM_3   [ ALU=A bus_A=R5 bus_B=WR_R6 CALL ADR=BM_mkmask ]
+        [ ALU=A bus_A=G  bus_B=WR_R6 ]
+        [ ALU=A-B bus_A=RW_R6 bus_B=R5 ]
+        [ ALU=A   bus_A=R6 LOAD_CNT ]
+:BM_mv3 [ bus_B=RW_Time SHIFT=BM_mv3 ] % Time:= Time << (G-R5)
+        [ ALU=A bus_A=Time bus_B=WR_PC ] % маска для R3 ->PC
+        [ ALU=A+1 bus_A=RW_L bus_B=WR_R6 CALL ADR=BM_mkmask ] % L:= L+1
+        % маска для R1 ->Time
+        [ ALU=NE(A) bus_A=RW_Time bus_B=WR_R4 CALL ADR=BM_first ]
+% ---------------------------------------------------------------
+        [ ALU=A-B bus_A=RW_Etop bus_B=R5 FLAG=Z ]
+        [ GO_TRUE ADR=BM_EXIT
+% R5= число битов, записанных в R3.
+% Модифицируем ввод и готовим маски для основного цикла.
+% L= емкость R1
+          ALU=A-B bus_A=RW_L bus_B=R5 FLAG=CARRY ] % L:= L-R5
+        [ ALU=A bus_A=L FLAG=Z
+          GO_TRUE ADR=BM_4 ] % L >= 0
+% L < 0 <==> прочитали R1 и часть R2
+        [ ALU=A+B bus_A=RW_L CONST D=020 ]
+        [ ALU=A bus_A=R2 bus_B=WR_R1 ]
+        [ ALU=A+B bus_A=RW_M bus_B=H RD_MEM_A ]
+        [ bus_B=WR_R2                RD_MEM_D GOTO ADR=BM_5 ]
+:BM_4   [ GO_TRUE ADR=BM_WM ] % Оптимизация словной пересылкой.
+:BM_5 % Подготовка масок.
+        [ ALU=A bus_A=L bus_B=WR_R6 CALL ADR=BM_mkmask ]
+        [ ALU=A bus_A=Time bus_B=WR_PC ]
+        [ ALU=NE(A) bus_A=RW_Time ]
+% На выход к основному циклу 88 тактов
+
+:BM_loop
+% G - сдвиг для рез-та
+        [ ALU=A bus_A=Time bus_B=WR_R4 ]
+% R4= маска для R2= Time
+% Основной цикл 15 тактов
+:BM_main
+        [ ALU=A-B bus_A=RW_Etop CONST D=20 FLAG=CARRY ]
+        [ ALU=A_AND_B bus_A=RW_R1 bus_B=PC ]
+        [ ALU=A_AND_B bus_A=R2->STACK bus_B=RW_R4 ]
+        [ ALU=A_OR_B  bus_A=RW_R1 bus_B=R4 ]
+        [ ALU=A bus_A=G LOAD_CNT ]
+:BM_mv4 [ bus_B=RW_R1 SHIFT=BM_mv4 ]
+        [ ALU=A bus_A=Time bus_B=WR_R4  % R4:= Time
+          GO_FALSE ADR=BM_end_0 FLAG=ZERO ]
+        [ ALU=A+B bus_A=RW_P bus_B=H WR_MEM_A ]
+        [                   bus_B=R1 WR_MEM_D
+          GO_IF_ANY_INT ADR=BM_int_0 ]
+        [ ALU=A+B bus_A=RW_M bus_B=H RD_MEM_A ]
+        [ bus_A=STACK->R1 % R1:= old(R2)
+          bus_B=WR_R2 RD_MEM_D FLAG=ZERO GOTO ADR=BM_main ]
+
+:BM_end_0
+% На выход 35 тактов
+        [ ALU=A+B bus_A=Etop CONST D=020 FLAG=Z ]
+        [ bus_A=STACK->R6   GO_TRUE ADR=BM_EXIT ]
+
+:BM_end % Пишем последнее неполное слово
+% Etop= остаток в битах - 32
+% R1 - готовое слово ввода
+        [ ALU=A+B bus_A=RW_P bus_B=H RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D REG_EN ADR=BM_mkmask ]
+        [ ALU=A+B bus_A=Etop CONST->R6 D=020 CALL_REG ]
+% В Time - маска на Etop битов для R3.
+        [ ALU=A-B bus_A=H CONST D=1 FLAG=Z ]
+        [ ALU=NEG(A) bus_A=RW_Etop LOAD_CNT % Etop:= -(ост.-32)=32-ост.
+          GO_TRUE ADR=BM_6 ]
+:BM_mv5 [ bus_B=RW_Time SHIFT=BM_mv5 ]
+:BM_6   [ ALU=A_AND_B bus_A=RW_R1 bus_B=Time ]
+        [ ALU=A_BIC_B bus_A=RW_R3 bus_B=Time ]
+        [ ALU=A_OR_B  bus_A=RW_R3 bus_B=R1 ]
+        [ ALU=A bus_A=P WR_MEM_A ]
+        [ bus_B=R3 WR_MEM_D GOTO ADR=BM_EXIT ]
+%-----------------------------------------------------------------------
+:BM_int_0
+        [ bus_A=STACK->R6 ]
+:BM_int
+% R2= destination bit address
+% R4= source bit address
+% влево:  R2= (P+h)*32
+%         R4=  M*32+L
+% вправо: R2= (P+h)*32+32-Etop
+%         R4=  M*32+L-Etop
+        [ ALU=A+B bus_A=RW_P bus_B=H ]
+        [ ALU=A bus_A=P bus_B=WR_R6 CALL ADR=mult32 ]
+        [ ALU=A bus_A=R6 bus_B=WR_R2 ] % R2:= (P+h)*32
+        [ ALU=A bus_A=M bus_B=WR_R6 CALL ADR=mult32 ]
+        [ ALU=A bus_A=R6 bus_B=WR_R4 ] % R4:=  M*32
+        [ ALU=A bus_A=H FLAG=N ]
+        [ ALU=A+B bus_A=RW_R4 bus_B=L GO_TRUE ADR=BM_8 ]
+% Вправо
+        [ ALU=A+B bus_A=RW_R2 CONST D=020 ]
+        [ ALU=A-B bus_A=RW_R2 bus_B=Etop ]
+        [ ALU=A-B bus_A=RW_R4 bus_B=Etop ]
+:BM_8   [ ALU=A_XOR_B bus_A=RW_R6 bus_B=R6 CALL ADR=BM_rest_regs ]
+:BM_fin3
+        [ bus_A=R6->STACK CALL ADR=DEC_PC ]
+        [ bus_A=R2->STACK ]
+        [ bus_A=R6->STACK ]
+        [ bus_A=R4->STACK FLAG=ZERO FINISH ]
+
+:BM_wint
+% Etop>0 - остаток в битах;
+% последнее слово прочитано по адресу M и записано по адресу P.
+% R2= destination bit address
+% R4= source bit address
+% влево:  R2= (P+h)*32
+%         R4= (M+h)*32
+% вправо: R2= (P+h)*32+32-Etop
+%         R4= (M+h)*32+32-Etop
+        [ ALU=A+B bus_A=RW_P bus_B=H ]
+        [ ALU=A bus_A=P bus_B=WR_R6 CALL ADR=mult32 ]
+        [ ALU=A bus_A=R6 bus_B=WR_R2 ] % R2:= (P+h)*32
+        [ ALU=A bus_A=H FLAG=N ]
+        [ ALU=A+B bus_A=RW_M bus_B=H ]
+        [ ALU=A bus_A=M bus_B=WR_R6 CALL ADR=mult32 ]
+        [ ALU=A bus_A=R6 bus_B=WR_R4   % R4:= (M+h)*32
+          GO_TRUE ADR=BM_8 ]
+% Вправо
+        [ ALU=B-A bus_A=Etop CONST->R5 D=020 ]
+        [ ALU=A+B bus_A=RW_R2 bus_B=R5 ]
+        [ ALU=A+B bus_A=RW_R4 bus_B=R5 GOTO ADR=BM_8 ]
+
+:BM_WM
+% Словная пересылка: прочитано слово R2= M^;
+% последнее слово записано по адресу P;
+% Etop - длина пересылки в битах.
+        [ CONST->R6 D=020 ] % R6:= 32
+:BM_wmain
+        [ ALU=B-A bus_A=Etop CONST D=020 FLAG=CARRY ]
+        [ ALU=A-B bus_A=RW_Etop bus_B=R6 GO_TRUE ADR=BM_w1 FLAG=Z ]
+        [ ALU=A+B bus_A=RW_P bus_B=H WR_MEM_A FLAG=ZERO ]
+        [ bus_B=R2 WR_MEM_D GO_IF_ANY_INT ADR=BM_wint ]
+        [ ALU=A+B bus_A=RW_M bus_B=H RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D GOTO ADR=BM_wmain ]
+:BM_w1 % Etop+32 <= 32
+% FLAG= (Etop=0)
+        [ ALU=A bus_A=R2 bus_B=WR_R1 GO_FALSE ADR=BM_end ]
+        [ ALU=A+B bus_A=RW_P bus_B=H WR_MEM_A ]
+        [ bus_B=R2 WR_MEM_D GOTO ADR=BM_EXIT ]
+
+%-----------------------------------------------------------------------
+%------------------------- Подпрограммы --------------------------------
+:BM_mkmask % R6= (0..32)
+% 9 тактов
+        [ ALU=A bus_A=R6 LOAD_CNT REG_EN ADR=BM_mk1 ]
+        [ ALU=A-B bus_A=R6 CONST D=020 FLAG=Z ]
+        [ CONST->Time D=1 GO_REG_TRUE ]
+:BM_mk2 [ bus_B=RW_Time SHIFT=BM_mk2 ]
+        [ ALU=A-1 bus_A=RW_Time FLAG=ZERO RETURN ]
+:BM_mk1 [ ALU=NEG(A) bus_A=RW_Time FLAG=ZERO RETURN ]
+
+:BM_first
+% Формирование и запись первого слова
+% PC - mask for R3, Time - mask for R2
+% R4=Time
+% G:= сдвиг для результата
+% Destroyed: R4, R6.
+% 15 тактов
+        [ ALU=A-B bus_A=RW_G bus_B=L LOAD_CNT ] % G:= G-L сдвиг для рез-та
+        [ ALU=A_AND_B bus_A=RW_R4 bus_B=R2 ]
+        [ ALU=NE(A) bus_A=Time bus_B=WR_R6 ] % R6= маска для R1
+        [ ALU=A_AND_B bus_A=RW_R6 bus_B=R1 ]
+        [ ALU=A_OR_B bus_A=RW_R4 bus_B=R6 ]
+:BM_mv2 [ bus_B=RW_R4 SHIFT=BM_mv2 ]
+        [ ALU=A_BIC_B bus_A=RW_R3 bus_B=PC ]
+        [ ALU=A_AND_B bus_A=RW_R4 bus_B=PC ]
+        [ ALU=A_OR_B  bus_A=RW_R3 bus_B=R4 ] % Сформировали R3
+        [ bus_B=P  WR_MEM_A ]
+        [ bus_B=R3 WR_MEM_D RETURN ]
+
+:BM_unpack
+% Инициализация чтения битов, R4 - абс. номер бита
+% 16 тактов
+        [ ALU=A_AND_B bus_A=R4 CONST->L D=1F ]  % L=номер бита
+        [ ALU=ASR(A) bus_A=R4 bus_B=WR_M ]
+        [ ALU=ASR(A) bus_A=RW_M ]
+        [ ALU=ASR(A) bus_A=RW_M ]
+        [ ALU=ASR(A) bus_A=RW_M ]
+        [ ALU=ASR(A) bus_A=RW_M RD_MEM_A ]      % M - словный адрес
+        [ bus_B=WR_R1           RD_MEM_D ]
+        [ ALU=A+B bus_A=RW_M bus_B=H RD_MEM_A ]
+        [ bus_B=WR_R2                RD_MEM_D ]
+% Инициализация записи битов
+        [ ALU=A_AND_B bus_A=R5 CONST->G D=1F ]  % G=номер бита
+        [ ALU=ASR(A) bus_A=R5 bus_B=WR_P ]
+        [ ALU=ASR(A) bus_A=RW_P ]
+        [ ALU=ASR(A) bus_A=RW_P ]
+        [ ALU=ASR(A) bus_A=RW_P ]
+        [ ALU=ASR(A) bus_A=RW_P RD_MEM_A ]      % P - словный адрес
+        [ bus_B=WR_R3           RD_MEM_D RETURN ]
+
+:get_pair
+% Со стека снимается пара: (словный адрес + битовое смещение);
+% конечный номер бита пишется в R5,
+% R6 портится.
+% 6 тактов
+        [ bus_A=STACK->R5 ]
+        [ bus_A=STACK->R6 CALL ADR=mult32 ]
+        [ ALU=A+B bus_A=RW_R5 bus_B=R6 RETURN ]
+
+:mult32 % R6:= R6*32
+% 3 такта
+        [ ALU=ASL(A) bus_A=RW_R6 ]              % := * 2
+        [ ALU=ASL(A+B) bus_A=RW_R6 bus_B=R6 ]   % := * 8
+        [ ALU=ASL(A+B) bus_A=RW_R6 bus_B=R6     % := *32
+          RETURN ]
+
+:BM_rest_regs
+% 7 тактов
+        [ bus_A=STACK->PC ]
+        [ bus_A=STACK->H ]
+        [ bus_A=STACK->Time ]
+        [ bus_A=STACK->G ]
+        [ bus_A=STACK->L ]
+        [ bus_A=STACK->P ]
+        [ bus_A=STACK->M RETURN ]
+%-----------------------------------------------------------------------
+%------------------ END OF BIT BLOCK TRANSFER --------------------------
+%-----------------------------------------------------------------------

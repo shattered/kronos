@@ -1,0 +1,234 @@
+
+
+
+
+
+
+utwervden
+
+predw.0010-01 31 01-lu
+
+
+
+
+
+
+
+
+
+               sistema awtomatizacii proektirowaniq
+                     programmnogo obespe~eniq
+                        mikro-|wm k1816we48
+
+                            s a p r 4 8
+
+
+
+                        opisanie primeneniq
+
+
+
+
+                        predw.0010-01 31 01
+
+                             listow 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              1 9 8 5
+
+                              - 2 -
+
+                        predw.0010-01 31 01
+
+
+
+
+
+
+                             annotaciq
+
+
+
+
+     w  dokumente  opisywa`tsq  uslowiq  primeneniq  i  krug  zada~,
+re{aemyh s pomo}x` sistemy awtomatizacii proektirowaniq programmnogo
+obespe~eniq mikro-|wm k1816we48.
+
+
+
+
+
+     w_n_i_m_a_n_i_e: zapre}aetsq pereda~a programmnogo  obespe~eniq
+sapr48 drugim organizaciqm bez soglasowaniq s razrabot~ikom.
+     osnowanie: postanowlenie gknt N 41 ot 1984 g.
+
+                              - 3 -
+
+                        predw.0010-01 31 01
+
+
+
+
+
+
+                            sodervanie
+
+
+
+    annotaciq ...................................................  2
+
+
+1.  nazna~enie...................................................  4
+
+
+2.  uslowiq primeneniq...........................................  4
+
+
+3.  opisanie zada~i..............................................  4
+
+
+4.  whodnye i wyhodnye dannye....................................  4
+
+                              - 4 -
+
+                        predw.0010-01 31 01
+
+
+                           1. nazna~enie
+
+
+
+
+     sistema awtomatizacii proektirowaniq  programmnogo  obespe~eniq
+mikro-|wm k1816we48 (sapr48) prednazna~ena dlq  sozdaniq  i  otladki
+sistemnyh i prikladnyh programm dlq ustrojstw i sistem,  postroennyh
+na baze mikro-|wm k1816we48.
+
+
+
+
+                       2. uslowiq primeneniq
+
+
+
+
+     sapr48   qwlqetsq   ~isto   krossowym   sredstwom    razrabotki
+programmnogo obespe~eniq. ona movet rabotatx pod  uprawleniem  odnoj
+iz nivepere~islennyh bazowyh operacionnyh sistem (os):
+
+       - rafos;
+       - fodos;
+       - os dwk.
+
+
+     p_r_i_m_e_~_a_n_i_e. w os rafos i fodos sapr48  movet  rabotatx
+tolxko pod uprawleniem SJ- ili FB-monitora.  pri~em,  pri  rabote  w
+FB-monitore sapr48 funkcioniruet w fonowom revime.
+
+     sistemnoe  programmnoe  obespe~enie  sapr48  oformleno  w  wide
+otdelxno wyzywaemyh programm w sootwetstwii s  trebowaniqmi  bazowoj
+os  k  sistemnym  programmam.  razrabotka  prikladnogo  programmnogo
+obespe~eniq dlq sistem na baze mikro-|wm  k1816we48  proizwoditsq  w
+ramkah bazowoj os s ispolxzowaniem programm sapr48.
+
+     instrumentalxnoj |wm dlq sapr48 sluvit odna iz sledu`}ih |wm:
+
+       - sm-4;
+       - "|lektronika 100/25";
+       - "|lektronika 79";
+       - "|lektronika 60";
+       - dwk-2;
+
+s ob'emom  operatiwnoj  pamqti  ne  menee  64  kbajt  i  minimalxnym
+komplektom wne{nih ustrojstw w sostawe:
+
+       - ngmd tipa "|lektronika 7012" (ili "|lektronika  6022")  ili
+         nmd tipa "izot 1370";
+       - alfawitno-cifrowoj displej;
+       - pe~ata`}ee ustrojstwo.
+
+
+
+
+
+
+                        3. opisanie zada~i
+
+
+
+
+     osnownoj  zada~ej,  re{aemoj  sapr48,  qwlqetsq   awtomatizaciq
+naibolee trudoemkih |tapow tehnologi~eskogo  processa  razrabotki  i
+otladki programmnogo obespe~eniq sistem na baze mikro-|wm k1816we48.
+
+     sistemnoe programmnoe obespe~enie sapr48 sostoit  iz  sledu`}ih
+programm:
+
+       - translqtor (kross-assembler) s qzyka  assemblera  mikro-|wm
+         k1816we48 (programma MAC48);
+
+       - redaktor swqzej, ispolxzuemyj dlq swqzi ob'ektnyh modulej i
+         polu~eniq zagruzo~nogo modulq (programma LINK48);
+
+       - |mulqtor sistemy komand  mikro-|wm  k1816we48,  primenqemyj
+         dlq  dinami~eskoj   dialogowoj   otladki   razrabatywaemogo
+         programmnogo obespe~eniq mikro-|wm (programma EMUL48);
+
+       - diz-assembler, preobrazu`}ij zagruzo~nyj  modulx  w  format
+         ishodnogo modulq (programma DIS48).
+
+
+
+
+                   4. whodnye i wyhodnye dannye
+
+
+
+
+     whodnye  i  wyhodnye  dannye,   promevuto~nye   nabory   dannyh
+razrabatywaemogo programmnogo obespe~eniq sistem na  baze  mikro-|wm
+hranqtsq w wide fajlow na wne{nih  nositelqh  instrumentalxnoj  |wm;
+fajlowaq struktura na wne{nih ustrojstwah  polnostx`  podderviwaetsq
+sistemnymi programmami bazowoj os.
+
+     osnownymi whodnymi naborami  dannyh  qwlq`tsq  ishodnye  fajly,
+sozdawaemye polxzowatelem s pomo}x` programm redaktor teksta  (EDIT,
+TECO i t.p.) bazowoj os. ishodnyj fajl (tip .M48) sodervit  algoritm
+raboty  mikro-|wm  k1816we48,   zapisannyj   na   qzyke   assemblera
+mikro-|wm.
+
+     osnownymi wyhodnymi fajlami  qwlq`tsq  zagruzo~nye  fajly  (tip
+.L48 ili .S48), soderva}ie  programmu  mikro-|wm  w  ma{innyh  kodah
+(format absol`tnoj zagruzki).  |ti  fajly  gotowy  k  zapisi  w  pzu
+mikro-|wm ili wo wne{nee zu s pomo}x` programmatora.
+
+     podrobno opisanie struktury whodnyh, promevuto~nyh  i  wyhodnyh
+fajlow  priwoditsq   w   dokumente   "sapr48.   opisanie   programm.
+predw.0010-01 13 01.".

@@ -1,0 +1,3 @@
+mas kr6.def kr6tty.mas kr6cmd.mas kr6mem.mas kr6main.mas kr6ipt.mas -l
+parity kr6.rom b=11
+ld kr6.rom

@@ -1,0 +1,50 @@
+                     Процессор Kronos P4.0
+
+
+     00      20      40      60      80      A0      C0      E0
+
+00   LI0     LLW     LXW     LSW0    ADD     MOVE    ACTIV
+01   LI1     LGW     LGW1    LSW1    SUB     BBLT    SYS
+02   LI2     LSW     LGW2    LSW2    MUL     SEEK    EI
+03   LI3     LLW3    LGW3    LSW3    DIV             DI
+04   LI4     LLW4    LGW4    LSW4    SHL     REG     TRAP
+05   LI5     LLW5    LGW5    LSW5    SHR     RCHK    TRA
+06   LI6     LLW6    LGW6    LSW6    ROL     CHK     TR
+07   LI7     LLW7    LGW7    LSW7    ROR     CHKZ    IDLE
+
+08   LI8     LLW8    LGW8    LSW8    OR      ALLOC
+09   LI9     LLW9    LGW9    LSW9    AND     ENTR
+0A   LI0A    LLW0A   LGW0A   LSW0A   XOR     RTN
+0B   LI0B    LLW0B   LGW0B   LSW0B   BIC     NOP
+0C   LI0C    LLW0C   LGW0C   LSW0C   IN      CX
+0D   LI0D    LLW0D   LGW0D   LSW0D   BIT     CI
+0E   LI0E    LLW0E   LGW0E   LSW0E   NOT     CF
+0F   LI0F    LLW0F   LGW0F   LSW0F   MOD     CL
+
+10   LIB     SLW     SXW     SSW0    LSS     DECS    CL0     INCL1
+11   LID     SGW     SGW1    SSW1    LEQ     DROP    CL1     EXCL1
+12   LIW     SSW     SGW2    SSW2    GTR     LODFV   CL2     INCL
+13   LIN     SLW3    SGW3    SSW3    GEQ     STORE   CL3     EXCL
+14   LLA     SLW4    SGW4    SSW4    EQU     STOFV   CL4     INC1
+15   LGA     SLW5    SGW5    SSW5    NEQ     COPT    CL5     DEC1
+16   LSA     SLW6    SGW6    SSW6    ABS     LXA     CL6     INC
+17   LEA     SLW7    SGW7    SSW7    NEG     LPC     CL7     DEC
+
+18   JFLC    SLW8    SGW8    SSW8    FADD    LXB     CL8     SWAP
+19   JFL     SLW9    SGW9    SSW9    FSUB    SXB     CL9     LPA
+1A   JFSC    SLW0A   SGW0A   SSW0A   FMUL    STOT    CL0A    LPW
+1B   JFS     SLW0B   SGW0B   SSW0B   FDIV    LODT    CL0B    SPW
+1C   JBLC    SLW0C   SGW0C   SSW0C   FCMP    ADDPC   CL0C    SSWU
+1D   JBL     SLW0D   SGW0D   SSW0D   FABS    JAMP    CL0D    BBU
+1E   JBSC    SLW0E   SGW0E   SSW0E   FNEG    ORJP    CL0E    BBP
+1F   JBS     SLW0F   SGW0F   SSW0F   FFCT    ANDJP   CL0F    INVLD
+
+(c) COPYRIGHT Kronos Research Group      1988
+
+    Распространение программного продукта в другие организации
+без согласия  на то  его авторов  ведет  к глубокой  антипатии
+последними лица, произведшего вышеупомянутое действие.
+                   Новосибирск,  Академгородок, ВЦ  СОАН  СССР
+                   Д.Кузнецов, А.Недоря, Е.Тарасов, В.Филиппов
+                                                  09 июля 1988.
+

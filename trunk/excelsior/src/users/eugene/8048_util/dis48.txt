@@ -1,0 +1,2017 @@
+
+
+
+
+
+
+ utwervden
+
+ predw. 0113-01 33 01-lu
+
+
+
+
+
+
+
+
+
+		sistema awtomatizacii proektirowaniq
+		      programmnogo  obespe~eniq
+			mikro-|wm  k1816we48
+
+			     s a p r 4 8
+
+
+		       programma diz-assembler
+			      D I S 4 8
+
+		      rukowodstwo  programmista
+
+
+			 predw. 0113-01 33 01
+
+			      listow 17
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			       1 9 8 5
+
+			       - 2 -
+
+			 predw. 0113-01 33 01
+
+
+
+
+
+
+			      annotaciq
+
+
+
+
+      nastoq}ij  dokument  qwlqetsq   rukowodstwom   programmista   i
+ operatora po rabote s programmoj DIS48.
+
+      diz-assembler DIS48 prednazna~en dlq  perewoda  ma{innyh	kodow
+ zagruzo~nogo modulq programmy	mikro-|wm  k1816we48  w  assemblernyj
+ format ishodnogo modulq.
+
+      dokument sodervit swedeniq ob uslowiqh primeneniq, wozmovnostqh
+ diz-assemblera i strukture whodnyh i wyhodnyh dannyh.
+
+
+      p_r_i_m_e_~_a_n_i_e. w dannom  dokumente	orientaciq  programmy
+ DIS48	 na   operacionnu`   sistemu   rafos   uslownaq.    programma
+ diz-assembler funkcioniruet  takve  pod  uprawleniem  os  fodos,  os
+ fobos, os dwk.
+
+			       - 3 -
+
+			 predw. 0113-01 33 01
+
+
+
+
+
+
+			     sodervanie
+
+
+
+     annotaciq ...................................................  2
+
+
+ 1.  nazna~enie i uslowiq primeneniq..............................  4
+
+
+ 2.  pusk programmy...............................................  4
+
+ 2.1.	komandnaq stroka..........................................  4
+ 2.2.	specifikacii fajlow.......................................  5
+ 2.3.	perekl`~ateli uprawleniq formatom wywoda..................  6
+
+ 3.  whodnye i wyhodnye dannye....................................  6
+
+ 3.1.	zagruzo~nyj modulx........................................  6
+ 3.2.	modulx opredelenij........................................  6
+ 3.2.1.   format operatora........................................  7
+ 3.2.2.   sintaksi~eskie edinicy operatora........................  7
+ 3.2.3.   operator opredeleniq oblasti diz-assemblirowaniq........  8
+ 3.2.4.   operator opredeleniq segmenta komand....................  8
+ 3.2.5.   operator opredeleniq segmenta dannyh....................  8
+ 3.2.6.   operator opredeleniq metki..............................  9
+ 3.2.7.   operator opredeleniq neposredstwennogo dannogo..........  9
+ 3.2.8.   operator konca opredelenij..............................  9
+ 3.3.	fajl diz-assemblirowaniq..................................  9
+ 3.3.1.   rezulxtaty obrabotki modulq opredelenij.................  9
+ 3.3.2.   tablica segmentow....................................... 10
+ 3.3.3.   tablica metok........................................... 11
+ 3.3.4.   tablica neposredstwennyh dannyh......................... 11
+ 3.4.	ishodnyj fajl............................................. 11
+ 3.5.	fajl listinga............................................. 12
+
+ 4.  soob}eniq programmy.......................................... 13
+
+ 4.1.	soob}eniq ob o{ibkah obrabotki modulq opredelenij......... 13
+ 4.2.	preduprevda`}ie soob}eniq................................. 13
+ 4.3.	poqsnq`}ie soob}eniq...................................... 14
+ 4.4.	soob}eniq ob o{ibkah wypolneniq........................... 14
+
+ prilovenie.   ..................................................  16
+
+
+ 1.  primer modulq opredelenij.................................... 16
+
+
+ 2.  fragment fajla diz-assemblirowaniq........................... 16
+
+
+ 3.  fragment ishodnogo fajla..................................... 17
+
+
+ 4.  fragment fajla listinga...................................... 17
+
+			       - 4 -
+
+			 predw. 0113-01 33 01
+
+
+		 1. nazna~enie i uslowiq primeneniq
+
+
+
+
+      programma  diz-assembler	 prednazna~ena	 dlq   preobrazowaniq
+ programmy  w  ma{innyh  kodah	mikro-|wm  (zagruzo~nyj   modulx)   w
+ udobno~itaemyj  dokument   (ishodnyj	modulx),   soderva}ij	tekst
+ programmy mikro-|wm w assemblernom (mnemoni~eskom) formate.
+
+      diz-assembler  movet  ispolxzowatxsq  dlq  prowerki   struktury
+ zagruzo~nogo modulq  -  opredeleniq  segmentow  perekrytij  ili  dlq
+ polu~eniq ishodnogo modulq programmnogo  obespe~eniq  mikro-|wm,  na
+ kotoroe ne imeetsq dostato~noj dokumentacii.
+
+      wo   wremq   formirowaniq   ishodnogo   modulq	diz-assembler
+ interpretiruet  zagruzo~nyj  modulx  kak  posledowatelxnostx  komand
+ mikro-|wm. dlq  zadaniq  oblastej  diz-assemblirowaniq  i  wydeleniq
+ segmentow  komand  i	dannyh	 ispolxzuetsq	modulx	 opredelenij,
+ sozdawaemyj polxzowatelem.
+
+      programma DIS48 wypolnqet sledu`}ie funkcii:
+
+	- wwod zagruzo~nogo modulq iz neskolxkih zagruzo~nyh  fajlow,
+	  ukazannyh polxzowatelem;
+	- prowerka  struktury  zagruzo~nogo  modulq   -   opredelenie
+	  segmentow perekrytij;
+	- wwod i obrabotka modulq opredelenij  iz  neskolxkih  fajlow
+	  opredelenij, ukazannyh polxzowatelem;
+	- formirowanie diz-assemblernoj raspe~atki w formate listinga
+	  ili ishodnogo fajla;
+	- wydelenie oblastej diz-assemblirowaniq w zagruzo~nom fajle;
+	- wydelenie w zagruzo~nom module segmentow komand i dannyh;
+	- priswoenie simwoli~eskih  imen  metkam  i  neposredstwennym
+	  dannym;
+	- raspe~atka tablic simwoli~eskih imen;
+	- wyda~a diagnosti~eskih soob}enij.
+
+
+      programma DIS48 rabotaet pod uprawleniem	operacionnoj  sistemy
+ rafos i ispolxzuet ee sistemnye resursy. programma zanimaet okolo 12
+ kbajt	operatiwnoj  pamqti.   ostalxnaq   swobodnaq   ~astx   pamqti
+ dinami~eski wydelqetsq pod drajwery ustrojstw, bufera wwoda-wywoda i
+ tablicy, neobhodimye dlq raboty diz-assemblera.
+
+      zagruzo~nye fajly i  fajly  opredelenij  dolvny  nahoditxsq  na
+ ustrojstwah s fajlowoj strukturoj.
+
+
+
+
+
+
+			  2. pusk programmy
+
+
+
+
+      programma DIS48 w formate zagruzki nahoditsq w fajle  s  imenem
+ DIS48.SAV.  dlq  zagruzki  i  zapuska	programmy   neobhodimo	 datx
+ sledu`}u` komandu monitora operacionnoj sistemy:
+
+	.R DIS48
+
+ ili
+
+	.RUN DEV:DIS48
+
+      posle zapuska programmy na  terminale  poqwlqetsq  simwol  "*",
+ ozna~a`}ij  gotownostx  programmy  k  wwodu  komandnoj  stroki.  pri
+ navatii klawi{i <wk>, w otwet na "*", na terminal wywoditsq nazwanie
+ programmy diz-assemblera i nomer wersii.
+
+      dlq wyhoda iz programmy diz-assemblera  i  pereda~i  uprawleniq
+ monitoru operacionnoj sistemy neobhodimo navatx <CTRL/C>, esli DIS48
+ ovidaet wwoda s terminala; ili dwavdy navatx  <CTRL/C>,  esli	DIS48
+ nahoditsq w revime raboty.
+
+      posle zawer{eniq raboty programma  DIS48	wywodit  na  terminal
+ simwol "*" i ovidaet wwoda nowoj komandnoj stroki.
+
+
+
+       2.1. komandnaq stroka
+
+
+
+      w komandnoj stroke ukazywa`tsq specifikacii whodnyh i  wyhodnyh
+ naborow dannyh; movno ne  ukazywatx  specifikacii  wyhodnyh  naborow
+ dannyh w sootwetstwii s prawilami os rafos.
+
+      programma diz-assemblera obrabatywaet sledu`}ie whodnye  nabory
+ dannyh:
+
+	- zagruzo~nyj	 modulx,     soderva}ij     ma{innye	 kody
+	  diz-assembliruemoj programmy; movet sostoqtx iz  neskolxkih
+	  zagruzo~nyh fajlow;
+
+	- modulx  opredelenij,	soderva}ij   uprawlq`}u`   informaci`
+	  diz-assemblera;  movet  sostoqtx   iz   neskolxkih   fajlow
+	  opredelenij.
+
+      wyhodnymi naborami dannyh qwlq`tsq:
+
+	- ishodnyj fajl, soderva}ij  diz-assembliruemu`  programmu  w
+	  assemblernom formate;
+
+	- fajl listinga, soderva}ij  diz-assembliruemu`  programmu  w
+	  assemblernom formate s ukazaniem kodow komand i adresow  ih
+	  zagruzki;
+
+			       - 5 -
+
+			 predw. 0113-01 33 01
+
+
+	- fajl	diz-assemblirowaniq,  soderva}ij  protokol  obrabotki
+	  modulq opredelenij i zagruzo~nogo modulq.
+
+      rezulxtatom odnogo progona programmy diz-assembler qwlq`tsq dwa
+ wyhodnyh  fajla:  ishodnyj   fajl   ili   fajl   listinga   i	 fajl
+ diz-assemblirowaniq.
+
+
+
+      komandnaq stroka dolvna sootwetstwowatx CSI-formatu,  prinqtomu
+ w operacionnoj sisteme rafos:
+
+OUT-SPC /OUT-SWT, DIS-SPC = IN-SPC, . . . , IN-SPC <wk>
+
+ gde
+
+    OUT-SPC
+	- specifikaciq osnownogo wyhodnogo fajla (ishodnogo ili fajla
+	  listinga).
+
+    /OUT-SWT
+	- perekl`~ateli   uprawleniq   formatom   wywoda    osnownogo
+	  wyhodnogo fajla (sm. nive). mogut bytx opu}eny.
+
+    DIS-SPC
+	- specifikaciq fajla diz-assemblirowaniq.
+
+    IN-SPC
+	- specifikaciq whodnyh fajlow (zagruzo~nyh fajlow ili  fajlow
+	  opredelenij).
+
+
+
+       2.2. specifikacii fajlow
+
+
+
+      specifikacii whodnyh i wyhodnyh fajlow w	operacionnoj  sisteme
+ rafos predstawlq`tsq sledu`}im obrazom:
+
+	DEV: FILE .TYP [LENGTH]
+
+ gde
+
+    DEV:
+	- ustrojstwo;
+
+    FILE
+	- imq fajla;
+
+    .TYP
+	- tip fajla;
+
+    [LENGTH]
+	- dlina fajla w blokah.
+
+      esli  odin  iz  |lementow  specifikacii  fajla  ne  ukazan,  to
+ zna~eniq |lementow prinima`tsq po umol~ani`:
+
+
+
+
+
+
+ osnownoj wyhodnoj fajl:
+	- imq ustrojstwa: po umol~ani` - DK:;
+	- esli ispolxzuetsq ustrojstwo	fajlowoj  struktury,  to  imq
+	  fajla qwlqetsq obqzatelxnym |lementom specifikacii;
+	- po umol~ani` tip ishodnogo  fajla  -	.m48.  dlq  polu~eniq
+	  fajla listinga sleduet qwno ukazatx tip - .LST;
+	- dlina fajla: po umol~ani` opredelqetsq  soglasno  prawilam,
+	  prinqtym w os rafos.
+
+
+ fajl diz-assemblirowaniq:
+	- po  umol~ani`  prinimaetsq  ustrojstwo,   nazna~ennoe   dlq
+	  osnownogo wyhodnogo fajla;
+	- dlq ustrojstw nefajlowoj struktury  imq  fajla  movet  bytx
+	  opu}eno;
+	- tip fajla: po umol~ani` - .DIS;
+	- dlina fajla: analogi~no osnownomu wyhodnomu fajlu.
+
+
+ whodnoj fajl:
+	- imq ustrojstwa: po umol~ani` dlq perwogo whodnogo  fajla  -
+	  DK:; dlq ostalxnyh  whodnyh  fajlow  po  umol~ani`  beretsq
+	  ustrojstwo, nazna~ennoe dlq predydu}ego whodnogo fajla;
+	- imena whodnyh fajlow sleduet ukazywatx qwno. whodnye	fajly
+	  dolvny nahoditxsq tolxko na ustrojstwah fajlowoj struktury;
+	- tip fajla: po umol~ani` - .L48 (zagruzo~nyj).  dlq  zadaniq
+	  fajla opredelenij, sleduet qwno ukazatx ego tip - .DEF;
+	- dlina fajla dlq whodnyh fajlow ne ukazywaetsq.
+
+
+
+      whodnymi fajlami programm DIS48 qwlq`tsq:
+
+	- zagruzo~nyj fajl (tip - .L48);
+
+	- fajl opredelenij (tip - .DEF);
+
+ dlq togo, ~toby diz-assembler mog otli~itx zagruzo~nyj fajl ot fajla
+ opredelenij,  posle  imeni  fajla  opredelenij  w  komandnoj  stroke
+ sleduet qwno ukazatx tip fajla -. DEF, naprimer:
+
+	ABC=ABC1,ABC2,ABC.DEF
+
+ gde
+	- ABC1, ABC2 - zagruzo~nye fajly, po umol~ani` tip - .L48;
+
+ komandnaq stroka dolvna sodervatx ne bolee {esti whodnyh fajlow.  ne
+ nakladywaetsq ograni~enij  na	~islo  zagruzo~nyh  fajlow  i  fajlow
+ opredelenij. fajly kavdogo tipa obrabatywa`tsq posledowatelxno w tom
+ porqdke, w kakom oni ukazany w komandnoj stroke: sna~ala  wse	fajly
+ opredelenij, zatem wse zagruzo~nye fajly.
+
+
+
+      dlq polu~eniq fajla  listinga  sleduet  posle  imeni  osnownogo
+ wyhodnogo fajla w komandnoj stroke qwno ukazatx tip  fajla  -	.LST,
+ naprimer:
+
+			       - 6 -
+
+			 predw. 0113-01 33 01
+
+
+	ABC.LST/M/G,ABC=ABC,ABC.DEF
+
+
+ gde
+	- /M i /G - perekl`~ateli uprawleniq formatom wywoda.
+
+
+
+       2.3. perekl`~ateli uprawleniq formatom wywoda
+
+
+
+      dlq  uprawleniq  formatom  wywoda  osnownogo  wyhodnogo	fajla
+ (ishodnogo ili fajla listinga) ispolxzuetsq ~etyre perekl`~atelq:
+
+ /G
+	- zapre}enie  awtomati~eskoj  generacii   wnutrennih   metok;
+	  ishodnyj modulx formiruetsq w absol`tnyh adresah;
+
+ /X
+	- zapre}enie formirowaniq wtoroj kolonki osnownogo  wyhodnogo
+	  fajla;
+
+ /E
+	- zapre}enie wywoda w osnownoj wyhodnoj fajl  preduprevda`}ih
+	  soob}enij;
+
+ /M
+	- zapre}enie  wywoda  w  osnownoj  wyhodnoj  fajl  poqsnq`}ih
+	  soob}enij.
+
+
+
+
+
+
+		    3. whodnye i wyhodnye dannye
+
+
+
+
+      specifikacii whodnyh i wyhodnyh naborow  dannyh  ukazywa`tsq  w
+ komandnoj stroke.
+
+      whodnye nabory dannyh programmy diz-assembler:
+
+	- zagruzo~nyj modulx;
+	- modulx opredelenij;
+
+ wyhodnye nabory dannyh:
+
+	- fajl diz-assemblirowaniq;
+	- ishodnyj modulx;
+	- fajl listinga.
+
+
+
+       3.1. zagruzo~nyj modulx
+
+
+
+      zagruzo~nyj  modulx  sodervit  tekst  programmy	mikro-|wm   w
+ ma{innyh kodah, movet sostoqtx  iz  neskolxkih  zagruzo~nyh  fajlow.
+ zagruzo~nye fajly diz-assembliru`tsq w  tom  porqdke,	w  kakom  oni
+ ukazany w komandnoj stroke.
+
+      zagruzo~nyj fajl sostoit iz dwoi~nyh zapisej peremennoj  dliny.
+ w na~ale zapisi ukazywaetsq adres  zagruzki  zapisi,  zatem  sleduet
+ tekst zapisi (ma{innye kody). dlina zapisi ne prewy{aet 42 bajta.
+
+
+
+       3.2. modulx opredelenij
+
+
+
+      modulx  opredelenij  sozdaetsq  polxzowatelem  dlq   uprawleniq
+ processom diz-assemblirowaniq. modulx opredelenij movet sostoqtx  iz
+ neskolxkih fajlow opredelenij, oni obrabatywa`tsq w porqdke ukazaniq
+ w komandnoj stroke.
+
+      esli modulx opredelenij w komandnoj stroke ne zadan, to oblasti
+ diz-assemblirowaniq   ne    wydelq`tsq    i	zagruzo~nyj    modulx
+ diz-assembliruetsq  polnostx`;  posledowatelxnostx  ma{innyh	kodow
+ zagruzo~nogo modulq interpretiruetsq kak  posledowatelxnostx  komand
+ mikro-|wm, segmenty dannyh ne wydelq`tsq.
+
+      fajl  opredelenij  qwlqetsq  tekstowym  fajlom  i  sostoit   iz
+ simwolxnyh  strok  dlinoj  ne	bolee  130  simwolow.  kavdaq  stroka
+ sodervit  odin   specialxnyj	operator,   stroki   prodolveniq   ne
+ dopuska`tsq.
+
+      rezulxtat  obrabotki  modulq  opredelenij  wywoditsq   w	 fajl
+ diz-assemblirowaniq.
+
+			       - 7 -
+
+			 predw. 0113-01 33 01
+
+
+      w prilovenii priwoditsq primer modulq opredelenij.
+
+
+
+     3.2.1. format operatora
+
+
+
+      operator modulq opredelenij sostoit iz dwuh polej i imeet wid:
+
+	     operator	 ;    kommentarij
+
+
+ kommentarij   qwlqetsq   neobqzatelxnoj   ~astx`   operatora.	 pole
+ kommentariq wsegda na~inaetsq simwolom ";" i movet  sodervatx	l`bye
+ pe~atnye simwoly.
+
+      dopuska`tsq sledu`}ie operatory:
+
+	- operator opredeleniq oblasti diz-assemblirowaniq;
+	- operator opredeleniq segmenta komand;
+	- operator opredeleniq segmenta dannyh;
+	- operator opredeleniq metki;
+	- operator opredeleniq neposredstwennogo dannogo;
+	- operator konec opredelenij.
+
+      porqdok  sledowaniq  wseh  operatorow  w	 module   opredelenij
+ proizwolxnyj. su}estwuet tolxko  odno	ograni~enie:  operator	konec
+ opredelenij dolven bytx edinstwennym i  stoqtx  poslednim  w  module
+ opredelenij. wse operatory, sledu`}ie za nim, ignoriru`tsq.
+
+
+
+     3.2.2. sintaksi~eskie edinicy operatora
+
+
+
+      operator modulq opredelenij sostoit  iz  sintaksi~eskih  edinic
+ (leksem).
+
+
+      p_r_i_m_e_~_a_n_i_e. dalee, pri opisanii	operatorow,  nazwaniq
+ leksem zakl`~a`tsq w uglowye skobki. simwoly ">" i "<"  ne  qwlq`tsq
+ |lementami operatora.
+
+      w operatorah dopuska`tsq sledu`}ie leksemy:
+
+  <imq>
+	- posledowatelxnostx  latinskih  bukw  (a-Z),  cifr  (0-9)  i
+	  znakow "?";  perwyj  simwol  obqzatelxno  bukwa.  zna~a}imi
+	  qwlq`tsq tolxko perwye {estx simwolow;
+
+  <adres>, <~islo>
+	- posledowatelxnostx cifr (0-9) i bukw (a-F);  perwyj  simwol
+	  obqzatelxno cifra. posledowatelxnostx interpretiruetsq  kak
+	  {estnadcateri~noe  ~islo,   simwol   osnowaniq   ("n")   ne
+	  ukazywaetsq. zna~enie <adresa> ne dolvno  prewy{atx  0FFFH;
+	  zna~enie <~isla> - 0FFH.
+
+
+
+
+
+
+	- <specialxnyj znak>:
+
+	   -
+	       - minus (razdelitelx granic);
+
+	   :
+	       - dwoeto~ie (priznak metki);
+
+	   #
+	       - nomer (priznak neposredstwennogo operanda);
+
+	   ;
+	       - to~ka s zapqtoj (priznak na~ala kommentariq);
+
+
+	- <sluvebnoe slowo>
+
+	   SEG
+	       - mnemonika     operatora     opredeleniq      oblasti
+		 diz-assemblirowaniq;
+
+	   CMD
+	       - mnemonika operatora opredeleniq segmenta komand;
+
+	   DAT
+	       - mnemonika operatora opredeleniq segmenta dannyh;
+
+	   EOF
+	       - mnemonika operatora konca opredelenij.
+
+      leksemy w operatore razdelq`tsq kak minimum odnim probelom  ili
+ simwolom "gorizontalxnaq tabulqciq".
+
+      <imq> ne dolvno sowpadatx  s  sluvebnymi	i  zarezerwirowannymi
+ slowami; pere~islennymi w tablice 1.
+
+			       - 8 -
+
+			 predw. 0113-01 33 01
+
+
+			      tablica 1
+
+
+A	       GEN	      MB0	     P7
+ADD	       GT	      MB1	     RB0
+ADDC	       HIGH	      MOD	     RB1
+AND	       I	      MOD41	     REPT
+ANL	       IF	      MOV	     RESTORE
+ANLD	       IN	      MOVD	     RET
+BUS	       INC	      MOVP	     RETR
+C	       INCLUDE	      MOVP3	     RL
+CALL	       INS	      MOVX	     RLC
+CLK	       IRP	      NE	     RR
+CLR	       IRPC	      NOCOND	     RRC
+CMD	       JB0	      NODEBUG	     R0
+CNT	       JB1	      NOGEN	     R1
+COND	       JB2	      NOLIST	     R2
+CPL	       JB3	      NOMACROFILE    R3
+DA	       JB4	      NOOBJECT	     R4
+DAT	       JB5	      NOP	     R5
+DB	       JB6	      NOPAGING	     R6
+DEC	       JB7	      NOPRINT	     R7
+DEBUG	       JC	      NOSYMBOLS      SAVE
+DIS	       JF0	      NOT	     SEG
+DJNZ	       JF1	      NOXREF	     SEL
+DS	       JMP	      NUL	     SET
+DW	       JMPP	      OBJECT	     SHL
+EJECT	       JNC	      OR	     SHR
+ELSE	       JNI	      ORG	     STOP
+EN	       JNT0	      ORL	     STRT
+END	       JNT1	      ORLD	     SWAP
+ENDIF	       JNZ	      OUTL	     SYMBOLS
+ENDM	       JTF	      PAGELENGTH     T
+ENT0	       JT0	      PAGEWIDTH      TCNT
+EOF	       JT1	      PAGING	     TCNTI
+EOT	       JZ	      PRINT	     TITLE
+EQ	       LE	      PSW	     XCH
+EQU	       LIST	      PUBLIC	     XCHD
+EXITM	       LOCAL	      P1	     XOR
+EXTRN	       LOW	      P2	     XREF
+F0	       LT	      P4	     XRL
+F1	       MACRO	      P5
+GE	       MACROFILE      P6
+
+
+
+     3.2.3. operator opredeleniq oblasti diz-assemblirowaniq
+
+
+
+      w   operatore   opredeleniq   oblasti    ukazywa`tsq    granicy
+ diz-assemblirowaniq.	ma{innye   kody   zagruzo~nogo	 modulq,   ne
+ popada`}ie  w	oblasti  diz-assemblirowaniq,  ignoriru`tsq.  esli  w
+ module opredelenij ne ispolxzu`tsq operatory opredeleniq oblasti, TO
+ diz-assemblirowanie proizwoditsq w predelah  adresnogo  prostranstwa
+ 0-0FFF.
+
+      format operatora:
+
+
+
+
+
+
+	  SEG	<adres.1> - <adres.2>
+
+ <adres.1> i <adres.2> - zada`t granicy oblasti  diz-assemblirowaniq.
+ ne imeet zna~eniq w kakom porqdke  zada`tsq  granicy  -  menx{ee  iz
+ zna~enij opredelqet na~alo oblasti, bolx{ee - konec oblasti.
+
+      esli   polxzowatelx   zadaet   perekrywa`}iesq   oblasti,    to
+ formiruetsq oblastx ob'edinq`}aq zadannye. naprimer, posle obrabotki
+ operatorow:
+
+		SEG	   0-0FF
+		SEG	  80-11F
+		SEG	  7F-40
+		SEG	 140-15F
+		SEG	 16F-160
+
+ budet sformirowano dwe oblasti diz-assemblirowaniq:
+
+		0-1FF	 i     140-16F
+
+
+
+     3.2.4. operator opredeleniq segmenta komand
+
+
+
+      w |tom operatore ukazywaetsq adres, na~inaq s kotorogo ma{innye
+ kody zagruzo~nogo  modulq  interpretiru`tsq  kak  posledowatelxnostx
+ komand mikro-|wm.
+
+      format operatora:
+
+		CMD	   <adres>
+
+ <adres> - adres na~ala segmenta komand, naprimer:
+
+		CMD	  3
+		CMD	  7
+		CMD	 160
+
+
+
+     3.2.5. operator opredeleniq segmenta dannyh
+
+
+
+      w operatore ukazywaetsq adres, na~inaq s kotorogo ma{innye kody
+ zagruzo~nogo modulq dolvny iterpretirowatxsq kak  posledowatelxnostx
+ bajtow dannyh. esli w module opredelenij ne  ispolxzu`tsq  operatory
+ opredeleniq   segmentow   dannyh,   to   wesx	 zagruzo~nyj   modulx
+ interpretiruetsq kak posledowatelxnostx komand mikro-|wm.
+
+      format operatora:
+
+		DAT	<adres>
+
+ <adres> - adres na~ala segmenta dannyh, naprimer:
+
+			       - 9 -
+
+			 predw. 0113-01 33 01
+
+
+		DAT	170
+		DAT	300
+
+
+
+     3.2.6. operator opredeleniq metki
+
+
+
+      operator	sluvit	dlq  zadaniq  siMwoli~eskih  imen  metkam.  w
+ sozdawaemom  ishodnom	module	wmesto	absol`tnyh  adresow  pereda~i
+ uprawleniq budet sformirowana neobhodimaq metka.
+
+      format operatora:
+
+	<imq>  :  <adres>
+
+  <imq>
+	- zadawaemoe polxzowatelem simwoli~eskoe imq metki;
+
+  <adres>
+	- adres, po kotoromu budet raspolagatxsq sozdawaemaq metka; w
+	  komandah pereda~i uprawleniq wse ssylki  na  <adres>	budut
+	  zameneny na <imq>.
+
+      primer:
+
+		TMRST	:    7
+		WAIT	:    122
+		TABL	:    300
+
+
+
+     3.2.7. operator opredeleniq neposredstwennogo dannogo
+
+
+
+      operator sluvit dlq zadaniq simwoli~eskih imen neposredstwennym
+ dannym. w sozdawaemom ishodnom  module  wmesto  absol`tnyh  zna~enij
+ neposredstwennyh dannyh budet sformirowano neobhodimoe imq.
+
+      format operatora:
+
+	<imq>	  #	<~islo>
+
+  <imq>
+	- zadawaemoe	  polxzowatelem       simwoli~eskoe	  imq
+	  neposredstwennogo dannogo;
+
+  <~islo>
+	- zna~enie   neposredstwennogo	 dannogo;   w	komandah    s
+	  neposredstwennymi  dannymi  wse  ssylki  na  <~islo>	budut
+	  zameneny na <imq>.
+
+      primer:
+
+		ZERO	#     0
+		MSK?0F	#     0F
+
+
+
+
+
+
+		MSK?F0	#     0F0
+
+
+
+     3.2.8. operator konca opredelenij
+
+
+
+      operator qwlqetsq priznakom konca  modulq  opredelenij;  dolven
+ bytx poslednim w module.
+
+      format operatora:
+
+		EOF
+
+
+
+       3.3. fajl diz-assemblirowaniq
+
+
+
+      fajl   diz-assemblirowaniq    sodervit	protokol    obrabotki
+ zagruzo~nogo modulq i modulq opredelenij. sostoit iz ~etyreh ~astej:
+
+	- rezulxtaty obrabotki modulq opredelenij;
+	- tablica segmentow;
+	- tablica metok;
+	- tablica neposredstwennyh operandow.
+
+      w konce fajla diz-assemblirowaniq pe~ataetsq stroka, w  kotoroj
+ ukazywaetsq:
+
+	- ~islo o{ibok obrabotki modulq opredelenij;
+	- ~islo preduprevda`}ih soob}enij w  sformirowannom  osnownom
+	  wyhodnom fajle.
+
+ zatem pe~ataetsq kopiq komandnoj stroki.
+
+      w prilovenii priwoditsq fragment fajla diz-assemblirowaniq.
+
+
+
+     3.3.1. rezulxtaty obrabotki modulq opredelenij
+
+
+
+      |ta ~astx fajla diz-assemblirowaniq wywoditsq po	stranicam.  w
+ zagolowke stranicy ukazywaetsq:
+
+	- nazwanie i wersiq diz-assemblera;
+	- wremq na~ala diz-assemblirowaniq;
+	- teku}aq data;
+	- nomer stranicy (desqti~nyj).
+
+      sledu`}aq za zagolowkom stroka sodervit nazwanie	polej  stroki
+ rezulxtatow  obrabotki.  kavdoe  pole	na~inaetsq  s	fiksirowannoj
+ pozicii stroki:
+
+			       - 10 -
+
+			 predw. 0113-01 33 01
+
+
+  1
+	- pole o{ibki: esli w operatore modulq opredelenij obnaruvena
+	  o{ibka, to w dannoj pozicii razme}aetsq sootwetstwu`}aq  ej
+	  litera. registriruetsq tolxko perwaq o{ibka w operatore;
+
+  3-9
+	- pole	adresa,  informaciq  w	 |tom	pole   pe~ataetsq   w
+	  {estnadcateri~nom wide:
+
+	- dlq operatora opredeleniq oblasti diz-assemblirowaniq:
+
+	   3-5
+	       - adres na~ala oblasti;
+
+	   7-9
+	       - adres konca oblasti;
+
+	- dlq  operatora  opredeleniq  na~ala  segmenta  komand   ili
+	  dannyh:
+
+	   3-5
+	       - adres na~ala segmenta;
+
+	- dlq operatora opredeleniq metki:
+
+	   5-7
+	       - zna~enie (adres) metki;
+
+	- dlq operatora opredeleniq neposredstwennogo dannogo:
+
+	   6-7
+	       - zna~enie neposredstwennogo dannogo;
+
+  11-15
+	- pole nomera operatora (desqti~nyj);
+
+  17 i dalee
+	- 3le  operatora:  tekst  obrabatywaemogo  operatora   modulq
+	  opredelenij.
+
+
+      p_r_i_m_e_~_a_n_i_e. esli  pri  obrabotke  operatora  obnaruven
+ znak, ne  ime`}ij  simwolxnogo  |kwiwalenta  w  kode  ASCII,  to  on
+ zamenqetsq na simwol "?".
+
+
+
+
+
+
+     3.3.2. tablica segmentow
+
+
+
+      tablica segmentow opisywaet ob}u` strukturu diz-assembliruemogo
+ zagruzo~nogo modulq. wse adresa w tablice {estnadcateri~nye.
+
+      w  processe   diz-assemblirowaniq   awtomati~eski   prowerqetsq
+ struktura  zagruzo~nogo  modulq,   t.	 e.   kontroliru`tsq   o{ibki
+ programmirowaniq,  pri  kotoryh  razli~nye   ma{innye	 kody	ime`t
+ odinakowye  adresa  zagruzki.	adresnoe  prostranstwo,   w   kotorom
+ proishodit takoe "nalovenie", nazywaetsq segmentom perekrytij.
+
+      zagolowok tablicy:
+
+SEGMENTS   TABLE
+      tablica segmentow
+
+      tablica segmentow wywoditsq  po  oblastqm  diz-assemblirowaniq,
+ kavdaq oblastx wkl`~aet w sebq:
+
+	- segmenty komand;
+	- segmenty dannyh;
+	- swobodnye segmenty;
+	- segmenty perekrytij.
+
+      struktura tablicy po poziciqm stroki:
+
+  1
+	- simwol "<";
+
+  2-4
+	- na~alxnyj adres oblasti diz-assemblirowaniq;
+
+  5
+	- simwol "-";
+
+  6-8
+	- kone~nyj adres oblasti diz-assemblirowaniq;
+
+  9
+	- simwol ">";
+
+  14
+	- simwol, opredelq`}ij tip segmenta:
+
+	   C
+	       - segment komand;
+
+	   D
+	       - segment dannyh;
+
+	   U
+	       - swobodnyj segment: w zagruzo~nom module po ukazannym
+		 adresam otsutstwu`t kakie-libo komandy ili dannye;
+
+	   *
+	       - segment perekrytiq;
+
+			       - 11 -
+
+			 predw. 0113-01 33 01
+
+
+  16-18
+	- na~alxnyj adres segmenta;
+
+  19
+	- simwol "-";
+
+  20-22
+	- kone~nyj adres segmenta;
+
+  26 i dalee
+	- informaciq   o   segmentah   oblasti	 diz-assemblirowaniq,
+	  wywoditsq w formate pozicij 14-22.  esli  dlq  wywoda  wseh
+	  segmentow dannoj  oblasti  nedostato~no  odnoj  stroki,  to
+	  wywod prodolvaetsq na sledu`}ej stroke s pozicii 14.
+
+
+
+     3.3.3. tablica metok
+
+
+
+      tablica metok sodervit simwoli~eskie imena metok	i  ih  adresa
+ (zna~eniq).  simwoli~eskie  imena  metok   generiru`tsq   programmoj
+ diz-assembler i zada`tsq polxzowatelem w module opredelenij.
+
+      zagolowok tablicy:
+
+LABELS	  TABLE
+      tablica metok
+
+      metki uporqdo~eny po adresam  (zna~eniqm).  format  tablicy  po
+ poziciqm stroki:
+
+  1-3
+	- adres metki ({estnadcateri~nyj);
+
+  5
+	- simwol, ukazywa`}ij na tip segmenta, w kotorom opredelqetsq
+	  dannaq metka:
+
+	   C
+	       - segment komand;
+
+	   D
+	       - segment dannyh;
+
+	   U
+	       - swobodnyj segment;
+
+  7-12
+	- simwoli~eskoe imq metki;
+
+  13-17
+	- ~islo  ispolxzowanij	danoj  metki  w  ka~estwe  adresa   w
+	  komandah pereda~i uprawleniq (desqti~nOE);
+
+  24 i dalee
+	- informaciq o metkah w formate pozicij 1-17.
+
+
+
+
+
+
+     3.3.4. tablica neposredstwennyh dannyh
+
+
+
+      tablica sodervit simwoli~eskie imena neposredstwennyh dannyh  i
+ ih   zna~eniq.   simwoli~eskie   imena    generiru`tsq    programmoj
+ diz-assembler i zada`tsq polxzowatelem w module opredelenij.
+
+      zagolowok tablicy:
+
+IMMEDIATE DATA TABLE
+      tablica neposredstwennyh dannyh
+
+      neposredstwennye	dannye	uporqdo~eny  po   zna~eniqm.   format
+ tablicy po poziciqm stroki:
+
+  1-2
+	- esli zna~enie neposredstwennogo  dannogo  imeet  simwolxnyj
+	  |kwiwalent  w  kode  ASCII,  to  w  pozicii  1  razme}aetsq
+	  sootwetstwu`}ij simwol; w protiwnom slu~ae w	poziciqh  1-2
+	  pe~ataetsq "..";
+
+  4-5
+	- zna~enie neposredstwennogo dannogo;
+
+  7-12
+	- simwoli~eskoe imq neposredstwennogo dannogo;
+
+  13-17
+	- ~islo ispolxzowanij neposredstwennogo  dannogo  w  komandah
+	  mikro-|wm (desqti~noe);
+
+  24 i dalee
+	- informaciq o	neposredstwennyh  dannyh  w  formate  pozicij
+	  1-17.
+
+
+
+       3.4. ishodnyj fajl
+
+
+
+      ishodnyj	fajl  sodervit	tekst  diz-assembliruemoj   programmy
+ mikro-|wm  w  mnemoni~eskom  (assemblernom)  formate.	mnemonika   i
+ sintaksis  formiruemyh  komand  polnostx`  sootwetstwu`t   dokumentu
+ "assembler mikro-|wm.	opisanie  qzyka".  polu~ennyj  ishodnyj  fajl
+ movet obrabatywatxsq programmoj kross-assembler MAC48.
+
+      w prilovenii priwoditsq fragment	ishodnogo  fajla,  sozdannogo
+ programmoj diz-assembler.
+
+      w processe  obrabotki  zagruzo~nogo  modulq  wmesto  absol`tnyh
+ zna~enij  neposredstwennyh  dannyh  i	adresow  pereda~i  uprawleniq
+ diz-assembler	w  ishodnom  fajle  formiruet	simwoli~eskie	imena
+ neposredstwennyh dannyh i metok pereda~i  uprawleniq.	simwoli~eskie
+ imena diz-assembler  beret  iz  modulq  opredelenij  ili  generiruet
+ samostoqtelxno.
+
+			       - 12 -
+
+			 predw. 0113-01 33 01
+
+
+      generiruemye simwoli~eskie imena metok ime`t wid "??hhh" (hhh -
+ adres metki w {estnadcateri~nom wide), imena neposredstwennyh dannyh
+ - "???hh" (hh - zna~enie  dannogo  w  {estnadcateri~nom  wide).  pri
+ pomo}i  sootwetstwu`}ego  perekl`~atelq  w  komandnoj	stroke	movno
+ zapretitx podstanowku generiruemyh simwoli~eskih imen. w |tom slu~ae
+ ishodnyj fajl sodervit absol`tnye zna~eniq neposredstwennyX dannyh i
+ absol`tnye adresa pereda~i uprawleniq.
+
+      simwoli~eskie  imena,   zadawaemye   polxzowatelem   w   module
+ opredelenij, wsegda podstawlq`tsq w ishodnyj fajl.
+
+      sozdawaemyj  diz-assemblerom  ishodnyj   fajl   movno   uslowno
+ razdelitx na tri ~asti:
+
+	- opredelenie simwoli~eskih imen neposredstwennyh dannyh;
+	- diz-assembliruemaq programma mikro-|wm  w  wide  komand  na
+	  qzyke assembler;
+	- opredelenie simwoli~eskih imen metok pereda~i uprawleniq.
+
+      opredelenie   simwoli~eskih   imen   neposredstwennyh    dannyh
+ proizwoditsq pri pomo}i direktiw assemblera SET.
+
+      formirowanie programmy na qzyke assembler  proizwoditsq  w  dwe
+ kolonki,  kolonki  razdelq`tsq  simwolami  ";;".  w  perwoj  kolonke
+ formiru`tsq simwoli~eskie imena metok i mnemonika komand  mikro-|wm,
+ wo wtoroj kolonke, w ka~estwe	koMmentariew,  formiru`tsq  direktiwy
+ assemblera DB, operandy kotoryh  -  {estnadcateri~noe	predstawlenie
+ diz-assembliruemyh ma{innyh kodow.
+
+      esli  w  module	opredelenij   ukazano,	 ~to   dannaq	~astx
+ zagruzo~nogo modulq dolvna interpretirowatxsq kak posledowatelxnostx
+ bajtow dannyh, to w perwoj kolonke formiru`tsq metki i direktiwy DB,
+ a wo wtoroj - mnemonika komand mikro-|wm.
+
+      formirowanie wtoroj  kolonki  movno  zapretitx  sootwetstwu`}im
+ perekl`~atelem w komandnoj stroke.
+
+      w   tekst   programmy   w   wide	  koMmentariew	  wstawlq`tsq
+ preduprevda`}ie  i  poqsnq`}ie  soob}eniq;  ih  wywod	movno	takve
+ zapretitx pri	pomo}i	sootwetstwu`}ih  perekl`~atelej  w  komandnoj
+ stroke.
+
+      opredelenie simwoli~eskih imen metok,  e}e  ne  opredelennyh  w
+ sformirowannom ishodnom  fajle,  proizwoditsq	pri  pomo}i  direktiw
+ assemblera EQU.
+
+      ishodnyj fajl zawer{aetsq direktiwoj assemblera END  s  adresom
+ zapuska  programmy  mikro-|wm.  za  direktiwoj   END,	 w   ka~estwe
+ kommentariq, raspe~atywaetsq komandnaq stroka.
+
+
+
+
+
+
+       3.5. fajl listinga
+
+
+
+      fajl listinga,  takve  kak  i  ishodnyj  fajl,  sodervit	tekst
+ diz-assembliruemoj    programmy    mikro-|wm	  w	mnemoni~eskom
+ (assemblernom) formate. krome togo, w	|tot  fajl  wywodqtsq  adresa
+ zagruzki i kody komand mikro-|wm.
+
+      w prilovenii priwoditsq fragment polu~aemogo fajla listinga.
+
+      fajl listinga  razbiwaetsq  na  stranicy,  w  zagolowke  kavdoj
+ stranicy ukazywaetsq:
+
+	- nazwanie i wersiq diz-assemblera;
+	- wremq na~ala diz-assemblirowaniq;
+	- teku}aq data;
+	- nomer stranicy (desqti~nyj).
+
+      sledu`}aq stroka sodervit nazwanie polej listinga, kavdoe  pole
+ na~inaetsq s fiksirowannoj pozicii stroki:
+
+  1-4
+	- adres    zagruzki    diz-assebliruemyh    ma{innyh	kodow
+	  ({estnadcateri~nyj);
+
+  6-9
+	- ma{innye kody ({estnadcateri~nye);
+
+  11-15
+	- nomer stroki listinga (desqti~nyj);
+
+  17 i dalee
+	- mnemonika komand mikro-|wm. sodervimoe |togo polq polnostx`
+	  sootwetstwuet odnoj stroke ishodnogo fajla.
+
+			       - 13 -
+
+			 predw. 0113-01 33 01
+
+
+		       4. soob}eniq programmy
+
+
+
+
+      posle zawer{eniq obrabotki  zagruzo~nogo	modulq	diz-assembler
+ DIS48 wywodit na terminal stroku,  w  kotoroj	ukazano  ob}ee	~islo
+ o{ibok  obrabotki  modulq  opredelenij   i   ~islo   preduprevda`}ih
+ soob}enij w sformirowannom osnownom wyhodnom fajle.
+
+      esli w komandnoj stroke ne byl ukazan fajl diz-assemblirowaniq,
+ to na terminal  wywodqtsq  stroki  modulq  operedelenij,  w  kotoryh
+ obnaruveny o{ibki.
+
+      esli w komandnoj stroke ne byl ukazan osnownoj  wyhodnoj	fajl,
+ to  na  terminal  wywodqtsq  preduprevda`}ie  soob}eniq   i   stroki
+ ishodnogo fajla, k kotorym otnosqtsq |ti soob}eniq.
+
+
+
+       4.1. soob}eniq ob o{ibkah obrabotki modulq opredelenij
+
+
+
+      o{ibka, obnaruvennaq w module opredelenij, otme~aetsq  w	fajle
+ diz-assemblirowaniq sootwetstwu`}ej literoj,  kotoraq	pe~ataetsq  w
+ perwoj pozicii stroki rezulxtatow obrabotki modulq opredelenij.
+
+      dalee opisany pri~iny wozniknoweniq o{ibok i  litery,  kotorymi
+ otme~a`tsq |ti o{ibki:
+
+ I
+	- nedopustimaq litera:
+	       - operator sodervit  nedopustimu`  literu  koda	ASCII
+		 (zamenqetsq na "?");
+	       - ispolxzowanie russkoj litery wne kommentariq;
+	       - ispolxzowanie	nedopustimogo  simwola	(specialxnogo
+		 znaka);
+
+ L
+	- dlina stroki prewy{aet 80 simwolow;
+
+ M
+	- powtornoe  opredelenie  simwoli~eskogo  imeni   metki   ili
+	  neposredstwennogo dannogo;
+	- uve opredelqlsq  segment  komand  ili  dannyh  s  takim  ve
+	  na~alxnym adresom;
+
+ N
+	- otsutstwuet operator "konec opredelenij" (EOF);
+
+ Q
+	- somnitelxnyj sintaksis:
+	       - ne raspoznan operator;
+	       - adres	ili  zna~enie,	ukazannoe  w  operatore,   ne
+		 qwlqetsq {estnadcateri~nym ~islom;
+
+
+
+
+
+
+ R
+	- w ka~estwe simwoli~eskogo imeni metki ili neposredstwennogo
+	  dannogo ispolxzuetsq sluvebnoe ili zarezerwirowannoe slowo;
+
+ T
+	- o{ibka use~eniq:
+	       - zna~enie adresa metki, adresa	na~ala	segmenta  ili
+		 zna~enie granic oblasti prewy{aet zna~enie 0FFF;
+	       - zna~enie   neposredstwennogo	 dannogo    prewy{aet
+		 zna~enie 0FF.
+
+
+      p_r_i_m_e_~_a_n_i_e.  esli  w  operatore	 dopu}eno   neskolxko
+ o{ibok, to registriruetsq tolxko perwaq o{ibka.
+
+
+
+       4.2. preduprevda`}ie soob}eniq
+
+
+
+      preduprevda`}ie soob}eniq oformlq`tsq  w	wide  kommentariew  i
+ wywodqtsq  w	osnownoj   wyhodnoj   fajl.   soob}eniq   informiru`t
+ polxzowatelq o wozmovno  newernom  diz-assemblirowanii  zagruzo~nogo
+ modulq.
+
+      kavdoe preduprevda`}ee soob}enie otnositsq k sledu`}ej  za  nim
+ stroke osnownogo wyhodnogo fajla.  polxzowatelx  dolven  wnimatelxno
+ izu~itx  polu~ennyj  fajl  i  otsleditx  logiku   diz-assembliruemoj
+ programmy. pri neobhodimosti,	sleduet  wnesti  izmeneniq  w  modulx
+ opredelenij i prodolvitx process diz-assemblirowaniq.
+
+      wywod preduprevda`}ih  soob}enij	movno  zapretitx  pri  pomo}i
+ sootwetstwu`}ego perekl`~atelq w komandnoj stroke.
+
+      preduprevda`}ee soob}enie pe~ataetsq s perwoj pozicii ishodnogo
+ fajla ili s 17 pozicii fajla listinga.
+
+      wo wremq wywoda soob}enij  wmesto  "ADDR"  w  {estnadcateri~nom
+ wide pe~ataetsq konkretnyj adres zagruzki ma{innyh kodow  mikro-|wm,
+ wmesto "LLLLLL" pe~ataetsq konkretnoe simwoli~eskoe imq metki.
+
+      dalee priwodqtsq teksty soob}enij i pri~iny ih wywoda:
+
+
+;!! <ADDR>  BYTE OVERLOAD
+      (nalovenie bajtow)
+
+	- zagruzo~nyj modulx imeet newernu` strukturu;	pri  zagruzke
+	  ego w pamqtx proizojdet  perekrytie  (nalovenie)  bajtow  s
+	  adresom zagruzki ADDR.
+
+			       - 14 -
+
+			 predw. 0113-01 33 01
+
+
+;!! <ADDR>  JUMP OR CALL IMPOSSIBLE
+      (perehod ili wyzow newozmoven)
+
+	- dannaq ~astx	zagruzo~nogo  modulq  diz-assembliruetsq  kak
+	  segment  komand.  ne	obnaruveno  qwnyh  sposobow  pereda~i
+	  uprawleniq komande s adresom zagruzki ADDR.
+
+
+;!! <ADDR>  JUMP OR CALL INCORRECT
+      (perehod ili wyzow ne dopuskaetsq)
+
+	- pereda~a uprawleniq na  segment  dannyh.  newernoe  zadanie
+	  segmentow  komand  ili  dannyh,  libo  neprawilxno  ukazana
+	  oblastx diz-assemblirowaniq.
+
+
+;!! <ADDR>  LABEL  LLLLLL  REDEFINED
+      (metka LLLLLL uve opredelena)
+
+	- metka   LLLLLL   opredelqlasx   ranee,    tak    kak	  uve
+	  diz-assemblirowalisx ma{innye kody s adresom zagruzki ADDR.
+
+
+;!! <ADDR>  LABEL  LLLLLL  WRONG ADDRESS
+      (metka LLLLLL newernyj adres)
+
+	- adres (zna~enie) metki LLLLLL sowpadaet s adresom  zagruzki
+	  wtorogo bajta dwuhbajtowoj komandy.
+
+;!! <ADDR>  SECOND BYTE MISSING
+      (net wtorogo bajta)
+
+	- wo  wremq  diz-assemblirowaniq  dwuhbajtowoj	 komandy   ne
+	  obnaruven wtoroj  bajt  komandy.  newerno  zadany  segmenty
+	  komand ili dannyh, libo  newerno  ukazany  granicy  oblasti
+	  diz-assemblirowaniq.
+
+
+;!! <ADDR>  WRONG COMMAND CODE
+      (neopredelennyj kod komandy)
+
+	- bajt zagruzo~nogo modulq s adresom zagruzki ADDR  ne	movet
+	  diz-assemblirowatxsq kak komanda.
+
+
+
+       4.3. poqsnq`}ie soob}eniq
+
+
+
+      poqsnq`}ie  soob}eniq  oformlq`tsq  w   wide   kommentariew   i
+ wywodqtsq w osnownoj wywodnoj fajl.
+
+      wywod  poqsnq`}ih  soob}enij   movno   zapretitx	 pri   pomo}i
+ sootwetstwu`}ego perekl`~atelq w komandnoj stroke.
+
+      poqsnq`}ee soob}enie pe~ataetsq, na~inaq s 9 pozicii  ishodnogo
+ fajla ili s 25 pozicii fajla listinga.
+
+
+
+
+
+
+      dalee priwodqtsq teksty soob}enij:
+
+
+; COMMAND SEGMENT BEGINING
+      (na~alo segmenta komand)
+
+
+; DATA SEGMENT BEGINING
+      (na~alo segmenta dannyh)
+
+
+; IMMEDIATE DATA
+
+      (neposredstwennye dannye)
+
+	- na~inaetsq opredelenie simwoli~eskih imen  neposredstwennyh
+	  dannyh pri pomo}i direktiw assemblera SET.
+
+
+; UNDEFINED LABELS
+      (neopredelennye metki)
+
+	- na~inaetsq opredelenie simwoli~eskih imen metok pri  pomo}i
+	  direktiw  assemblera	EQU.  |ti  metki   ispolxzowalisx   w
+	  ka~estwe operandow w komandah pereda~i  uprawleniq,  no  ne
+	  byli opredeleny w sozdawaemom ishodnom fajle.
+
+
+
+       4.4. soob}eniq ob o{ibkah wypolneniq
+
+
+
+      soob}eniq ob o{ibkah wypolneniq wywodqtsq  na  terminal.	posle
+ wywoda  soob}eniq  diz-assembler  prekra}aet  rabotu,	 wywodit   na
+ terminal simwol "*" i ovidaet wwoda nowoj komandnoj stroki.
+
+      wo wremq wywoda soob}enij ob o}ibkah wypolneniq, wmesto  "DEV:"
+ i  "DEV:FILE.TYP",  pe~ataetsq   konkretnoe   imq   ustrojstwa   ili
+ specifikaciq fajla.
+
+      dalee priwodqtsq teksty soob}enij, pri~iny wozniknoweniq o{ibok
+ i dejstwiq polxzowatelq:
+
+?DIS48-F-BAD SWITCH
+      (newernyj perekl`~atelx)
+
+ pri~ina:
+	- w komandnoj stroke obnaruven nedopustimyj perekl`~atelx.
+
+ dejstwiq:
+	- wwesti prawilxnu` komandnu` stroku.
+
+			       - 15 -
+
+			 predw. 0113-01 33 01
+
+
+?DIS48-F-DEVICE IS FUL:  DEV:
+      (ustrojstwo perepolneno)
+
+ pri~ina:
+	- na ustrojstwe,  prednazna~ennom  dlq	wywoda,  nedostato~no
+	  mesta dlq razme}eniq wywodnogo fajla.
+	- katalog ustrojstwa, prednazna~ennogo dlq odnogo iz wywodnyh
+	  fajlow, perepolnen i ne imeet mesta dlq razme}eniq zapisi o
+	  nowom fajle;
+
+ dejstwiq:
+	- oswoboditx mesto  na	ustrojstwe  ili  ispolxzowatx  drugoe
+	  ustrojstwo wywoda.
+
+
+?DIS48-F-DYNAMIC MEMORY OVERFLOW
+      (perepolnenie dinami~eskoj pamqti)
+
+ pri~ina:
+	- w  swobodnoj	operatiwnoj  pamqti  nedostato~no  mesta  dlq
+	  razme}eniq neobhodimyh tablic.
+
+ dejstwiq:
+	- dlq  wwoda  i  wywoda  fajlow  ispolxzowatx	tolxko	 odno
+	  ustojstwo, velatelxno DK: ;
+	- dis-assemblirowatx zagruzo~nyj modulx dwavdy: otdelxno  dlq
+	  polu~eniq osnownogo wyhodnogo fajla i dlq  polu~eniq	fajla
+	  dis-assemblirowaniq;
+	- w fajle opredelenij  umenx{itx  ~islo  simwoli~eskih	imen,
+	  opredelennyh polxzowatelem.
+
+
+?DIS48-F-ERROR RECORD IN  DEV:FILE.TYP
+      (o{ibo~naq zapisx w fajle)
+
+ pri~ina:
+	- ukazannyj w komandnoj stroke zagruzo~nyj fajl imeet zapisx,
+	  format kotoroj ne sootwetstwuet formatu zapisi zagruzo~nogo
+	  fajla.
+
+ dejstwiq:
+	- proweritx, qwlqetsq li ukazannyj fajl zagruzo~nym;
+	- sozdatx nowyj zagruzo~nyj fajl.
+
+
+?DIS48-F-FILE NOT FOUND:  DEV:FILE.TYP
+      (fajl ne najden)
+
+ pri~ina:
+	- fajl, ukazannyj w komandnoj stroke w ka~estwe wwodnogo,  ne
+	  najden.
+
+ dejstwiq:
+	- proweritx su}estwuet li fajl s ukazannym  imenem  i  wwesti
+	  prawilxnu` komandnu` stroku.
+
+
+
+
+
+
+?DIS48-F-ILLEGAL COMMAND
+      (nedopustimaq komanda)
+
+ pri~ina:
+	- w komandnoj stroke  obnaruvena  sintaksi~eskaq  o{ibka  ili
+	  ukazano  bolee  {esti  whodnyh  fajlow  ili  dwuh  wyhodnyh
+	  fajlow.
+
+ dejstwiq:
+	- wwesti prawilxnu` komandnu` stroku.
+
+
+?DIS48-F-ILLEGAL DEVICE:  DEV:
+      (nedopustimoe ustrojstwo)
+
+ pri~ina:
+	- ustrojstwo, ukazannoe w komandnoj stroke, ne	obsluviwaetsq
+	  operacionnoj sistemoj rafos.
+
+ dejstwiq:
+	- w komandnoj stroke ukazatx dopustimoe imq ustrojstwa.
+
+
+?DIS48-F-READ ERROR FROM  DEV:FILE.TYP
+      (o{ibka ~teniq)
+
+ pri~ina:
+	- o{ibka wo wremq operacii ~teniq whodnogo fajla.
+
+ dejstwiq:
+	- ispolxzowatx drugoe ustrojstwo wwoda.
+
+
+?DIS48-F-WRITE ERROR TO  DEV:FILE.TYP
+      (o{ibka zapisi)
+
+ pri~ina:
+	- o{ibka wo wremq operacii zapisi na ustrojstwo wywoda.
+
+ dejstwiq:
+	- ispolxzowatx drugoe ustrojstwo wywoda.
+
+			       - 16 -
+
+			 predw. 0113-01 33 01
+
+
+						     prilovenie
+
+
+
+
+
+
+
+
+
+
+
+		    1. primer modulq opredelenij
+
+
+
+
+
+	 o{ibka
+
+	SEG	0-4F	; perekrywa`}iesq segmenty
+	SEG	40-7F
+
+	DAT	300
+	DAT	52	;  tablica
+	CMD	58
+	TABL1	#00
+	MSK?0F	#0F
+	MSK?F0	#0F0
+	TABL2	#2C
+	HEXSYM: 1BB
+	INIT:	05
+	WAIT:	2C
+	INTRPT: 2E
+	TJUMP:	52
+	ATJUMP	#52
+	JUMP1:	70
+	JUMP2:	79
+	JUMP3:	8F
+	JUMP4:	0A4
+	JUMP5:	0BF
+	JUMP6:	58
+
+		EOF
+
+
+
+
+
+
+		2. fragment fajla diz-assemblirowaniq
+
+
+
+
+k1816we48 DISASSEMBLER, DIS48 VA0-00, 22-FEB-85  00:31:32  PAGE    1
+
+    HEX    SEQ		SOURSE
+
+	      1
+Q	      2  o{ibka
+	      3
+  000 04F     4 SEG	0-4F	; perekrywa`}iesq segmenty
+  040 07F     5 SEG	40-7F
+	      6
+  300	      7 DAT	300
+  052	      8 DAT	52	;  tablica
+  058	      9 CMD	58
+     00      10 TABL1	#00
+     0F      11 MSK?0F	#0F
+     F0      12 MSK?F0	#0F0
+     2C      13 TABL2	#2C
+    1BB      14 HEXSYM: 1BB
+    005      15 INIT:	05
+    02C      16 WAIT:	2C
+    02E      17 INTRPT: 2E
+    052      18 TJUMP:	52
+     52      19 ATJUMP	#52
+    070      20 JUMP1:	70
+    079      21 JUMP2:	79
+    08F      22 JUMP3:	8F
+    0A4      23 JUMP4:	0A4
+    0BF      24 JUMP5:	0BF
+    058      25 JUMP6:	58
+	     26
+	     27 	EOF
+
+     SEGMENTS TABLE
+<000-07F>    C 000-001	 U 002-002   C 003-051	 D 052-057   C 058-07
+
+     LABELS TABLE
+ 005 C INIT	 1	02C C WAIT	1      02E C INTRPT    2
+ 039 C ??039	 1	04E C ??04E	2      052 D TJUMP     0
+ 065 C ??065	 1	067 C ??067	1      06C C ??06C     1
+ 070 C JUMP1	 0	078 C ??078	1      079 C JUMP2     0
+ 08F U JUMP3	 0	0A4 U JUMP4	0      0BF U JUMP5     0
+ 1B1 U ??1B1	 1	1BB U HEXSYM	0
+
+     IMMEDIATE DATA TABLE
+ .. 00 TABL1	 3	.. 01 ???01	1      .. 07 ???07     1
+ .. 0F MSK?0F	 1	.. 10 ???10	1      .. 11 ???11     1
+ #  23 ???23	 1	$  24 ???24	1      ,  2C TABL2     0
+ P  50 ???50	 1	R  52 ATJUMP	1      .. 80 ???80     1
+ .. 90 ???90	 1	.. 92 ???92	1      .. 93 ???93     2
+ .. F0 MSK?F0	 2	.. F6 ???F6	1
+
+ERRORS:     1,	WARNINGS:     3
+MOS.LST,MOS=MOS,MOS.DEF
+
+			       - 17 -
+
+			 predw. 0113-01 33 01
+
+
+		     3. fragment ishodnogo fajla
+
+
+
+
+	; IMMEDIATE DATA
+TABL1	EQU	000H
+MSK?0F	EQU	00FH
+ATJUMP	EQU	052H
+MSK?F0	EQU	0F0H
+???01	EQU	001H
+???07	EQU	007H
+???0B	EQU	00BH
+???10	EQU	010H
+???11	EQU	011H
+???14	EQU	014H
+???23	EQU	023H
+???24	EQU	024H
+???37	EQU	037H
+???50	EQU	050H
+???80	EQU	080H
+???83	EQU	083H
+???90	EQU	090H
+???92	EQU	092H
+???93	EQU	093H
+???D7	EQU	0D7H
+???F6	EQU	0F6H
+	ORG	0000H
+	; COMMAND SEGMENT BEGINNING
+;!! <0000>  JUMP OR CALL IMPOSSIBLE
+	JMP	INIT		;;	DB	4,5
+	ORG	0003H
+	; COMMAND SEGMENT BEGINNING
+;!! <0003>  JUMP OR CALL IMPOSSIBLE
+	JMP	INTRPT		;;	DB	4,2EH
+INIT:	MOV	A,#???92	;;	DB	23H,92H
+	MOV	R0,#???07	;;	DB	0B8H,7
+	MOVX	@R0,A		;;	DB	90H
+	MOV	A,#???80	;;	DB	23H,80H
+	MOV	R1,#???0B	;;	DB	0B9H,0BH
+	MOVX	@R1,A		;;	DB	91H
+	MOV	R1,#???01	;;	DB	0B9H,1
+	MOV	A,#???23	;;	DB	23H,23H
+	MOVX	@R1,A		;;	DB	91H
+	MOV	A,#???11	;;	DB	23H,11H
+	MOVX	@R1,A		;;	DB	91H
+	MOV	A,#MSK?F0	;;	DB	23H,0F0H
+	MOVX	@R1,A		;;	DB	91H
+	MOV	A,#???90	;;	DB	23H,90H
+	MOVX	@R1,A		;;	DB	91H
+	MOV	R0,#TABL1	;;	DB	0B8H,0
+	MOV	A,#???93	;;	DB	23H,93H
+
+
+
+
+
+
+		     4. fragment fajla listinga
+
+
+
+
+k1816we48 DISASSEMBLY MNEMONICS, DIS48 VA0-00,	22-FEB-85 00:31:32  P
+
+LOC  CODE  SEQ		MNEMONICS
+
+	      1 	; IMMEDIATE DATA
+	      2 TABL1	EQU	000H
+	      3 MSK?0F	EQU	00FH
+	      4 ATJUMP	EQU	052H
+	      5 MSK?F0	EQU	0F0H
+	      6 ???01	EQU	001H
+	      7 ???07	EQU	007H
+	      8 ???0B	EQU	00BH
+	      9 ???10	EQU	010H
+	     10 ???11	EQU	011H
+	     11 ???14	EQU	014H
+	     12 ???23	EQU	023H
+	     13 ???24	EQU	024H
+	     14 ???37	EQU	037H
+	     15 ???50	EQU	050H
+	     16 ???80	EQU	080H
+	     17 ???83	EQU	083H
+	     18 ???90	EQU	090H
+	     19 ???92	EQU	092H
+	     20 ???93	EQU	093H
+	     21 ???D7	EQU	0D7H
+	     22 ???F6	EQU	0F6H
+	     23 	ORG	0000H
+	     24 	; COMMAND SEGMENT BEGINNING
+	     25 ;!! <0000>  JUMP OR CALL IMPOSSIBLE
+0000 0405    26 	JMP	INIT
+	     27 	ORG	0003H
+	     28 	; COMMAND SEGMENT BEGINNING
+	     29 ;!! <0003>  JUMP OR CALL IMPOSSIBLE
+0003 042E    30 	JMP	INTRPT
+0005 2392    31 INIT:	MOV	A,#???92
+0007 B807    32 	MOV	R0,#???07
+0009 90      33 	MOVX	@R0,A
+000A 2380    34 	MOV	A,#???80
+000C B90B    35 	MOV	R1,#???0B
+000E 91      36 	MOVX	@R1,A
+000F B901    37 	MOV	R1,#???01
+0011 2323    38 	MOV	A,#???23
+0013 91      39 	MOVX	@R1,A
+0014 2311    40 	MOV	A,#???11
+0016 91      41 	MOVX	@R1,A
+0017 23F0    42 	MOV	A,#MSK?F0
+0019 91      43 	MOVX	@R1,A
+001A 2390    44 	MOV	A,#???90
+001C 91      45 	MOVX	@R1,A
+001D B800    46 	MOV	R0,#TABL1
+001F 2393    47 	MOV	A,#???93
+0021 90      48 	MOVX	@R0,A
+0022 23D7    49 	MOV	A,#???D7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

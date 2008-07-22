@@ -1,0 +1,1577 @@
+
+
+
+
+
+
+ utwervden
+
+ predw.0111-01 33 01-lu
+
+
+
+
+
+
+
+
+
+                sistema awtomatizacii proektirowaniq
+                      programmnogo obespe~eniq
+                         mikro-|wm k1816we48
+
+                             s a p r 4 8
+
+
+                      programma kross-assembler
+                              M A C 4 8
+
+                      rukowodstwo  programmista
+
+
+                         predw.0111-01 33 01
+
+                              listow 16
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                               1 9 8 5
+
+                               - 2 -
+
+                         predw.0111-01 33 01
+
+
+
+
+
+
+                              annotaciq
+
+
+
+
+      nastoq}ij  dokument  qwlqetsq   rukowodstwom   programmista   i
+ operatora po rabote s translqtorom (kross-assemblerom) MAC48 s qzyka
+ assemblera mikro-|wm k1816we48.
+
+      kross-assembler MAC48  prednazna~en  dlq  perewoda  programm  s
+ qzyka assemblera w programmu w  ma{innyh  kodah  mikro-|wm,  kotoraq
+ trebuet dalxnej{ej nastrojki programmoj redaktor swqzej LINK48.
+
+      dokument sodervit swedeniq ob uslowiqh primeneniq, wozmovnostqh
+ i osnownyh harakteristikah  programmy  kross-assembler  i  strukture
+ whodnyh i wyhodnyh dannyh.
+
+
+      p_r_i_m_e_~_a_n_i_e. w dannom  dokumente  orientaciq  programmy
+ MAC48   na   operacionnu`   sistemu   rafos   uslownaq.    programma
+ kross-assembler funkcioniruet takve pod  uprawleniem  os  fodos,  os
+ fobos, os dwk.
+
+                               - 3 -
+
+                         predw.0111-01 33 01
+
+
+
+
+
+
+                             sodervanie
+
+
+
+     annotaciq ...................................................  2
+
+
+ 1.  nazna~enie i uslowiq primeneniq..............................  4
+
+
+ 2.  primenenie programmy.........................................  4
+
+ 2.1.   pusk programmy............................................  4
+ 2.2.   komandnaq stroka..........................................  4
+ 2.2.1.   polu~enie zagruzo~nogo modulq...........................  5
+ 2.2.2.   uprawlenie listingom....................................  5
+ 2.2.3.   direktiwy uprawleniq....................................  6
+ 2.2.3.1. uprawlenie protokolom translqcii........................  6
+ 2.2.3.2. zadanie wlovennyh ishodnyh fajlow.......................  7
+ 2.2.3.3. sowmestimostx s drugimi translqtorami...................  7
+
+ 3.  whodnye i wyhodnye dannye....................................  8
+
+ 3.1.   ishodnyj modulx...........................................  8
+ 3.2.   ob'ektnyj modulx..........................................  8
+ 3.3.   zagruzo~nyj modulx........................................  8
+ 3.4.   listing...................................................  9
+ 3.4.1.   rezulxtaty translqcii...................................  9
+ 3.4.2.   tablica simwolow........................................ 10
+ 3.4.3.   tablica perekrestnyh ssylok............................. 11
+ 3.4.4.   zawer{enie listinga..................................... 11
+
+ 4.  soob}eniq programmy.......................................... 12
+
+ 4.1.   soob}eniq ob o{ibkah translqcii........................... 12
+ 4.2.   soob}eniq ob o{ibkah wypolneniq........................... 13
+
+ prilovenie.   ..................................................  15
+
+
+ 1.  fragment stranicy translqcii................................. 15
+
+
+ 2.  fragment tablicy simwolow.................................... 15
+
+
+ 3.  fragment tablicy perekrestnyh ssylok......................... 16
+
+                               - 4 -
+
+                         predw.0111-01 33 01
+
+
+                 1. nazna~enie i uslowiq primeneniq
+
+
+
+
+      programma  kross-assembler  prednazna~ena   dlq   awtomatizacii
+ programmirowaniq   na    urowne    ma{inno-orientirowannogo    qzyka
+ (assemblera) mikro-|wm k1816we48. opisanie whodnogo  qzyka  -  qzyka
+ assemblera  mikro-|wm  priwedeno  w  dokumente  "sapr48.   assembler
+ mikro-|wm. opisanie qzyka. predw.0111-01 35 01"".
+
+      programma kross-assembler MAC48 perewodit  programmu  na  qzyke
+ assemblera  (ishodnyj  modulx)  w  absol`tnu`  ob'ektnu`   programmu
+ (ob'ektnyj modulx), kotoraq w  dalxnej{em  nastraiwaetsq  programmoj
+ redaktor swqzej LINK48. parallelxno s  sozdaniem  ob'ektnogo  modulq
+ formiruetsq fajl listinga, kotoryj  sodervit  rezulxtaty  translqcii
+ ishodnogo modulq. wmesto ob'ektnogo modulq polxzowatelx movet  srazu
+ polu~itx zagruzo~nyj modulx.
+
+      translqciq osu}estwlqetsq w dwa prohoda.
+
+      programma MAC48 wypolnqet sledu`}ie funkcii:
+
+        - wwod  ishodnogo  modulq  iz  neskolxkih  fajlow,   zadannyh
+          polxzowatelem;
+        - obrabotka wlovennyh ishodnyh modulej;
+        - wy~islenie wyravenij w processe translqcii;
+        - obrabotka direktiw uslownoj translqcii;
+        - obrabotka makrosredstw (makrokomandy i bloki powtorenij);
+        - sintaksi~eskij i semanti~eskij analiz predlovenij ishodnogo
+          modulq s wyda~ej soob}enij ob o{ibkah;
+        - wywod w ob'ektnyj modulx  informacii  ob  ob}ih  i  wne{nih
+          imenah, opredelennyh polxzowatelem;
+        - wywod  w  ob'ektnyj  modulx  ma{innyh  kodow  mikro-|wm   i
+          informacii dlq ih nastrojki;
+        - wywod listinga rezulxtatow translqcii ishodnogo modulq;
+        - wywod  w  fajl   listinga   tablicy   simwoli~eskih   imen,
+          opredelennyh polxzowatelem, w alfawitnom porqdke;
+        - wywod w fajl listinga tablicy perekrestnyh ssylok;
+
+      kross-assembler MAC48  rabotaet  pod  uprawleniem  operacionnoj
+ sistemy rafos i ispolxzuet ee sistemnye resursy. programma  zanimaet
+ okolo 20 kbajt operatiwnoj pamqti, ostalxnaq swobodnaq ~astx  pamqti
+ dinami~eski wydelqetsq pod drajwery ustrojstw, bufera wwoda-wywoda i
+ tablicy, neobhodimye dlq translqcii.
+
+      dlq  translqcii  programm  s  pomo}x`  kross-assemblera   MAC48
+ neobhodimo, ~to by  ishodnye  moduli  nahodilisx  na  ustrojstwah  s
+ fajlowoj strukturoj.
+
+
+
+
+
+
+                       2. primenenie programmy
+
+
+
+
+
+
+       2.1. pusk programmy
+
+
+
+      kross-assembler w formate zagruzki  zapisan  w  fajl  s  imenem
+ MAC48.SAV.  dlq  zagruzki  i  zapuska  programmy   neobhodimo   datx
+ sledu`}u` komandu monitora operacionnoj sistemy:
+
+        .R MAC48
+
+ ili
+
+        .RUN DEV:MAC48
+
+ esli zagruzo~nyj modulx nahoditsq ne na sistemnom ustrojstwe (DEV: -
+ imq ustrojstwa).
+
+      posle zagruzki i zapuska kross-assemblera na terminal wywoditsq
+ simwol "*" ozna~a`}ij gotownostx programmy k wwodu komandnoj stroki.
+ esli w otwet na simwol "*" navatx <wk>, to  kross-assembler  wywedet
+ na terminal swoe nazwanie i nomer wersii.
+
+      dlq wyhoda iz programmy kross-assembler i  pereda~i  uprawleniq
+ monitoru operacionnoj sistemy neobhodimo navatx <CTRL/C>, esli MAC48
+ ovidaet wwoda s terminala, ili dwavdy navatx  <CTRL/C>,  esli  MAC48
+ nahoditsq w revime translqcii.
+
+      posle  zawer{eniq  translqcii  ishodnyh  fajlow,  ukazannyh   w
+ komandnoj stroke, programma MAC48 wywodit na terminal simwol  "*"  i
+ ovidaet wwoda nowoj komandnoj stroki.
+
+
+
+       2.2. komandnaq stroka
+
+
+
+      specifikacii whodnyh i wyhodnyh naborow  dannyh  ukazywa`tsq  w
+ komandnoj stroke. ona dolvna sootwetstwowatx CSI-formatu,  prinqtomu
+ w operacionnoj sisteme rafos.
+
+      format komandnoj stroki:
+
+OBJ_SPC , LST_SPC /LST_SWT = SRC_SPC , ... , SRC_SPC  <wk>
+
+ gde
+
+   OBJ_SPC
+        - specifikaciq  ob'ektnogo  fajla.  esli  ob'ektnyj  fajl  ne
+          trebuetsq, to movet bytx opu}ena.
+
+                               - 5 -
+
+                         predw.0111-01 33 01
+
+
+   LST_SPC
+        - specifikaciq  fajla  listinga.  esli   fajl   listinga   ne
+          trebuetsq, to movet bytx opu}ena.
+
+   /LST_SWT
+        - perekl`~ateli uprawleniq listingom (p. 2.2.2.). mogut  bytx
+          opu}eny.
+
+   SRC_SPC
+        - specifikaciq ishodnogo fajla.
+
+ w odnoj komandnoj  stroke  movet  bytx  ukazano  do  {esti  ishodnyh
+ fajlow. wse ishodnye fajly budut  ottranslirowany  kak  odno  celoe:
+ tekst wo  wtorom  i  posledu`}ih  fajlah  budet  wosprinimatxsq  kak
+ prodolvenie teksta perwogo ishodnogo fajla.
+
+      specifikaciq fajlow w operacionnoj sisteme rafos predstawlqetsq
+ sledu`}im obrazom:
+
+        DEV: FILE .TYP [LENGTH]
+
+ gde
+
+   DEV:
+        - imq ustrojstwa. esli trebuetsq ustrojstwo DK:  ,  to  movet
+          bytx opu}eno.
+
+   FILE
+        - imq  fajla.   esli   ispolxzuetsq   ustrojstwo   nefajlowoj
+          struktury, to movet  bytx  opu}eno.  ishodnye  fajly  mogut
+          raspolagatxsq tolxko na ustrojstwah fajlowoj struktury.
+
+   .TYP
+        - tip  fajla.  esli  ispolxzuetsq  tip  fajla   prinqtyj   po
+          umol~ani` dlq dannoj gruppy fajlow, to movet bytx opu}en.
+
+   [LENGTH]
+        - dlina fajla w  blokah,  imeet  smysl  tolxko  dlq  wyhodnyh
+          fajlow (ob'ektnogo ili  listinga).  esli  opu}eno,  to  dlq
+          fajla rezerwiruetsq oblastx na  wne{nem  nositele  soglasno
+          prawilam prinqtym w operacionnoj sisteme rafos.
+
+      zna~eniq   |lementow   specifikacij   fajlow   prinimaemye   po
+ umol~ani`:
+
+ ob'ektnyj fajl:
+        - ustrojstwo: - DK: ;
+        - tip fajla: - .O48 ;
+
+ fajl listinga:
+        - ustrojstwo: - ustrojstwo, nazna~ennoe dlq ob'ektnogo fajla;
+        - tip fajla: - .LST ;
+
+ perwyj ishodnyj fajl:
+        - ustrojstwo: - DK: ;
+        - tip fajla: - .M48 ;
+
+
+
+
+
+
+ posledu`}ie ishodnye fajly:
+        - ustrojstwo:  -  ustrojstwo,  nazna~ennoe  dlq   predydu}ego
+          ishodnogo fajla;
+        - tip fajla: - .M48;
+
+
+
+     2.2.1. polu~enie zagruzo~nogo modulq
+
+
+
+      programma kross-assembler MAC48 movet wmesto ob'ektnogo  modulq
+ srazu sozdawatx zagruzo~nyj modulx. zagruzo~nyj  modulx  ne  trebuet
+ dalxnej{ej obrabotki (nastrojki) redaktorom swqzej LINK48.
+
+      dlq  polu~eniq  zagruzo~nogo   modulq   sleduet   posle   imeni
+ ob'ektnogo fajla w komandnoj stroke qwno ukazatx tip fajla - .L48  ,
+ naprimer:
+
+        ABC.L48,ABC=ABC1,ABC2
+
+      wo  wremq  translqcii  s  polu~eniem  zagruzo~nogo  modulq  wse
+ direktiwy PUBLIC  i  EXTRN,  wstre~ennye  w  transliruemoj  ishodnoj
+ programme, ignoriru`tsq i otme~a`tsq kak o{ibo~nye (kod o{ibki Z).
+
+
+
+     2.2.2. uprawlenie listingom
+
+
+
+      dlq    uprawleniq    listingom    ispolxzu`tsq    dwe    gruppy
+ perekl`~atelej: uprawleniq wywodom i  uprawleniq  formatom  stranicy
+ listinga.
+
+      fajl listinga wywoditsq po stranicam, w na~ale kavdoj  stranicy
+ pe~ataetsq {estx strok zagolowka. standartnyj  format  stranicy:  72
+ stroki po 128 simwolow w  stroke.  dlq  izmeneniq  formata  stranicy
+ ispolxzu`tsq sledu`}ie perekl`~ateli:
+
+ /L:NUM
+        - gde NUM - ~islo (posle desqti~nogo ~isla sleduet  postawitx
+          to~ku). opredelqet dlinu stranicy  listinga  w  strokah  (s
+          u~etom {esti strok zagolowka stranicy). esli NUM menx{e  7,
+          to dlina stranicy ustanawliwaetsq rawnoj 7; esli NUM bolx{e
+          72, to dlina stranicy ustanawliwaetsq rawnoj 72 strokam.
+
+ /W:NUM
+        - gde NUM - ~islo (posle desqti~nogo ~isla sleduet  postawitx
+          to~ku). opredelqet {irinu  stranicy  listinga  w  simwolah.
+          esli NUM menx{e  70,  to  {irina  stranicy  ustanawliwaetsq
+          rawnoj 70 simwolam; esli bolx{e  128,  to  {irina  stranicy
+          ustanawliwaetsq rawnoj 128 simwolam.
+
+      fajl listinga sostoit  iz  treh  osnownyh  ~astej:  rezulxtatow
+ translqcii, tablicy simwolow  i  tablicy  perekrestnyh  ssylok.  dlq
+ razre{eniq  (ili  zapre}eniq)  wywoda  otdelxnyh   ~astej   listinga
+ ispolxzu`tsq sledu`}ie perekl`~ateli:
+
+                               - 6 -
+
+                         predw.0111-01 33 01
+
+
+ /Y:ARG
+        - razre{enie wywoda ~asti listinga,  opredelqemoj  argumentom
+          ARG.
+
+ /N:ARG
+        - zapre}enie wywoda ~asti listinga,  opredelqemoj  argumentom
+          ARG.
+
+ esli argument perekl`~atelej  /Y  ili  /N  ne  ukazan,  to  dejstwie
+ perekl`~atelq   rasprostranqetsq   na   wesx   listing.   u   odnogo
+ perekl`~atelq movno ukazywatx neskolxko argumentow.
+
+      argument ARG movet prinimatx sledu`}ie zna~eniq:
+
+ SYM
+        - wywod tablicy simwolow.
+
+ XRF
+        - wywod tablicy perekrestnyh ssylok.
+
+ PAG
+        - razdelenie listinga na stranicy:
+
+          /Y:PAG
+               - listing wywoditsq po stranicam;
+
+          /N:PAG
+               - listing na stranicy ne delitsq,  zagolowok  stranicy
+                 pe~ataetsq tolxko odin raz (w  na~ale  listinga),  a
+                 perekl`~atelx /L:NUM w komandnoj stroke i  direktiwy
+                 uprawleniq EJECT w ishodnom module ignoriru`tsq.
+
+ LIS
+        - wywod rezulxtatow translqcii. direktiwy uprawleniq  LIST  i
+          NOLIST w ishodnom module ignorirutsq.
+
+ GEN
+        - wkl`~enie w listing  operatorow,  polu~ennyh  w  rezulxtate
+          ras{ireniq  makrokomand  i  blokow  powtorenij.   direktiwy
+          uprawleniq GEN i NOGEN w ishodnom module ignoriru`tsq.
+
+ CND
+        - wkl`~enie  w  listing  operatorow  ishodnogo   teksta,   ne
+          transliruemyh po uslowi`, i  direktiw  uslownoj  translqcii
+          (IF, ELSE, ENDIF). direktiwy uprawleniq  COND  i  NOCOND  w
+          ishodnom module ignoriru`tsq.
+
+      po umol~ani` prinima`tsq sledu`}ie zna~eniq perekl`~atelej:
+
+        /L:72./W:128./Y:SYM:PAG:/N:XRF
+
+ direktiwy LIST, NOLIST, GEN, NOGEN, COND i NOCOND w ishodnom  module
+ obrabatywa`tsq.
+
+
+
+
+
+
+     2.2.3. direktiwy uprawleniq
+
+
+
+      direktiwy  uprawleniq  predzna~eny  dlq   uprawleniq   wedeniem
+ protokola translqcii i ukazaniq wlovennyh ishodnyh fajlow (direktiwa
+ INCLUDE).
+
+      format direktiw  uprawleniq,  wstawlqemyh  w  ishodnyj  modulx,
+ sledu`}ij:
+
+       $<spisok direktiw uprawleniq>
+
+ simwol $ dolven nahoditsq w perwoj pozicii stroki ishodnogo  teksta;
+ |lementy w spiske razdelq`tsq probelami. direktiwy uprawleniq  mogut
+ raspolagatxsq w l`bom meste ishodnogo teksta.
+
+      spisok direktiw uprawleniq, soderva}ij bolx{e odnoj  direktiwy,
+ obrabatywaetsq  slewa  naprawo.  w  slu~ae   o{ibki   direktiwa   ne
+ obrabatywaetsq, ignoriru`tsq i wse ostalxnye direktiwy uprawleniq  w
+ |toj stroke.
+
+
+
+   2.2.3.1. uprawlenie protokolom translqcii
+
+
+
+      direktiwy  uprawleniq  protokolom  sluvat  dlq  razre{eniq  ili
+ zapre}eniq wywoda w fajl listinga rezulxtatow translqcii  operatorow
+ ishodnogo teksta. ispolxzu`tsq sledu`}ie direktiwy:
+
+    LIST
+        - razre{aetsq wywod w fajl listinga;
+
+    NOLIST
+        - zapre}aetsq wywod w fajl listinga;
+
+    GEN
+        - razre{aetsq  wywod  operatorow,  polu~ennyh  w   rezulxtate
+          ras{ireniq   makrokomand   i   blokow   powtorenij.   wywod
+          proizwoditsq, esli byl ustanowlen revim LIST.
+
+    NOGEN
+        - zapre}aetsq  wywod  operatorow,  polu~ennyh  w   rezulxtate
+          ras{ireniq makrokomand i blokow powtorenij.
+
+    COND
+        - razre{aetsq wywod direktiw uslownoj translqcii  (IF,  ELSE,
+          ENDIF) i operatorow, ne  transliruemyh  po  uslowi`.  wywod
+          proizwoditsq, esli byl ustanowlen revim LIST.
+
+    NOCOND
+        - zapre}aetsq wywod direktiw uslownoj translqcii i operatorow
+          ne transliruemyh po uslowi` .
+
+                               - 7 -
+
+                         predw.0111-01 33 01
+
+
+      p_r_i_m_e_~_a_n_i_e.   direktiwy   uprawleniq   listingom    ne
+ obrabatywa`tsq, esli w komandnoj stroke byli ukazany sootwetstwu`}ie
+ perekl`~ateli.
+
+      esli  w  ishodnom   tekste   ne   ispolxzuetsq   ni   odna   iz
+ wy{epere~islennyh   direktiw    uprawleniq,    to    po    umol~ani`
+ predpolagaetsq revim:
+
+    $   LIST    GEN    COND
+
+
+
+
+    SAVE
+        - w  steke  zapominaetsq  teku}ij  revim  wedeniq   protokola
+          (LIST/NOLIST,  GEN/NOGEN,   COND/NOCOND).   revim   wedeniq
+          protokola ne izmenqetsq do sledu`}ej direktiwy  uprawleniq.
+          glubina steka - 16 urownej wloveniq.
+
+    RESTORE
+        - iz steka wosstanawliwaetsq revim wedeniq protokola.
+
+      direktiwy  SAVE  i  RESTORE  ispolxzu`tsq  w   slu~aqh,   kogda
+ trebuetsq izmenitx  revim  wedeniq  protokola  translqcii  otdelxnyh
+ ~astej ishodnoj programmy s posledu`}im wosstanowleniem  prerwannogo
+ revima.
+
+
+
+
+    TITLE ('stroka')
+        - ukazannaq stroka  pe~ataetsq  wo  wtoroj  stroke  zagolowka
+          stranicy. stroka, soderva}aq bolx{e 79 simwolow, usekaetsq.
+          tekst,  opredelqemyj   direktiwoj   TITLE,   pe~ataetsq   w
+          zagolowke kavdoj stranicy do poqwleniq sledu`}ej  direktiwy
+          TITLE. esli direktiwa  TITLE  ne  ispolxzuetsq,  to  wtoraq
+          stroka zagolowka pustaq.
+
+    EJECT
+        - na~inaet nowu` stranicu.  predydu}aq  stranica  dopolnqetsq
+          pustymi strokami do konca stranicy. esli w komandnoj stroke
+          ne ukazan perekl`~atelx /L, to dlina  stranicy  prinimaetsq
+          rawnoj 72 strokam.  esli  zadan  perekl`~atelx  /N:PAG,  to
+          direktiwa EJECT ignoriruetsq.
+
+
+
+
+
+
+   2.2.3.2. zadanie wlovennyh ishodnyh fajlow
+
+
+
+      dlq zadaniq wlovennyh ishodnyh  fajlow  ispolxzuetsq  direktiwa
+ uprawleniq INCLUDE:
+
+    INCLUDE (specifikaciq fajla)
+        - translqciq  teku}ego   ishodnogo   fajla   ostanawliwaetsq.
+          transliru`tsq  operatory  ishodnogo  teksta  iz  ukazannogo
+          fajla do wlovennoj direktiwy INCLUDE ili  do  konca  fajla.
+          posle konca  fajla  wozobnowlqetsq  translqciq  prerwannogo
+          ishodnogo  fajla.   urowenx   wloveniq   direktiw   INCLUDE
+          ograni~en tolxko razmerom swobodnoj dinami~eskoj pamqti.
+
+      specifikaciq   fajla   dolvna   sootwetstwowatx    CSI-formatu,
+ prinqtomu w operacionnoj sisteme rafos:
+
+      DEV: FILE.TYP
+
+ gde:
+
+    DEV:
+        - imq ustrojstwa. po umol~ani` DK:
+
+    FILE
+        - imq fajla.
+
+    .TYP
+        - tip fajla. po umol~ani` .M48.
+
+ wlovennye ishodnye fajly dolvny raspolagatxsq tolxko na  ustrojstwah
+ fajlowoj struktury: imq fajla sleduet obqzatelxno ukazywatx.
+
+      esli w specifikacii fajla obnaruvena o{ibka ili ukazannyj  fajl
+ ne najden, to registriruetsq  o{ibka  i  wwod  operatorow  ishodnogo
+ teksta prodolvaetsq iz teku}ego ishodnogo fajla.
+
+
+
+   2.2.3.3. sowmestimostx s drugimi translqtorami.
+
+
+
+      dlq sowmestimosti s drugimi translqtorami  s  qzyka  assemblera
+ mikro-|wm dopuskaetsq ispolxzowanie sledu`}ih direktiw uprawleniq:
+
+                               - 8 -
+
+                         predw.0111-01 33 01
+
+
+   DEBUG
+   MACROFILE (tekst)
+   MOD41
+   MODEBUG
+   NOMACROFILE
+   NOOBJECT
+   NOPAGING
+   NOPRINT
+   NOSYBOLS
+   NOXREF
+   OBJECT (tekst)
+   PAGELENGTH (tekst)
+   PAGEWIDTH (tekst)
+   PAGING
+   PRINT (tekst)
+   SYMBOLS
+   XREF
+
+      wse  wy{epere~islennye   direktiwy   uprawleniq   ignoriru`tsq.
+ funkcii, wozlovennye na nih w drugih translqtorah zada`tsq s pomo}x`
+ komandnoj stroki.
+
+      direktiwa  EOT  (indikaciq  konca  lenty)  w  ishodnom   module
+ ignoriruetsq.
+
+
+
+
+                    3. whodnye i wyhodnye dannye
+
+
+
+
+      programma  na  ishodnom  qzyke  movet  sostoqtx  iz  neskolxkih
+ modulej, kavdyj modulx transliruetsq nezawisimo i movet sostoqtx  iz
+ neskolxkih  ishodnyh   fajlow.   rezulxtatom   translqcii   qwlq`tsq
+ ob'ektnyj (ili zagruzo~nyj) modulx i fajl listinga.
+
+
+
+       3.1. ishodnyj modulx
+
+
+
+      ishodnyj   modulx,   transliruemyj   kross-assemblerom   MAC48,
+ predstawlqet soboj  tekstowyj  fajl,  soderva}ij  posledowatelxnostx
+ operatorow na qzyke assemblera mikro-|wm k1816we48.  opisanie  qzyka
+ priwedeno  w  dokumente  "sapr48.  assembler   mikro-|wm.   opisanie
+ qzyka.".
+
+      dlina   stroki   ishodnogo   modulq   (s    u~etom    wozmovnyh
+ makroras{irenij) ne dolvna prewy{atx 130 simwolow.
+
+
+
+
+
+
+       3.2. ob'ektnyj modulx
+
+
+
+      ob'ektnyj modulx sodervit tekst ishodnoj programmy  w  ma{innyh
+ kodah mikro-|wm k1816we48 i dopolnitelxnu` informaci`,  ispolxzuemu`
+ programmoj  redaktor  swqzej  LINK48  dlq   ob'edineniq   nezawisimo
+ transliruemyh modulej.
+
+      ob'ektnyj modulx qwlqetsq dwoi~nym fajlom i sostoit iz  zapisej
+ peremennoj dliny. ime`tsq zapisi pqti tipow:
+
+        - slowarx globalxnyh imen, sodervit sledu`}u` informaci`:
+               - globalxnye imena, opredelennye w ishodnom  module  i
+                 ispolxzuemye w drugih modulqh (ob}ie simwoly);
+               - globalxnye imena, ispolxzuemye  w  dannom  module  i
+                 opredelennye w drugih modulqh (wne{nie simwoly);
+               - imq modulq, wybiraetsq iz direktiwy uprawleniq TITLE
+                 i movet ne sowpadatx s imenem ob'ektnogo fajla;
+               - to~ka zapuska;
+
+        - konec slowarq globalxnyh imen;
+
+        - tekst programmy w ma{innyh  kodah  mikro-|wm,  operandy  ne
+          modificirowany i trebu`t dalxnej{ej nastrojki;
+
+        - slowarx  nastrojki,  sodervit  dannye  o   ~astqh   teksta,
+          trebu`}ih  izmeneniq   (nastrojki),   i   neobhodimye   dlq
+          nastrojki dannye;
+
+        - konec ob'ektnogo modulq.
+
+      dlina ob'ektnoj zapisi (bez zagolowka) ne prewy{aet 42 bajta.
+
+
+
+       3.3. zagruzo~nyj modulx
+
+
+
+      zagruzo~nyj modulx sodervit tekst ishodnoj programmy w ma{innyh
+ kodah mikro-|wm k1816we48.
+
+      zagruzo~nyj  modulx  qwlqetsq  dwoi~nym  fajlom  i  sostoit  iz
+ zapisej peremennoj dliny. w na~ale zapisi ukazywaetsq adres zagruzki
+ zapisi,  zatem  sleduet  tekst   zapisi   (ma{innye   kody).   dlina
+ zagruzo~noj zapisi (bez zagolowka) ne prewy{aet 42 bajta.
+
+                               - 9 -
+
+                         predw.0111-01 33 01
+
+
+       3.4. listing
+
+
+
+      listing predstawlqet soboj raspe~atku, soderva}u`  programmu  w
+ ishodnom i ob'ektnom wide, soob}eniq ob  o{ibkah,  tablicu  simwolow
+ polxzowatelq w alfawitnom porqdke, tablicu perekrestnyh ssylok.
+
+      listing  wywoditsq  po  stranicam,  zagolowok  kavdoj  stranicy
+ sostoit iz dwuh strok. w perwoj stroke ukazano:
+
+        - nazwanie i wersiq translqtora;
+        - wremq na~ala translqcii;
+        - teku}aq data;
+        - nomer stranicy w desqti~nom wide.
+
+ wtoraq stroka zagolowka sodervit nazwanie ishodnogo modulq, kak bylo
+ ukazano w  direktiwe  uprawleniq  TITLE.  esli  direktiwa  TITLE  ne
+ ispolxzowalasx, to |ta stroka pustaq.
+
+
+
+     3.4.1. rezulxtaty translqcii
+
+
+
+      w  na~ale  kavdoj  stranicy   translqcii   pe~ataetsq   stroka,
+ soderva}aq  nazwanie  polej  stroki  translqcii.   wywodnaq   stroka
+ translqcii razbita na polq, kavdoe pole na~inaetsq  s  fiksirowannoj
+ pozicii stroki:
+
+ 1
+        - kod o{ibki translqcii: esli w dannom  operatore  obnaruvena
+          o{ibka, to w dannoj pozicii razme}aetsq sootwetstwu`}aq  ej
+          litera, w protiwnom slu~ae  probel.  registriruetsq  tolxko
+          perwaq o{ibka w operatore.
+
+ 2
+        - probel
+
+ 3-16
+        - w  |tih  poziciqh  pe~ataetsq   polu~ennyj   w   rezulxtate
+          translqcii   operatora   ob'ektnyj   kod   ili    sluvebnaq
+          informaciq:
+
+        - dlq operatorow generiru`}ih ob'ektnyj kod:
+
+          3-6
+               - adres, priswoennyj perwomu  bajtu  ob'ektnogo  koda,
+                 pe~ataetsq w {estnadcateri~nom wide.
+
+          7
+               - probel.
+
+          8-9
+               - w |tih poziciqh raspe~atywaetsq w  {estnadcateri~nom
+                 wide perwyj bajt ob'ektnogo koda.
+
+
+
+
+
+
+          10-11
+               - wtoroj  bajt   ob'ektnogo   koda,   esli   bajt   ne
+                 generiruetsq, to - probely.
+
+          12-14
+               - probely.
+
+          15
+               - simwol "e", esli ob'ektnyj  kod  trebuet  dalxnej{ej
+                 nastrojki redaktorom swqzej, w  protiwnom  slu~ae  -
+                 probel.
+
+          16
+               - probel.
+
+        - sluvebnaq informaciq:
+
+          3-4
+               - probely.
+
+          5-8
+               - w |tih poziciqh raspe~atywaetsq w  {estnadcateri~nom
+                 wide  rezulxtat  wy~isleniq  wyravenij  -  operandow
+                 direktiw  ORG,  SET,  EQU,  END,  DS,  REPT,  IF.  w
+                 ostalxnyh slu~aqh - probely.
+
+          9-16
+               - probely.
+
+ 17
+        - probel, esli wwod proishodit iz ishodnogo modulq; esli wwod
+          proishodit iz fajlow, wkl`~ennyh  po  direktiwe  uprawleniq
+          INCLUDE,  w  |toj  pozicii  pe~ataetsq  desqti~noe   ~islo,
+          opredelq`}ee teku}ij urowenx wloveniq fajlow INCLUDE.
+
+ 18
+        - probel,  esli  wwod  proishodit  iz  ishodnogo  modulq,   w
+          protiwnom slu~ae simwol "=".
+
+ 19-23
+        - nomer operatora w desqti~nom wide.
+
+ 24
+        - priznak ras{ireniq makrokomandy: simwol "+" w |toj  pozicii
+          ozna~aet,  ~to  dannyj  operator   polu~en   w   rezulxtate
+          ras{ireniq makrokomandy; w protiwnom slu~ae probel.
+
+ 25 i dalee
+        - tekst transliruemogo operatora.  esli  tekst  operatora  ne
+          ume}aetsq  w  {irinu  stranicy,  to  on   prodolvaetsq   na
+          sledu`}ej stroke s pozicii 25, w poziciqh  1-24  pe~ata`tsq
+          probely.
+
+
+      p_r_i_m_e_~_a_n_i_e. esli direktiwy DW  i  DB  sodervat  spisok
+ operandow,  to  ob'ektnyj  kod  dlq  kavdogo  operanda  wywoditsq  w
+ otdelxnu` stroku. pri translqcii direktiw  DB,  ime`}ih  w  ka~estwe
+ operanda simwolxnu` stroku, ob'ektnyj kod raspe~atywaetsq w poziciqh
+
+                               - 10 -
+
+                         predw.0111-01 33 01
+
+
+ 8-15 i, pri neobhodimosti, prodolvaetsq na sledu`}u` stroku.
+
+      wywod rezulxtatow translqcii  operatorow  movet  podawlqtsq  wo
+ wremq dejstwiq perekl`~atelej /N:LIS, /N:GEN,  /N:CND  ili  direktiw
+ uprawleniq  NOLIST,  NOGEN,  NOCOND.  esli  w  operatore  obnaruvena
+ o{ibka, to stroka translqcii raspe~atywaetsq w l`bom slu~ae.
+
+      w prilovenii priwoditsq fragment stranicy translqcii.
+
+
+
+     3.4.2. tablica simwolow
+
+
+
+      w  tablicu  simwolow  wkl`~a`tsq  wse   simwoly,   opredelennye
+ polxzowatelem, a takve sozdannye  kross-assemblerom  pri  ras{irenii
+ makrokomand i blokow powtorenij: t.e. fakti~eskie parametry i metki,
+ zame}a`}ie  formalxnye  parametry  i  lokalxnye  metki.   formalxnye
+ parametry i lokalxnye metki, ispolxzuemye w opredelenii  makrokomand
+ i blokow powtorenij, w tablicu ne wkl`~a`tsq.
+
+      tablica simwolow ne wywoditsq,  esli  w  komandnoj  stroke  byl
+ zapre}en ee wywod.
+
+      tablica sostoit iz treh ~astej: tablicy ob}ih simwolow, tablicy
+ wne{nih simwolow i tablicy  simwolow  polxzowatelq.  kavdaq  tablica
+ wywoditsq po strokam, wse simwoly uporqdo~eny po alfawitu.
+
+      w  tablicu  ob}ih   simwolow   wkl`~a`tsq   globalxnye   imena,
+ opredelennye w dannom ishodnom module. oni  mogut  ispolxzowatxsq  w
+ drugih ishodnyh modulqh.  pered  wywodom  tablicy  propuskaetsq  dwe
+ stroki i pe~ataetsq nazwanie tablicy:
+
+ PUBLIC SYMBOLS
+        - ob}ie simwoly
+
+ zagolowok ne wywoditsq, esli w module ne opredeleno ni odnogo ob}ego
+ simwola.
+
+      format wywodnoj stroki tablicy (po poziciqm stroki):
+
+ 1-6
+        - imq  simwola,  wyrawniwaetsq  slewa  i  dopolnqetsq  sprawa
+          probelami.
+
+ 7-8
+        - probely.
+
+ 9-12
+        - zna~enie simwola w {estnadcateri~nom wide.
+
+ 13-14
+        - probely.
+
+ 15 i dalee
+        - powtorenie formata pozicij 1-14.
+
+
+
+
+
+
+      w  tablicu  wne{nih  simwolow  wkl`~a`tsq   globalxnye   imena,
+ ispolxzuemye, no ne  opredelennye  w  dannom  ishodnom  module.  oni
+ dolvny bytx opredeleny  w  drugom  ishodnom  module.  pered  wywodom
+ tablicy propuskaetsq dwe stroki i pe~ataetsq nazwanie tablicy:
+
+ EXTERNAL SYMBOLS
+        - wne{nie simwoly
+
+ zagolowok ne wywoditsq,  esli  w  module  ne  opredeleno  ni  odnogo
+ wne{nego simwola.
+
+      format wywodnoj stroki tablicy (po poziciqm stroki):
+
+ 1-6
+        - imq  simwola,  wyrawniwaetsq  slewa  i  dopolnqetsq  sprawa
+          probelami.
+
+ 7-10
+        - probely.
+
+ 11 i dalee
+        - powtorenie formata pozicij 1-10.
+
+
+      w tablicu  simwolow  wkl`~a`tsq  wse  simwoly,  ispolxzuemye  w
+ dannom module, za iskl`~eniem  makrokomand.  pered  wywodom  tablicy
+ propuskaetsq dwe stroki i pe~ataetq nazwanie tablicy:
+
+ USER SYMBOLS
+        - simwoly polxzowatelq
+
+      format wywodnoj stroki tablicy (po poziciqm stroki):
+
+ 1-6
+        - imq  simwola,  wyrawniwaetsq  slewa  i  dopolnqetsq  sprawa
+          probelami.
+
+ 7
+        - probel
+
+ 8-14
+        - w |tih poziciqh pe~ataetsq zna~enie simwola.
+
+        - dlq simwola ime`}ego ~islowoe zna~enie:
+
+          8
+               - probel.
+
+          9-12
+               - zna~enie simwola w {estnadcateri~nom wide.
+
+          13-14
+               - probely.
+
+        - dlq simwola ime`}ego zna~enie tipa "registr mikro-|wm":
+
+          8
+               - simwol "<".
+
+                               - 11 -
+
+                         predw.0111-01 33 01
+
+
+          9-13
+               - nazwanie registra mikro-|wm.
+
+          14
+               - simwol ">".
+
+        - dlq pro~ih simwolow:
+
+          8
+               - probel.
+
+          9-13
+               - "UNDEF" - dlq neopredelennogo simwola;
+               - "MULTY" - dlq mnogokratno opredelennogo;
+               - "EXTRN" - dlq wne{nego simwola.
+
+          14
+               - probel.
+
+ 15-16
+        - probely.
+
+ 17 i dalee
+        - powtorenie formata pozicij 1-16.
+
+
+      w prilovenii priwoditsq fragment tablicy simwolow.
+
+
+
+     3.4.3. tablica perekrestnyh ssylok
+
+
+
+      tablica   perekrestnyh   ssylok   sodervit   wse   simwoly    i
+ makrokomandy,     opredelennye     polxzowatelem     i     sozdannye
+ kross-assemblerom, i nomera operatorow ih ispolxzowaniq (opredeleniq
+ i ssylki na simwol). operatorami opredeleniq s~ita`tsq te operatory,
+ w kotoryh simwol poqwlqetsq w ka~estwe metki (ili imeni w direktiwah
+ EQU, SET, MACRO) ili w ka~estwe operanda direktiw  EXTRN  i  PUBLIC.
+ ispolxzowanie simwola wo wseh ostalxnyh slu~aqh s~itaetsq ssylkoj na
+ simwol. esli  wo  wremq  translqcii  operatora  formirowanie  stroki
+ translqcii bylo zapre}eno perekl`~atelqmi /N:LIS, N:GEN, /N:CND  ili
+ direktiwami  uprawleniq  NOLIST,  NOGEN,  NOCOND,  TO  nomer   |togo
+ operatora w tablicu ne wkl`~aetsq.
+
+      tablica perekrestnyh ssylok wywoditsq, esli w komandnoj  stroke
+ byl razre{en ee wywod.
+
+      tablica perekrestnyh ssylok sostoit  iz  dwuh  ~astej:  tablicy
+ simwolow i tablicy  makrokomand.  w  oboih  tablicah  wywod  nomerow
+ operatorow ispolxzowaniq kavdogo simwola proizwoditsq w odnu stroku.
+ wse  simwoly  uporqdo~eny  po  alfawitu,  nomera  operatorow  -   po
+ wozrastani`.
+
+      pered wywodom tablicy perekrestnyh ssylok simwolow propuskaetsq
+ dwe stroki i pe~ataetsq zagolowok tablicy:
+
+
+
+
+
+
+ SYMBOL CROSS REFERENCE
+        - tablica perekrestnyh ssylok simwolow
+
+      format wywodnoj stroki tablicy (po poziciqm stroki):
+
+ 1-6
+        - imq  simwola,  wyrawniwaetsq  slewa  i  dopolnqetsq  sprawa
+          probelami.
+
+ 7-8
+        - probely.
+
+ 9-13
+        - porqdkowyj   nomer   operatora,   w   kotorom    sodervitsq
+          opredelenie simwola ili ssylka na nego.
+
+ 14
+        - probel, esli operator sodervit ssylku  na  simwol;  esli  w
+          dannom     operatore     simwol      opredelqetsq      (ili
+          pereopredelqetsq), to w |toj pozicii pe~ataetsq simwol "#".
+
+ 15-16
+        - probely.
+
+ 17 i dalee
+        - powtorenie formata pozicij 9-16. esli  dlq  wywoda  nomerow
+          wseh operatorow ispolxzowaniq dannogo simwola  nedostato~no
+          odnoj stroki, to wywod prodolvaetsq  na  sledu`}ej  stroke,
+          na~inaq s pozicii 9.
+
+
+      pered   wywodom   tablicy   perekrestnyh   ssylok   makrokomand
+ propuskaetsq dwe stroki i pe~ataetsq zagolowok tablicy:
+
+ MACROS CROSS REFERENCE
+        - tablica perekrestnyh ssylok makrokomand
+
+ zagolowok  tablicy  ne  pe~ataetsq,  esli  w  ishodnom   module   ne
+ ispolxzowalisx makrokomandy. format |toj tablicy analogi~en  formatu
+ tablicy perekrestnyh ssylok simwolow.
+
+      w prilovenii priwoditsq fragment tablicy perekrestnyh ssylok.
+
+
+
+     3.4.4. zawer{enie listinga
+
+
+
+      posle zawer{eniq wywoda wseh tablic w listing wywoditsq stroka,
+ w kotoroj ukazano ob}ee ~islo o{ibok translqcii  w  dannom  ishodnom
+ module. zatem wywoditsq  kopiq  komandnoj  stroki,  w  kotoroj  byli
+ ukazany specifikacii whodnyh i wyhodnyh fajlow.
+
+                               - 12 -
+
+                         predw.0111-01 33 01
+
+
+                       4. soob}eniq programmy
+
+
+
+
+      posle zawer{eniq translqcii kross-assembler  MAC48  wywodit  na
+ terminal stroku, w kotoroj ukazano ob}ee ~islo o{ibok  translqcii  w
+ transliruemom ishodnom module.
+
+      esli w komandnoj stroke ne byl ukazan fajl listinga  i  ime`tsq
+ o{ibki translqcii,  to  na  terminal  wywoditsq  stroka  translqcii,
+ soderva}aq o{ibku. format  |toj  stroki  analogi~en  formatu  stroki
+ translqcii.
+
+      na terminal tak ve wywodqtsq soob}eniq ob o{ibkah wypolneniq.
+
+
+
+       4.1. soob}eniq ob o{ibkah translqcii
+
+
+
+      o{ibki   translqcii,   obnaruvennye   w   ishodnoj   programme,
+ otme~a`tsq w listinge sootwetstwu`}ej literoj, kotoraq pe~ataetsq  w
+ perwoj pozicii stroki translqcii. dlq isprawleniq o{ibok  neobhodimo
+ wnesti   izmeneniq   w   ishodnu`   programmu    i    powtorno    ee
+ protranslirowatx.
+
+      dalee opisany pri~iny wozniknoweniq o{ibok i  litery,  kotorymi
+ otme~a`tsq |ti o{ibki:
+
+ A
+        - nedopustimoe ispolxzowanie wne{nego simwola w wyravenii.
+        - sli{kom  slovnoe  wyravenie   s   ispolxzowaniem   wne{nego
+          simwola. ob'ektnyj  kod  sgenerirowan,  no  ne  movet  bytx
+          nastroen redaktorom swqzej.
+
+ B
+        - neprawilxnoe raspolovenie skobok ili kawy~ek.
+
+ D
+        - o{ibka sme}eniq: adres q~ejki  nazna~eniq  pri  perehode  w
+          predelah stranicy wyhodit za predely stranicy.
+
+ E
+        - o{ibka  w  wyravenii:  propu}en   operator,   operand   ili
+          razdelitelx.
+        - sli{kom slovnoe wyravenie.
+
+ I
+        - nedopustimaq litera:
+               - operator sodervit  nedopustimu`  literu  koda  ASCII
+                 (zamenqetq na "?");
+               - ispolxzowanie russkoj litery wne strokowoj konstanty
+                 ili kommentariq;
+               - nedopustimaq   cifra   w   konstante   dlq   dannogo
+                 osnowaniq;
+               - neraspoznano osnowanie konstanty.
+
+
+
+
+
+
+ M
+        - mnogokratnoe opredelenie:
+               - simwol opredelqetsq nedopustimym obrazom iz-za bolee
+                 rannego  postoqnnogo  opredeleniq,  pereopredelqtxsq
+                 mogut  simwoly,  opredelqemye   tolxko   s   pomo}x`
+                 direktiw SET ili MACRO.
+               - ispolxzowanie mnogokratno opredelennogo simwola.
+
+ N
+        - o{ibka wloveniq:
+               - operatory uslownoj translqcii i(ili)  razdeliteli  w
+                 tele makrokomandy wloveny newerno;
+               - direktiwy ENDM, EXITM, LOKAL ispolxzu`tsq wne teksta
+                 makroopredelenij;
+               - otsutstwuet ili newerno ispolxzowana direktiwa END.
+
+ P
+        - o{ibka   prohoda:   zna~enie   simwola   izmenilosx   mevdu
+          prohodami.
+
+ Q
+        - o{ibka sintaksisa.
+
+ R
+        - o{ibka perepolneniq:
+               - sodervimoe  s~et~ika  adresa  prewysilo   dwenadcatx
+                 razrqdow;
+               - zna~enie konstanty prewy{aet maksimalxno  dopustimoe
+                 zna~enie;
+               - perepolnenie ili delenie na 0  wo  wremq  wy~isleniq
+                 wyraveniq;
+
+ S
+        - o{ibka w specifikacii fajla w direktiwe INCLUDE:
+               - nedopustimoe ustrojstwo;
+               - fajl ne najden.
+
+ U
+        - neopredelennyj simwol: ispolxzuemyj simwol ne byl opredelen
+          polxzowatelem.
+
+ V
+        - nedopustimoe zna~enie: zna~enie wyhodit za  dopustimye  dlq
+          dannoj komandy predely.
+
+ X
+        - nedopustimyj operand: operand ne ispolxzuetsq  s  ukazannoj
+          komandoj.
+
+ Z
+        - w revime sozdaniq zagruzo~nogo  modulq  direktiwy  EXTRN  i
+          PUBLIC ignoriru`tsq.
+
+
+      p_r_i_m_e_~_a_n_i_e.  esli  w  operatore   dopu}eno   neskolxko
+ o{ibok, TO registriruetsq tolxko perwaq o{ibka.
+
+                               - 13 -
+
+                         predw.0111-01 33 01
+
+
+       4.2. soob}eniq ob o{ibkah wypolneniq
+
+
+
+      soob}eniq ob o{ibkah wypolneniq wywodqtsq  na  terminal.  posle
+ wywoda  soob}enij,   na~ina`}ihsq   s   "MAC48-F-'   kross-assembler
+ prekra}aet translqci`, wywodit na  terminal  simwol  "*"  i  ovidaet
+ wwoda nowoj komandnoj stroki.  posle  wywoda  soob}enij  ob  o{ibkah
+ wypolneniq, na~ina`}ihsq s "MAC48-W-' translqciq prodolvaetsq.
+
+      wo wremq wywoda soob}enij ob o{ibkah wypolneniq wmesto "DEV:" i
+ "DEV:FILE.TYP"  pe~ataetsq  konkretnoe   nazwanie   ustrojstwa   ili
+ specifikaciq fajla.
+
+      dalee priwodqtsq soob}eniq ob o{ibkah, pri~iny ih wozniknoweniq
+ i dejstwiq polxzowatelq w slu~ae o{ibki:
+
+?MAC48-F-BAD SWITCH
+      (newernyj perekl`~atelx)
+
+ pri~ina:
+        - w komandnoj stroke obnaruven nedopustimyj perekl`~atelx ili
+          nedopustimoe zna~enie perekl`~atelq.
+
+ dejstwiq:
+        - wwesti prawilxnu` komandnu` stroku.
+
+
+?MAC48-F-DEVICE IS FUL:  DEV:
+      (ustrojstwo perepolneno)
+
+ pri~ina:
+        - na ustrojstwe,  prednazna~ennom  dlq  wywoda,  nedostato~no
+          mesta dlq razme}eniq wywodnogo fajla.
+        - katalog ustrojstwa, prednazna~ennogo dlq odnogo iz wywodnyh
+          fajlow, perepolnen i ne imeet mesta dlq razme}eniq zapisi o
+          nowom fajle;
+
+ dejstwiq:
+        - oswoboditx mesto  na  ustrojstwe  ili  ispolxzowatx  drugoe
+          ustrojstwo wywoda.
+
+
+?MAC48-F-DYNAMIC MEMORY OVERFLOW
+      (perepolnenie dinami~eskoj pamqti)
+
+ pri~ina:
+        - w  swobodnoj  operatiwnoj  pamqti  nedostato~no  mesta  dlq
+          razme}eniq wseh tablic translqcii.
+
+ dejstwiq:
+        - otkazatxsq ot wedeniq tablicy perekrestnyh ssylok;
+        - dlq  wwoda  i  wywoda  fajlow  ispolxzowatx   tolxko   odno
+          ustojstwo, velatelxno DK: ;
+        - translirowatx  ishodnu`  programmu  dwavdy:  otdelxno   dlq
+          polu~eniq listinga i dlq polu~eniq ob'ektnogo modulq;
+        - umenx{itx ~islo i/ili wlovennostx ispolxzuemyh  makrokomand
+          i blokow powtorenij i iskl`~itx iz nih kommentarii;
+
+
+
+
+
+
+        - umenx{itx urowenx wloveniq direktiw uprawleniq INCLUDE;
+        - razbitx  ishodnu`   programmu   na   neskolxko   ~astej   i
+          translirowatx ih razdelxno.
+
+
+?MAC48-F-FILE NOT FOUND:  DEV:FILE.TYP
+      (fajl ne najden)
+
+ pri~ina:
+        - fajl, ukazannyj w komandnoj stroke w ka~estwe wwodnogo,  ne
+          najden.
+
+ dejstwiq:
+        - proweritx su}estwuet li fajl s ukazannym  imenem  i  wwesti
+          prawilxnu` komandnu` stroku.
+
+
+?MAC48-F-ILLEGAL COMMAND
+      (nedopustimaq komanda)
+
+ pri~ina:
+        - w komandnoj stroke  obnaruvena  sintaksi~eskaq  o{ibka  ili
+          ukazano  bolee  {esti  whodnyh  fajlow  ili  dwuh  wyhodnyh
+          fajlow.
+
+ dejstwiq:
+        - wwesti prawilxnu` komandnu` stroku.
+
+
+?MAC48-F-ILLEGAL DEVICE:  DEV:
+      (nedopustimoe ustrojstwo)
+
+ pri~ina:
+        - ustrojstwo, ukazannoe w komandnoj stroke, ne  obsluviwaetsq
+          operacionnoj sistemoj rafos.
+
+ dejstwiq:
+        - w komandnoj stroke ukazatx dopustimoe imq ustrojstwa.
+
+
+?MAC48-F-READ ERROR FROM  DEV:FILE.TYP
+      (o{ibka ~teniq)
+
+ pri~ina:
+        - o{ibka wo wremq operacii  ~teniq  ishodnogo  fajla,  w  tom
+          ~isle i fajla, ukazannogo w direktiwe INCLUDE.
+
+ dejstwiq:
+        - ispolxzowatx drugoe ustrojstwo wwoda.
+
+
+?MAC48-F-WRITE ERROR TO  DEV:FILE.TYP
+      (o{ibka zapisi)
+
+ pri~ina:
+        - o{ibka wo wremq operacii zapisi na ustrojstwo wywoda.
+
+                               - 14 -
+
+                         predw.0111-01 33 01
+
+
+ dejstwiq:
+        - ispolxzowatx drugoe ustrojstwo wywoda.
+
+?MAC48-W-ALL EXTRN/PUBLIC IGNORED
+      (wse wne{nie i ob}ie ignoriru`tsq)
+
+ pri~ina:
+        - komandnaq stroka sodervit ukazanie o sozdanii  zagruzo~nogo
+          modulq, a w tekste ishodnogo  modulq  obnaruveny  direktiwy
+          EXTRN ili PUBLIC. wse direktiwy EXTRN i PUBLIC ignoriru`tsq
+          i otme~a`tsq kodom o{ibki Z w listinge.
+
+ dejstwiq:
+        - otmenitx revim sozdaniq zagruzo~nogo modulq  ili  iskl`~itx
+          direktiwy  EXTRN  i  PUBLIC  iz  ishodnogo  modulq.  modulx
+          neobhodimo stranslirowatx e}e raz.
+
+?MAC48-W-FILE NOT FOUND:  DEV:FILE.TYP
+      (fajl ne najden)
+
+ pri~ina:
+        - fajl, ukazannyj w direktiwe uprawleniq INCLUDE, ne najden.
+
+ dejstwiq:
+        - o{ibo~naq direktiwa INCLUDE ignoriruetsq i otme~aetsq kodom
+          o{ibki S. proweritx su}estwuet li fajl s ukazannym  imenem,
+          isprawitx o{ibku i stranslirowatx modulx e}e raz.
+
+?MAC48-W-ILLEGEL COMMAND
+      (nedopustimaq komanda)
+
+ pri~ina:
+        - o{ibka w specifikacii fajla w direktiwe INCLUDE.
+
+ dejstwiq:
+        - o{ibo~naq direktiwa INCLUDE ignoriruetsq i otme~aetsq kodom
+          o{ibki S.  neobhodimo  isprawitx  o{ibku  i  stranslirowatx
+          modulx e}e raz.
+
+?MAC48-W-ILLEGAL DEVICE:  DEV:
+      (nedopustimoe ustrojstwo)
+
+ pri~ina:
+        - ustrojstwo, ukazannoe w direktiwe  uprawleniq  INCLUDE,  ne
+          obsluviwaetsq operacionnoj sistemoj rafos.
+
+ dejtswiq:
+        - o{ibo~naq direktiwa INCLUDE ignoriruetsq i otme~aetsq kodom
+          o{ibki S.  neobhodimo  isprawitx  o{ibku  i  stranslirowatx
+          modulx e}e raz.
+
+
+?MAC48-W-TOO MANY EXTERNAL SYMBOLS
+      (sli{kom mnogo wne{nih simwolow)
+
+ pri~ina:
+        - wo wremq wywoda w ob'ektnyj fajl  slowarq  globalxnyh  imen
+          obnaruveno  ~to  ~islo  wne{nih  simwolow  prewy{aet   255.
+
+
+
+
+
+
+          nekotorye  wne{nie  simwoly  w  listinge   otme~a`tsq   kak
+          neopredelennye (kod o{ibki U).
+
+ dejstwiq:
+        - umenx{itx ~islo  wne{nih  simwolow  ispolxzuemyh  w  dannom
+          ishodnom module. modulx neobhodimo stranslirowatx e}e raz.
+
+                               - 15 -
+
+                         predw.0111-01 33 01
+
+
+                                                     prilovenie
+
+
+
+
+
+
+
+
+
+
+
+
+                   1. fragment stranicy translqcii
+
+
+
+
+
+k1816we48 CROSS-ASSEMBLER, MAC48 VA2-01,    6-OCT-84 01:08:13  PAGE
+
+
+  LOC  OBJ         SEQ          SOURSE STATEMENT
+
+    0020              1 TIMERS  EQU     020H
+    0021              2 TIMERM  EQU     021H
+    0022              3 CLMIN   EQU     022H
+    0023              4 CLHOUR  EQU     023H
+    0024              5 CLSEC   EQU     024H
+    0025              6 TIME1   EQU     025H
+    0026              7 TIME2   EQU     026H
+    0027              8 BLINK   EQU     027H
+    0028              9 ICNTH   EQU     028H
+    0029             10 ICNTL   EQU     029H
+    002A             11 CNLWRD  EQU     02AH
+    002B             12 KWGHT   EQU     02BH
+                     13 ALARM   SET     P7
+                     14
+                     15         EXTRN   P?TIK,P?SEK,P?MIN,P?HOU
+                     16
+    0007             17         ORG     07H
+                     18
+                     19         ;podprogramma obrabotki  prerywanij
+  0007 65            20         STOP    TCNT
+  0008 23F7          21         MOV     A,#0F7H
+  000A 62            22         MOV     T,A     ;perezagruzka  tajmer
+  000B B829          23         MOV     R0,#ICNTL
+  000D F0            24         MOV     A,@R0
+  000E 0301          25         ADD     A,#1    ;prira}enie  ml. ~ast
+  0010 55            26         STRT    T       ;zapusk  tajmera
+  0011 A0            27         MOV     @R0,A
+  0012 B928          28         MOV     R1,#ICNTH
+  0014 F1            29         MOV     A,@R1
+  0015 1300          30         ADDC    A,#0
+  0017 A1            31         MOV     @R1,A
+  0018 D303          32         XRL     A,#03H
+U 001A 9600          33         JNZ     OUTCHA  ; perehod,esli s~et~i
+  001C F0            34         MOV     A,@R0
+
+
+
+
+
+
+  001D D3E8          35         XRL     A,#0E8H
+U 001F 9600          36         JNZ     OUTCHA
+  0021 93            37         RETR
+  0022 64            38 CTABL:  DB      100,60,60,24
+  0023 3C
+  0024 3C
+  0025 18
+  0026 0000   E      39 STABL:  DW      P?TIK,P?SEC,P?MIN,P?HOU
+U 0028 0000
+  002A 0000   E
+  002C 0000   E
+  002E 706E7774      40 PDAYS:  DB      'pnwtsr~tptsbws'
+       73727E74
+       70747362
+       7773
+
+
+
+
+
+
+
+                    2. fragment tablicy simwolow
+
+
+
+
+PUBLIC SYMBOLS
+INTER1  0100  RESTOR  017A  SAVE    013C
+
+
+EXTERNAL SYMBOLS
+BASE      IN?SYM    OUT1      OUT2
+
+
+USER SYMBOLS
+??0001  0204    ??0002  020E    ??0003  0206    ??0004  0226
+??0005  0233    ??0006  0228    ALARM  <P7   >  BASE    EXTRN
+COUN    MULTY   COUNT   000C    ERFLAG <F1   >  IN?SYM  EXTRN
+INTER0  UNDEF   INTER1  0100    INTER2  0120    INTREG <RB1  >
+OUT1    EXTRN   OUT2    EXTRN   RESTOR  017A    SAVE    013C
+SOBCNT <R7   >  TIMER  <TCNTI>
+
+                               - 16 -
+
+                         predw.0111-01 33 01
+
+
+               3. fragment tablicy perekrestnyh ssylok
+
+
+
+
+
+SYMBOL CROSS REFERENCE
+ALARM      49#     50      50      50      51      51      51
+           66#     67      68      69      70      71      73
+           73      75      76      77      78      78      78
+           78
+SOBCNT     53#     54      55      56      57      58      59
+           75      77      78      78
+TIMER      42#     48      48      48      49      87      87#
+           88      88      88      89     127     127#    128
+          128     128     129     167     167#    168     168
+          168     169     207     207#    208     208     208
+          209     247     247#    248     248     248     249
+          287     287#    288     288     288     289     327
+          327#    328     328     328     329     338     338#
+
+
+MACROS CROSS REFERENCE
+OUTNUM    120#    125     132     221     344     449
+OUTSEG    177#    211     323

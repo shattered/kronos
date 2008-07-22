@@ -1,0 +1,59 @@
+:HARD_ERR
+        [ CALL ADR=DEC_PC ]
+:HARD_ERR1
+        [ bus_B=M RESET_HARD_ERR ]
+        [ CONST->R6 D=3 ]
+        [ GOTO ADR=SYS_TRAP ]
+
+:REQUEST
+        [ CALL ADR=DEC_PC ]
+        [ bus_B=M IDLE_OFF ]
+        [ GOTO ADR=TRAP41 ]
+
+:DEBUG  [ CALL ADR=DEC_PC ]
+        [ bus_B=M RESET_DEBUG ]
+        [ CONST->R6 D=0B ]
+        [ GOTO ADR=SYS_TRAP ]
+
+:TIME   [ CALL ADR=DEC_PC ]
+        [ CALL ADR=CHECK_HALT ]
+        [ ALU=A+1 bus_A=RW_Time ]
+        [ CALL ADR=REFRESH ]
+        [ ALU=A_AND_B bus_A=M CONST D=2 FLAG=Z ]
+        [ GO_FALSE ADR=TIME_1 ]
+:TIME_2 [ FLAG=ZERO FINISH ]
+:TIME_1 [ ALU=A-B bus_A=Time CONST D=14 FLAG=CARRY ]
+        [ GO_FALSE ADR=TIME_2 ]
+        [ ALU=A-B bus_A=Time CONST D=0A0 FLAG=CARRY ]
+        [ GO_FALSE ADR=TIME_3 ]
+        [ CONST->Time D=14 ]
+:TIME_3 [ ALU=A-B bus_A=RW_Time CONST D=14 ]
+        [ CONST->R6 D=1 ]
+        [ GOTO ADR=SYS_TRAP ]
+
+:ACL    [ CALL ADR=DEC_PC ]
+        [ bus_B=M RESET_ACL ]
+        [ CONST->R6 D=4   ]
+        [ GOTO ADR=SYS_TRAP ]
+
+:CNSL   [ GOTO ADR=BUS_INT ]
+
+:BUS_INT
+        [ CALL ADR=DEC_PC ]
+        [ bus_B=WR_R6 RD_VECTOR ]
+        [ ALU=ASR(A) bus_A=RW_R6 ]
+        [ ALU=ASR(A) bus_A=RW_R6 ]
+        [ ALU=A_AND_B bus_A=RW_R6 CONST D=3F ]
+        [ GOTO ADR=SYS_TRAP ]
+
+:REQ0=0FF8
+        [ GOTO ADR=BUS_INT  ]
+:REQ1   [ GOTO ADR=HARD_ERR ]
+:REQ2   [ GOTO ADR=CNSL     ]
+:REQ3   [ GOTO ADR=ACL      ]
+:REQ4   [ GOTO ADR=TIME     ]
+:REQ5   [ GOTO ADR=DEBUG    ]
+:REQ6   [ GOTO ADR=REQUEST  ]
+:REQ7   [ GOTO ADR=HARD_ERR ]
+$
+

@@ -1,0 +1,9 @@
+MODULE t; (*  07-May-91. (c) KRONOS *)
+
+FROM SYSTEM      IMPORT ADR;
+
+VAR a: POINTER TO RECORD e,f: DYNARR OF POINTER TO INTEGER END; i: INTEGER;
+
+BEGIN
+  i:=a^.f[i]^;
+END t.

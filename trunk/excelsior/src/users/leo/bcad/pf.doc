@@ -1,0 +1,11 @@
+pfed:
+
+e   -  exit & save char in model
+esc -  exit without save char in model
+ins -  begin drawning
+del -  end drawning
+space - vertex in drawning
++     up   propW
+'-'   down propW
+r/R   -refresh edited char
+

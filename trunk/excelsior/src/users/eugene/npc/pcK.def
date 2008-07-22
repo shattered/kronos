@@ -1,0 +1,530 @@
+DEFINITION MODULE pcK; (* Ned 28-Mar-91. (c) KRONOS *)
+
+(* Kernel *)
+
+IMPORT  SYSTEM;
+
+CONST
+  max_name = 23;
+
+TYPE
+  STRUCT = POINTER TO struct_rec;
+  OBJECT = POINTER TO object_rec;
+  NODE   = POINTER TO node_rec;
+  NAME   = ARRAY [0..max_name] OF CHAR;
+  SET32  = SET OF [0..31];
+  VALUE  = RECORD
+    n : LONGINT;           (* for SCALARs *)
+    r : POINTER TO RECORD  (* for other types *)
+      CASE : INTEGER OF
+        |0: r  : REAL;
+        |1: lr : LONGREAL;
+        |2: b  : BYTE;
+        |3: s8 : SET OF [0..7];
+        |4: sc : SHORTCARD;
+        |5: s32: SET32;
+      END;
+    END;
+  END;
+
+  Form   = ( invtype, undef,
+             shortIC, shortint, shortcard, IC, integer, cardinal, longint,
+             real, longreal,
+             boolean, char, bitset, byte, word, addr, niltype,
+             range, enum, opaque, pointer, set, proctype,
+             array, vector, array_of, dynarr, record
+           );
+  Forms  = SET OF Form;
+
+CONST
+  INTs    = Forms{shortIC,shortint,IC,integer,longint};
+  CARDs   = Forms{shortIC,shortcard,IC,cardinal};
+  WHOLEs  = INTs+CARDs;
+  REALs   = Forms{real,longreal};
+  NUMs    = WHOLEs+REALs;
+  SCALARs = WHOLEs+Forms{boolean,char,enum,byte,word,range};
+  BYTEs   = Forms{char,shortint,shortcard,byte,shortIC};
+  ARRs    = Forms{vector,array,array_of,dynarr};
+  SETs    = Forms{bitset,set};
+
+TYPE
+  struct_rec= RECORD
+    mode: Form;
+    tags: BITSET;
+    mno : SHORTINT;
+    obj : OBJECT;
+    next: OBJECT;
+    link: OBJECT;
+    locs: OBJECT;
+    base: STRUCT;
+    inx : STRUCT;
+    size: LONGINT;   (* для динаров размер дескриптора *)
+    n   : LONGINT;
+    m   : LONGINT;
+    ref : LONGINT;   (* номер в симфайле *)
+    pos : LONGINT;   (* позиция в тексте *)
+    adr : LONGINT;   (* for back-end     *)
+  END;
+
+CONST (* modes for objects & nodes *)
+  inv      = 0;
+  var      = 1;
+  varpar   = 2;
+  varseq   = 3;
+  seq      = 4;
+  proc     = 5;
+  xproc    = 6;
+  iproc    = 7;
+  cproc    = 8;
+  cons     = 9;
+  type     =10;
+  sproc    =11;
+  sfunc    =12;
+  field    =13;
+  method   =14;
+  module   =15;
+  header   =16;
+
+  VARs     = {var,varpar,seq,varseq};
+  PROCs    = {proc,xproc,iproc,cproc};
+
+(* only for nodes: *)
+  index    =20;
+  binary   =21;
+  unary    =22;
+  deref    =23;
+  guard    =24;
+  eguard   =25;
+  value    =26;  (* for literals *)
+  aggregate=27;
+  sequence =28;
+  pair     =29;  (* supplementary node [a..b] *)
+  node     =30;  (* supplementary node l,r    *)
+  char2str =31;  (* type transfer from char to string *)
+
+  call     =34;
+  assign   =35;
+  while    =36;
+  repeat   =37;
+  loop     =38;
+  exit     =39;
+  return   =40;
+  for      =41;
+  with     =42;
+  wguard   =43;  (* oberon guard with *)
+  if       =44;
+  ifelse   =45;
+  case     =46;
+  caselse  =47;
+  casedo   =48;
+  inc      =49;
+  dec      =50;
+  incl     =51;
+  excl     =52;
+  new      =53;
+  dispose  =54;
+  resize   =55;
+  halt     =56;
+  assert   =57;
+  origin   =58;
+  copy     =59;
+  dcopy    =60;
+  move     =61;
+
+  inittd   =69;
+  free     =70;         (* for extensions *)
+
+CONST (* subclass in node *)
+
+  bits    = 1;
+  bytes   = 2;
+  size    = 3;
+  high    = 4;
+  len     = 5;
+  max     = 6;
+  min     = 7;
+  is      = 8;
+
+  abs     =10;
+  adr     =11;
+  cap     =12;
+  chr     =13;
+  conv    =14;
+  typetran=15;
+  odd     =16;
+  not     =17;
+  rcheck  =18;
+  compl   =19;          (* set complement *)
+
+  ash     =22;
+  equ     =23;
+  neq     =24;
+  lss     =25;
+  leq     =26;
+  gtr     =27;
+  geq     =28;
+  in      =29;
+  mul     =30;
+  div     =31;
+  mod     =32;
+  slash   =33;
+  rem     =34;
+  plus    =35;
+  minus   =36;
+  and     =37;
+  or      =38;
+  xor     =39;
+  bic     =40;
+  cand    =41;
+  cor     =42;
+  rol     =43;
+  ror     =44;
+  concat  =45;          (* strings concatenation *)
+
+CONST   (* object & struct tags: *)
+  RO        = 0;  (* read only  *)
+  forward   = 1;  (* forward declaration *)
+  exported  = 2;
+  RO_export = 3;
+  redefine  = 4;  (* for methods *)
+  external  = 5;
+
+TYPE
+  Mode       = [0..99];
+  Sub        = [0..99];
+  object_rec = RECORD
+    mode : Mode;
+    name : NAME;
+    l,r  : OBJECT;
+    next : OBJECT;
+    type : STRUCT;
+    tags : BITSET;
+    scope: INTEGER;
+    adr  : LONGINT;   (* for back-end      *)
+    inx  : LONGINT;   (* for back-end      *)
+    head : OBJECT;    (* for proc & module *)
+    val  : VALUE;
+    pos  : LONGINT;   (* text position     *)
+  END;
+  node_rec   = RECORD
+    mode: Mode;
+    sub : Sub;
+    next: NODE;
+    type: STRUCT;
+    obj : OBJECT;
+    pos : LONGINT;                 (* text position *)
+    CASE :INTEGER OF
+      |1: l,r: NODE;
+      |2: a,b: LONGINT;            (* for pair         *)
+      |3: val: VALUE;              (* for cons & value *)
+    END;
+  END;
+
+(*----------------------------------------------------------------*)
+
+VAR
+  null_object: object_rec;
+  null_struct: struct_rec;
+  null_node  : node_rec;
+
+(***************************************************************
+
+                       ПРЕДСТАВЛЕНИЕ ТИПОВ
+
+size - размер типа. Для стандартных типов инициализируется
+       значениями из pcSystem. Для остальных типов =-1.
+ref  - номер типа в симфайле.
+obj  - ссылка на объект для именованного типа, иначе NIL.
+mno  - номер модуля в котором описан тип.
+pos  - позиция в тексте описания типа.
+adr  - поле для генератора (не используется генератором).
+n,m  - универсальные поля, используемые по разному для разных типов.
+
+             base
+range     базовый тип           n=min     m=max
+pointer   базовый тип
+set       базовый тип
+record    базовый тип           next - список полей
+                                link - список методов
+                                locs - дерево полей
+                                n    - уровень расширения
+                                m    - число методов
+enum                            n=0    m=max element
+                                next - список констант
+opaque
+proctype  тип результата        next - список параметров
+array     тип элемента          inx  - тип индекса
+vector    тип элемента          n    - длина (число элементов)
+array_of  тип элемента          n    - число измерений
+dynarr    тип элемента          n    - число измерений
+
+Представление вариантной записи:
+
+Все поля связаны в список.
+В месте вариантной части вставляется объект вида head.
+head^.l = NIL, если тэг анонимный
+head^.l = field, если тэг нормальное поле.
+
+head^.r - указывает список заголовков для каждого
+варианта.
+
+RECORD
+  a
+  CASE b: OF
+    |     c,d
+    |     e
+  ELSE    f
+  END
+  g
+END;
+
+--> a --> head -> g
+         /    \
+        b      head  -> head     -> head
+                 \          \           \
+                  f          e           c -> d
+
+----------------------------------------------------------------
+
+     Для    объектов    вида   процедура   и   модуль   заводится
+дополнительный объект вида header. Этот объект содержит ссылку на
+header  объемлющего блока (^.l), на корень дерева локалов (^.r) и
+на  список объектов (^.next). Дерево локалов содержит все видимые
+локальные  объекты.  В список объектов завязаны типы, константы и
+переменные,  а также кодовые процедуры и процедуры у которых было
+предварительное описание.
+
+              l         r          next       head
+   header:  previous   locs       object      owner
+                       tree        list
+
+     Список объектов содержит объекты в том порядке, в котором их
+надо размещать:
+
+для модулы : все объекты в порядке описания;
+для оберона: процедуры в лексикографическом порядке.
+             остальные в порядке описания,
+
+для модуля:  head^.adr   - key (def time)
+             head^.scope - внешний номер
+             mod^.scope  - внешний номер
+             mod^.adr    - может быть использован при генерации
+
+        head             next
+module -------> header  -----> список объектов
+
+Представление методов.
+
+Метод  представлен  двумя объектами. Один объект - это нормальная
+процедура,  другой объект с видом method соответствует элементу в
+таблице методов. Процедуры провязаны в список объектов модуля для
+того,  чтобы  обеспечить  корректную  их нумерацию. Методы каждой
+записи  связаны  в список record^.link. Признак redefine у метода
+означает,  что  это  переопределение  метода из базовой записи и,
+следовательно,  номер  в  таблице  должен быть взят у предыдущего
+метода.
+
+----------------------------------------------------------------
+              ПРЕДСТАВЛЕНИЕ СИНТАКСИЧЕСКОГО ДЕРЕВА
+
+Основные классы узлов:
+        - узлы, ссылающиеся на объекты;
+        - операторы;
+        - обозначения;
+        - операции;
+        - вспомогательные узлы.
+
+Общий вид дерева:
+
+                       module -> inittd
+                      /      \
+                     /       stat list
+                    /
+                  proc -> next proc
+                 /    \
+               proc   stat list
+
+Корень дерева - узел вида модуль:
+    module^.next - список узлов инициализации дескрипторов типов
+                   (только для Оберона);
+    module^.obj  - объект единица компиляции;
+    module^.r  - список операторов (тело модуля);
+    module^.l  - первая процедура модуля;
+
+Для процедуры:
+
+    proc^.next - следующая процедура в том же блоке;
+    proc^.l    - первая процедура локальная в данной;
+    proc^.r    - список операторов (тело процедуры).
+
+Атрибуты узла:
+
+mode - вид узла
+sub  - вид операции для унарных и бинарных операций;
+       признак допонительного контроля для некоторых узлов.
+next - следующий оператор или выражение
+type - тип узла; отстутствует для операторов; тип результата
+       для операций
+obj  - ссылка на объект (для узлов ссылок); используется также
+       в узлах динамического контроля типов (guard,eguard,is).
+pos  - позиция в тексте; для операторов - конец оператора
+l,r  - ссылки на под-узлы
+a,b  - только для узла с pair
+val  - содержит константное значение (литерал).
+
+ЗАМЕЧАНИЕ:  В  тех  случаях,  когда  есть  только одно под-дерево
+почти всегда используется левая ссылка.
+
+1. Узлы ссылки соответствуют использованию идентификаторов.
+
+Поле  obj  содержит ссылку на соответствующий объект, поле type -
+тип объекта (копируется из объекта). Все эти узлы - листы,
+т.е. не содержат ссылок на под-деревья.
+
+cons    поле val копируются из объекта:
+        val:=obj^.val;
+var     содержит ссылку на объект с видами var, varpar
+        seq, varseq.
+proc    содержит ссылку на объект с видами proc, xproc
+        iproc, cproc
+type
+
+2. Операторы
+
+2.1. Просто устроенные операторы
+
+               l               r              obj
+while      expression       stat-seq
+repeat     stat list        expression
+loop                        stat-seq
+exit
+return     [expression]
+with       designator       stat list      temp var
+wguard     designator       stat list      type
+assign    [designator]      expression     [var]
+call      [designator]      parm list      [var]
+inc,dec    designator      [expression]
+incl,excl  designator       expression
+new        designator      [expression]
+dispose    designator
+resize     designator       expression
+halt      [expression]
+assert     expression      [expression]
+copy       expression       designator
+dcopy      expression       designator
+
+ЗАМЕЧАНИЕ:
+
+Для   узлов   с   видом  assign  &  call  используется  следующее
+соглашение:
+
+     Если n^.l = NIL, то это присваивание переменной (assign) или
+вызов  нормальной  (не  формальной)  процедуры  (call).  При этом
+n^.obj    содержит    ссылку    на   переменную   или   процедуру
+соответственно.
+                         obj
+i:=j;           assign  ----> i
+               /      \
+             NIL        j
+
+i^:=j;          assign
+               /      \
+            deref      j
+                \
+                 i
+КОНЕЦ ЗАМЕЧАНИЯ.
+
+2.2. Сложно устроенные операторы
+
+Вспомогательный узел node используется при недостатке ссылок,
+а вспомогательный узел pair способен хранить два числа.
+
+2.2.1. FOR
+                         for
+
+                     /          \
+                  node         stat list
+
+                /       \
+             from        to
+          expression  expression
+
+for^.obj  -- loop variable
+node^.pos -- step (шаг цикла)
+
+2.2.2. CASE
+
+        case
+       /    \
+     expr    casedo | caselse -> pair (min,max)
+                  /       \
+                 /        stat
+                /
+             casedo -> casedo .... ->
+             /    \
+            /     stat
+           /
+         pair -> pair
+
+pair^.a .. pair^.b - диапазон меток
+
+case^.r = caselse, если часть иначе присутствует (возможно пустая)
+          casedo, иначе
+
+case^.r^.next - пара содержащая значения минимальной
+                и максимальной метки.
+
+
+2.2.3. procedure call
+
+          call
+       /        \
+  proc desig     p1 -> ... -> sequence
+                             /
+                            s1 -> ...
+
+
+sequence^.pos - длина в последовательности
+
+2.2.4. IF
+
+IF    expr1 THEN stat1
+ELSIF expr2 THEN stat2
+ELSE stat3
+END;
+
+              ifelse
+             /      \
+            /       stat3
+           /
+          if  --------->  if
+        /   \           /    \
+     expr1  stat1    expr2  stat2
+
+2.2.5. origin
+
+              origin
+             /      \
+        designator   node
+                    /    \
+                  expr  expr
+
+
+
+  index    =30;
+  binary   =31;
+  unary    =32;
+  deref    =33;
+  guard    =34;
+  eguard   =35;
+  value    =36;  -- for literals
+  aggregate=37;
+  sequence =38;
+  pair     =39;  -- additional node [a..b]
+  node     =40;  -- additional node l,r
+  char2str =41;  -- type transfer from char to string
+
+***************************************************************)
+
+END pcK.
+

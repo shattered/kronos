@@ -1,0 +1,1 @@
+DEFINITION MODULE pedTools; (* Sem 18-Apr-91. (c) KRONOS *)TYPE  tool_rec = RECORD    size : INTEGER;    vias : INTEGER;    pipe : INTEGER;  END;VAR  tool_box : DYNARR OF tool_rec;END pedTools.

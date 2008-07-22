@@ -1,0 +1,1 @@
+ECHO='TBHI'.BASE='0'BIN='. /bin /usr/bin'ETC='. /etc /usr/etc'TTY='/dev/tty0'KEY='/dev/key0'SHELL='shell'STK='1'/ipr/LEXICON err /etc/SYSERR.ENG /etc/SYSERR.RUSMSG='/dev/ENGLISH'%/ipr/MOUSE_6m 2%CPD='/dev/mou2'CMASK='--++++-+---'STK='10'human -i%/ipr/NETwsARC%/ipr/pcn%mount /ss /dev/dk5 -ro{TTY=/dev/tty0 KEY=/dev/key0} login &

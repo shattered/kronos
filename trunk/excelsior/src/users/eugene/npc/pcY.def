@@ -1,0 +1,96 @@
+DEFINITION MODULE pcY; (* Ned 28-Mar-91. (c) KRONOS *)
+
+(* sYm files *)
+
+CONST (* стандартные типы *)
+  undef    = 1;
+  shortIC  = 2;
+  shortcard= 3;
+  shortint = 4;
+  IC       = 5;
+  integer  = 6;
+  cardinal = 7;
+  longint  = 8;
+  real     = 9;
+  longreal =10;
+  boolean  =11;
+  char     =12;
+  bitset   =13;
+  byte     =14;
+  word     =15;
+  addr     =16;
+  niltype  =17;
+
+CONST
+  range    = 1;
+  enum     = 2;
+  opaque   = 3;
+  pointer  = 4;
+  set      = 5;
+  proctype = 6;
+  array    = 7;
+  vector   = 8;
+  array_of = 9;
+  dynarr   =10;
+  record   =11;
+
+CONST (* виды объектов *)
+  xcons    =16;
+  cons     =17;
+  var      =18;
+  xproc    =19;
+  iproc    =20;
+  cproc    =21;
+  type     =22;
+  hdtype   =23;
+
+  module   =31;
+  flist    =32;
+  field    =33;
+  method   =34;
+  plist    =35;
+  varpar   =36;
+  seq      =37;
+  varseq   =38;
+  valpar   =39;
+
+  linkage  =45;
+  readonly =46;
+  eosf     =47;
+
+CONST SYMTAG = 4D5953F8H;  (* ЬSYM *)
+
+(***************************************************************
+
+SYMFILE = symtag4 vers zero1 zero1  ANCHOR { ELEMENT }
+ANCHOR  = module time4 name
+ELEMENT =
+   cons  ref1 name               *const_val
+   xcons ref1 modno1 name        *const_val
+   ( type | hdtype )  ref1 modno1 name
+   ( var  | varpar | seq | varseq | field  )  ref1 name         *adr4
+   plist { ELEMENT } ( xproc | proc | iproc | pproc ) ref1 name *no1
+   plist { ELEMENT } cproc ref1 name              *len4 { bytes }
+   plist { ELEMENT } method rec1 res1 name *procno1 *mtadr1
+   plist { ELEMENT } proctype ref1 modno1
+   pointer  ref1 modno1
+   enum     ref1 modno1 number_of_elems1
+   range    ref1 modno1 min4 max4
+   array    ref1 modno1 inx1 size4
+   vector   ref1 modno1 len4 size4
+   array_of ref1 modno1 dim1 size1
+   dynarr   ref1 modno1 dim1 size1
+   flist { ELEMENT } record ref1 modno1 size4 no_of_methods1 *adrTD4
+   readonly
+
+!! имена кончаются символом LF
+
+const_val:
+   CASE get() OF
+     |1: val1
+     |4: val4
+     |0: adr4 len4 { bytes }
+
+***************************************************************)
+
+END pcY.

@@ -1,0 +1,237 @@
+%---------------------------------------------------------------%
+%                                                               %
+%           Firmware for Kronos-P2.51 processor                 %
+%                                                               %
+%---------------------------------------------------------------%
+%    Computer center, Acadimy of Sience, Siberia department,    %
+%                  Novosibirsk, USSR.                           %
+%                                                               %
+%    (c)  Start, Kronos research groop.                         %
+%                                         14-Sep-87             %
+%---------------------------------------------------------------%
+
+% Bit 3F locked for parity
+
+TRANSLATE
+64. 60. 63. 59.  62. 58. 61. 57.
+56. 52. 55. 51.  54. 50. 53. 49.
+48. 44. 47. 43.  46. 42. 45. 41.
+40. 36. 39. 35.  38. 34. 37. 33.
+32. 28. 31. 27.  30. 26. 29. 25.
+24. 20. 23. 19.  22. 18. 21. 17.
+16. 12. 15. 11.  14. 10. 13. 09.
+08. 04. 07. 03.  06. 02. 05. 01.
+
+FIELD F 64. : 1. = 0FFFFFFFFFFFFFFFF
+FIELD   D 58. ^18. ^24. ^31. ^23. ^2. ^19. ^5. ^6. = 0
+FIELD ADR ^26. 23. 32. 22. 24. 18. 5. 2. 31. 19. 6. 21. = 0
+FIELD ALU ^54. 55. 56. 15. 9. 13. 14.  8. 3. 7. 4.
+   {   A       2D5      B       2DE
+       B+1     0DE      B+FLAG  3DE
+       A+1     0D5      A+FLAG  3D5
+       A-1     2D1      A+B     2D6
+       A-B     0DC      B-A     0DF
+       A-B-1   2DC      A+B+1   0D6
+                        A+B+FLAG 3D6
+       A_OR_B  2DB      A_AND_B 2D0
+       A_XOR_B 2DD      A_BIC_B 2D9
+       NE(A)   2D2      NE(B)   2D8
+       NEG(A)  0D2      NEG(B)  0D8
+       ROL(A)  245      ROR(A)  2C5
+       ROR(A+1) 0C5     ROR(A-1)  2C1
+       ROL(B)  24E      ROR(B)  2CE
+       ROL(A-B) 04C     ROL(A_AND_B) 240
+       ROR(A_BIC_B) 2C9 ROR(A_AND_B) 2C0
+       ROL(A_BIC_B) 249 ASL(A)  205
+       ROR(A_OR_B) 2CB  B->P    22E
+       ASR(A)  255      ROR(NE(B)) 2C8
+       ASL(A-B) 00C
+       A&NP+B&P 2FE     ASR(A+FLAG) 355
+
+       P         21E    % ΅¥ ª®¬ ­¤λ η¨β ξβ P-register
+%      P         23E    % ηβ® γαβ ­®Ά«¥­® η¨αβ® ν¬―¨ΰ¨η¥αª¨. Sem&Leo
+       A->P      225
+
+   } = A
+%              PUSH POP POP1 WR  RD  A3  A2  A1  A0
+FIELD bus_A     29. 40.  43. 34. 37. 51. 42. 41. 45.
+ { NOTHING 0
+   Etop 10 R1 11 R2 12 R3 13 R4 14 R5 15 R6 16 Time 17 G 18
+   L 19 PC 1A M 1B S 1C H 1D P 1E F 1F e1 12 m1 13 s1 14 e2 15 m2 16 s2 17
+   constFF 18 const02 19 tmp1 1A tmp2 1B
+   WR_Etop 20 WR_R1   21  WR_R2 22  WR_R3 23  WR_R4 24  WR_R5   25
+   WR_tmp1 2A WR_tmp2 2B  WR_e1 22
+
+   WR_Time 27 WR_PC   2A  WR_S  2C  WR_H  2D  WR_F  2F               % Leo
+   WR_P    2E WR_G    28  WR_L  29  WR_M  2B  WR_R6 26               % Leo
+   WR_s1   24 WR_s2   27
+
+   RW_Etop 30  RW_R1 31   RW_R2 32  RW_R3 33  RW_R5 35  RW_Time 37
+   RW_R4   34  RW_R6 36   RW_PC 3A  RW_S  3C  RW_H  3D  RW_F    3F
+   RW_e1   32  RW_m1 33   RW_s1 34  RW_e2 35  RW_m2 36  RW_s2   37
+   RW_tmp1 3A  RW_tmp2 3B RW_M  3B  RW_L  39
+
+   STACK 0C0
+   STACK->Etop 0E0  STACK->R1 0E1  STACK->R2 0E2  STACK->R3 0E3
+   STACK->R4 0E4  STACK->R5 0E5  STACK->R6 0E6  STACK->Time 0E7
+   STACK->G  0E8  STACK->L  0E9 STACK->tmp1 0EA STACK->tmp2 0EB
+   STACK->M  0EB  STACK->PC 0EA STACK->e2 0E5  STACK->m2 0E6
+   STACK->s2 0E7
+   Etop->STACK 110  R1->STACK 111  R2->STACK 112  R3->STACK 113
+   R4->STACK 114  R5->STACK 115  R6->STACK 116  Time->STACK 117
+   G->STACK 118  L->STACK 119 tmp1->STACK 11A tmp2->STACK 11B
+   PC->STACK 11A M->STACK 11B e1->STACK 112 m1->STACK 113
+   s1->STACK 114
+ } = NOTHING
+
+GENERIC STACK_DOWN  bus_A = 080
+GENERIC STACK_UP    bus_A = 180
+GENERIC STACK_RD+UP bus_A = 1C0
+GENERIC STACK_RD    bus_A = 040
+
+%                       WR  RD  A3  A2  A1  A0
+FIELD bus_B             39. 38. 46. 47. 44. 48.
+ { NOTHING 0
+   Etop 10 R1 11 R2 12 R3 13 R4 14 R5 15 R6 16 Time 17 G 18
+   L 19 PC 1A M 1B S 1C H 1D P 1E F 1F constFF 18 const02 19
+   e1 12 m1 13 s1 14 e2 15 m2 16 s2 17 tmp1 1A tmp2 1B
+   WR_Etop 20 WR_R1 21 WR_R2 22 WR_R3 23 WR_R4 24 WR_R5 25 WR_R6 26
+
+   WR_G 28 WR_L 29 WR_PC 2A WR_M 2B WR_S 2C WR_Time 27
+   WR_H 2D WR_P 2E WR_F 2F WR_constFF 28 WR_const02 29 WR_e2 25 WR_e1 22
+   WR_tmp1 2A WR_tmp2 2B WR_m2 26 WR_s1 24 WR_m1 23
+
+   RW_Etop 30  RW_R1 31   RW_R2 32  RW_R3 33  RW_R5 35  RW_Time 37
+   RW_R4   34  RW_R6 36   RW_PC 3A  RW_S  3C  RW_H  3D  RW_F    3F
+   RW_e1   32  RW_m1 33   RW_s1 34  RW_e2 35  RW_m2 36  RW_s2   37
+   RW_tmp1 3A  RW_tmp2 3B RW_M  3B  RW_L  39
+   RW_P    3E  RW_G  38
+ } = NOTHING
+
+%                CNST  WR  RD  A3  A2  A1  A0
+FIELD CONST->REG  ^52. 39. 38. 46. 47. 44. 48.
+
+GENERIC CONST->Etop CONST->REG = 020
+GENERIC CONST->R1   CONST->REG = 021
+GENERIC CONST->R2   CONST->REG = 022
+GENERIC CONST->R3   CONST->REG = 023
+GENERIC CONST->R4   CONST->REG = 024
+GENERIC CONST->R5   CONST->REG = 025
+GENERIC CONST->R6   CONST->REG = 026
+GENERIC CONST->Time CONST->REG = 027
+GENERIC CONST->G    CONST->REG = 028
+GENERIC CONST->L    CONST->REG = 029
+GENERIC CONST->PC   CONST->REG = 02A
+GENERIC CONST->M    CONST->REG = 02B
+GENERIC CONST->e1   CONST->REG = 022
+GENERIC CONST->m1   CONST->REG = 023
+GENERIC CONST->s1   CONST->REG = 024
+GENERIC CONST->m2   CONST->REG = 026
+GENERIC CONST->s2   CONST->REG = 027
+GENERIC CONST->tmp1 CONST->REG = 02A
+GENERIC CONST->tmp2 CONST->REG = 02B
+
+FIELD CONST        52.                   = 1
+
+%                   C2  C1  C0 FILE S1 S0
+FIELD   SEQUENSER   36. 35. 33. 10. 20. 1. { NEXT 08 } = 0B
+
+GENERIC GOTO                SEQUENSER  = 0B
+GENERIC GO_TRUE             SEQUENSER  = 33
+GENERIC GO_FALSE            SEQUENSER  = 2B
+GENERIC CALL                SEQUENSER  = 0F
+GENERIC CALL_TRUE           SEQUENSER  = 37
+GENERIC CALL_FALSE          SEQUENSER  = 2F
+GENERIC RETURN              SEQUENSER  = 0D
+GENERIC RETURN_TRUE         SEQUENSER  = 35
+GENERIC RETURN_FALSE        SEQUENSER  = 2D
+GENERIC GO_REG              SEQUENSER  = 0A
+GENERIC GO_REG_TRUE         SEQUENSER  = 32
+GENERIC GO_REG_FALSE        SEQUENSER  = 2A
+GENERIC CALL_REG            SEQUENSER  = 0E
+GENERIC GO_IF_STACK_EMPTY   SEQUENSER  = 3B
+GENERIC GO_IF_NO_MP_ERR     SEQUENSER  = 03
+GENERIC GO_IF_INT_REQ       SEQUENSER  = 1B
+GENERIC GO_IF_CASH_EMPTY    SEQUENSER  = 23
+GENERIC CALL_IF_CASH_EMPTY  SEQUENSER  = 27
+
+FIELD REG_EN       ^17. = 1
+
+FIELD FLAG 11. 12. 16.
+  { SAVE 6  NEG(FLAG) 7  ZERO 4  Z 3  OVR 2  FLAG+OVR 0  CARRY 1 N 5 }=SAVE
+
+%               WRMSK  D2  D1  D0
+FIELD INTERUPTS   50.  41. 42. 45. =0
+% € … B - ‚… ‡€—…… €‘ …›‚€‰
+GENERIC RESET_MP_ERR   INTERUPTS = 09
+GENERIC RESET_STK_OVR  INTERUPTS = 0D
+GENERIC RESET_ACL      INTERUPTS = 0E
+GENERIC RESET_TIME     INTERUPTS = 0C
+GENERIC RESET_INC_PC   INTERUPTS = 0F
+
+FIELD WRMASK 52. = 1
+FIELD INTE 57. = 1
+
+%         CASH CNST MAP CH1 CH0
+FIELD PC   58.  52. 26. 27. 28.  = 7
+%  ‘‹‡‚€ ’• ‹…‰ € “ -€„…‘€ „€…’‘ ‚›•„ €
+GENERIC WR_CASH  PC = 0
+GENERIC RW_PC    PC = 1
+GENERIC INC_PC   PC =1A
+FIELD   DEC_CASH_CNT   49. = 0
+
+FIELD UPDATE_CASH
+%CASH
+58.
+%FIELD   SEQUENSER
+^36. 35. 33. ^10. ^20. ^1.
+%FIELD ADR
+^26. 23. 32. 22. 24. 18. 5. 2. 31. 19. 6. 21. = UPDATE_CASH_S
+
+FIELD FINISH
+%CASH INTE MAP CH1  CH0
+58.   ^57. 26. ^27. 28.
+%FIELD   SEQUENSER
+36. 35. ^33. 10. ^20. ^1. = 0
+
+%                 MP   LOCK  BR  OUT  A1  A0
+FIELD MEMORY      ^62. ^61.  53. 63.  59. 60.
+
+GENERIC RD_MEM_A     MEMORY= 08
+GENERIC RD_MEM_D     MEMORY= 00
+GENERIC RD_LOCK      MEMORY= 10
+GENERIC LOCK_MEM     MEMORY= 10
+GENERIC WR_MEM_A     MEMORY= 0C
+GENERIC WR_MEM_D     MEMORY= 04
+GENERIC WR_SIO_A     MEMORY= 0E
+GENERIC WR_SIO_D     MEMORY= 06
+GENERIC RD_SIO_A     MEMORY= 0A
+GENERIC RD_SIO_D     MEMORY= 02
+
+$
+DEFAULT[ SEQUENSER=NEXT REG_EN=0 PC ALU=400 FLAG bus_A bus_B INTE=0
+         CONST=0 MEMORY=7 WRMASK=0 DEC_CASH_CNT=1 ]
+PARITY 3F
+
+% Reserved registers:
+%       R7  - timer
+%       R8  - G  global data segment
+%       R9  - L  local data segment
+%       R0A - PC program counter
+%       R0B - M  process mask
+%       R0C - S  first free word on procedure stack
+%       R0D - H  procedure stack limit
+%       R0E - P  current process
+%       R0F - F  code segment
+%
+% Floating point arithmetic registers:
+%       R2  - e1 exponent 1
+%       R3  - m1 mantith  1
+%       R4  - s1 sign     1
+%       R5  - e2 exponent 2
+%       R6  - m2 mantith  2
+%       R7  - s2 sign     2
+%       R8  - constFF
+%       R9  - const02
+%       R0A - tmp1
+%       R0B - tmp2

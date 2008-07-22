@@ -1,0 +1,1 @@
+mou /mnt /dev/fd0 -a $1ls /mnt/

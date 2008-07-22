@@ -1,0 +1,10 @@
+IMPLEMENTATION MODULE intVM; (* 06-Jun-88. (c) KRONOS *)
+
+VAR vm0,vm1: INTEGER;
+
+PROCEDURE Swap(n: INTEGER);
+BEGIN
+
+END Swap;
+
+END intVM.

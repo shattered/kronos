@@ -1,0 +1,2 @@
+IMPLEMENTATION MODULE defBMG[1]; (* nick 05-Oct-90. (c) KRONOS *)
+END defBMG.

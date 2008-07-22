@@ -1,0 +1,68 @@
+DEFINITION MODULE BIO;
+(*# call(o_a_copy=>off,o_a_size=>on) *)
+
+TYPE FILE;
+
+VAR
+  null: FILE;
+  cd  : FILE;
+  (* standard i/o files: *)
+  inp: FILE;
+  out: FILE;
+  err: FILE;
+
+
+
+CONST
+  done = 0;
+
+PROCEDURE open  (f: FILE; name,mode: ARRAY OF CHAR; VAR res: CARDINAL);
+PROCEDURE create(f: FILE; name,mode: ARRAY OF CHAR; VAR res: CARDINAL);
+PROCEDURE close (f: FILE; VAR res: CARDINAL);
+PROCEDURE purge (f: FILE);
+
+
+PROCEDURE res(f: FILE): CARDINAL;
+
+PROCEDURE cut(f: FILE);
+PROCEDURE pos(f: FILE): LONGINT;
+PROCEDURE eof(f: FILE): LONGINT;
+
+PROCEDURE seek(f: FILE; pos: LONGINT; origin: CARDINAL);
+
+PROCEDURE flush(f: FILE);
+
+PROCEDURE read (f: FILE; data: ADDRESS; pos,len: CARDINAL);
+PROCEDURE write(f: FILE; data: ADDRESS; pos,len: CARDINAL);
+
+PROCEDURE get(f: FILE; VAR data: ARRAY OF BYTE; pos,len: CARDINAL);
+PROCEDURE put(f: FILE;     data: ARRAY OF BYTE; pos,len: CARDINAL);
+
+PROCEDURE getc(f: FILE; VAR ch: BYTE);
+PROCEDURE putc(f: FILE;     ch: BYTE);
+
+PROCEDURE getw(f: FILE; VAR w: WORD);
+PROCEDURE putw(f: FILE;     w: WORD);
+
+PROCEDURE get32(f: FILE; VAR w: LONGWORD);
+PROCEDURE put32(f: FILE;     w: LONGWORD);
+
+PROCEDURE gets(f: FILE; VAR data: ARRAY OF CHAR);
+PROCEDURE puts(f: FILE;     data: ARRAY OF CHAR);
+
+(*# save, call(var_arg=>on,c_conv=>on,reg_param=>()) *)
+PROCEDURE print(f: FILE; fmt: ARRAY OF CHAR);
+(*# restore *)
+
+PROCEDURE fname(f: FILE; VAR name: ARRAY OF CHAR);
+
+PROCEDURE rename(oldname,newname: ARRAY OF CHAR; VAR res: CARDINAL);
+
+PROCEDURE remove(filename: ARRAY OF CHAR;  VAR res: CARDINAL);
+PROCEDURE mkdir (dirname : ARRAY OF CHAR;  VAR res: CARDINAL);
+PROCEDURE rmdir (dirname : ARRAY OF CHAR;  VAR res: CARDINAL);
+PROCEDURE chdir (dirname : ARRAY OF CHAR;  VAR res: CARDINAL);
+
+PROCEDURE chmode(name,mode: ARRAY OF CHAR; VAR res: CARDINAL);
+
+END BIO.

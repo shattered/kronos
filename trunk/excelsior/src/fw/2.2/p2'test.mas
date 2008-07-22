@@ -1,0 +1,80 @@
+:REG_TEST
+        [ CONST->R0     D=055 ]
+        [ CONST->R1     D=0AA ]
+        [ CONST->R2     D=0FF ]
+        [ ALU=A_OR_B    BUS_A=RW_R0   BUS_B=R1 ]
+        [ ALU=A-B       BUS_A=R0 BUS_B=R2 FLAG=Z ]
+:RT_ERR0  [ BUS_A=R0 BUS_B=R2 GO_FALSE ADR=RT_ERR0 ]
+
+        [ CONST->R1 D=1 ]
+        [ CONST->R1 D=0 OLD ]
+        [ CONST->R2 D=10. ]
+:RT2    [ ALU=A+B BUS_A=RW_R1 BUS_B=R1 ]
+        [ ALU=A+B BUS_A=RW_R1 BUS_B=R1 ]
+        [ ALU=A_OR_B BUS_A=RW_R1 CONST D=1 ]
+        [ ALU=A-1    BUS_A=RW_R2 FLAG=Z ]
+        [ GO_FALSE ADR=RT2 ]
+
+        [ ALU=ROL(A) BUS_A=R1    BUS_B=WR_R2 ]
+        [ ALU=ROL(A) BUS_A=R2    BUS_B=WR_R2 ]
+        [ ALU=A-B    BUS_A=R2    BUS_B=R1  FLAG=Z ]
+          % R1 # 1010101010101010101
+:RT_ERR1  [ BUS_A=R2   BUS_B=R1 GO_FALSE ADR=RT_ERR1 ]
+
+        % R1 = 0101 0101 0101 0101 (16 least significant bits)
+        [ ALU=B     BUS_B=R1    BUS_A=WR_R2  OLD ]
+        [ ALU=A-B   BUS_A=R2    CONST D=05   FLAG=Z ]
+:RT_ERR2 [ BUS_A=R2   BUS_B=R1 OLD GO_FALSE ADR=RT_ERR2 ] % ATTENSION !!!
+                                                          % 19..16 -> 0..3
+        [ ALU=B BUS_A=WR_R2 CONST D=0FF ]
+        [ R2->STACK ]
+
+:RT_LOOP
+        [ STACK->R2 ]
+
+        % ROL(R1,1) as 20 bit register
+        [ ALU=ROL(A) BUS_A=RW_R1 BUS_B=WR_R1 OLD ]
+
+:RT7    [ ALU=A-1  BUS_A=RW_R2 FLAG=Z ]
+        [ R2->STACK GO_TRUE ADR=RT_OK ]
+
+        [ ALU=A  BUS_A=R1  BUS_B=WR_R0  ]
+        [ ALU=A  BUS_A=R0  BUS_B=WR_R2  ]
+        [ ALU=A  BUS_A=R2  BUS_B=WR_R3  ]
+        [ ALU=A  BUS_A=R3  BUS_B=WR_R4  ]
+        [ ALU=A  BUS_A=R4  BUS_B=WR_R5  ]
+        [ ALU=A  BUS_A=R5  BUS_B=WR_R6  ]
+        [ ALU=A  BUS_A=R6  BUS_B=WR_R7  ]
+        [ ALU=A  BUS_A=R7  BUS_B=WR_R8  ]
+        [ ALU=A  BUS_A=R8  BUS_B=WR_R9  ]
+        [ ALU=A  BUS_A=R9  BUS_B=WR_R10 ]
+        [ ALU=A  BUS_A=R10 BUS_B=WR_R11 ]
+        [ ALU=A  BUS_A=R11 BUS_B=WR_R12 ]
+        [ ALU=A  BUS_A=R12 BUS_B=WR_R13 ]
+        [ ALU=A  BUS_A=R13 BUS_B=WR_R14 ]
+        [ ALU=A  BUS_A=R14 BUS_B=WR_R15 ]
+        [ ALU=B  BUS_A=WR_R0  BUS_B=R15 ]
+
+        [ ALU=A-B BUS_A=R1 BUS_B=R0 FLAG=Z ]
+:RT_ERR3  [ BUS_A=R1 BUS_B=R0 GO_FALSE ADR=RT_ERR3 ]
+
+        [ ALU=B BUS_B=R1  OLD BUS_A=WR_R2 ]
+        [ ALU=A-B BUS_A=R2 BUS_B=R0 OLD FLAG=Z ]
+:RT_ERR4  [ BUS_A=R2 BUS_B=R0 OLD GO_FALSE ADR=RT_ERR4 ] % ATTENSION !!!
+                                                         % 19..16 -> 0..3
+        [ GOTO ADR=RT_LOOP ]
+
+:RT_OK  [ STACK->R2 ]
+
+        [ CONST->R0 D=08 ]
+:RT_OK_LOOP1
+        [ CONST->R1 D=0400 ]
+:RT_OK_LOOP2
+        [ ALU=A-1 BUS_A=RW_R1 FLAG=Z ]
+        [ IDLE_LIGHT ]
+        [ IDLE_LIGHT GO_FALSE ADR=RT_OK_LOOP2 ]
+
+        [ ALU=A-1 BUS_A=RW_R0 FLAG=Z ]
+        [ GO_FALSE ADR=RT_OK_LOOP1 ]
+
+        [ RETURN ]

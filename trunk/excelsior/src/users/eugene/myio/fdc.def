@@ -1,0 +1,42 @@
+
+FIELD adr 7 6 5 4 3 2 1 0 = 0
+
+FIELD goto 0C 0A 9 8 = 3
+
+FIELD go_cond ^0C  0F 0E 0D 0A 9 8
+        {       cmd0    03
+                cmd1    0B
+                rd_dat  13
+                trk20   1B
+                flag    23
+                no_flag 2B
+                wr_dat  33
+                mark    3B
+        } = 3
+
+FIELD reg_en   ^0B = 1
+
+FIELD wr_pulse 0C 0F 0E 0D = 1
+
+FIELD flag 0C 0F 0E 0D
+        {       false   3
+                true    2
+        } = true
+
+FIELD call 0C 0A 9 8 = 7
+
+FIELD call_reg 0C 0A 9 8 = 5
+
+FIELD return 0C 0A 9 8 = 6
+
+FIELD out_byte 0C 0F 0E 0D = 4
+
+FIELD inp_byte 0C 0F 0E 0D = 5
+
+FIELD shift    0C 0F 0E 0D = 6
+
+FIELD all 0F:0C ^0B 0A:0 = 0
+
+$
+
+DEFAULT [ all=0 ]

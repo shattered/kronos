@@ -1,0 +1,2 @@
+IMPLEMENTATION MODULE coSym; (* 13-Nov-90. (c) KRONOS *)
+END coSym.

@@ -1,0 +1,33 @@
+: 200000 200000
+             D1 - DIP20           : 10000 5000 3
+ 15-..free..        14-..free..        13-..free..        12-..free..       
+ 16-..free..         6-..free..         7-..free..         8-..free..       
+  9-..free..        10-..free..        11-..free..         1-a              
+  2-b                3-c                4-d                5-e              
+ 20-x               19-y               18-z               17-g              
+;
+             D2 - DIP40           : 40000 5000 3
+ 34-..free..        33-..free..        32-..free..        31-..free..       
+ 36-..free..        35-..free..         7-..free..         8-..free..       
+  9-..free..        10-..free..        11-..free..        12-..free..       
+ 13-..free..        14-..free..        15-..free..        16-..free..       
+ 17-..free..        18-..free..        19-..free..        20-..free..       
+ 21-..free..        22-..free..        23-..free..        24-..free..       
+ 25-..free..        26-..free..        27-..free..        28-..free..       
+ 29-..free..        30-..free..         1-a                6-a              
+  2-b                3-c                4-d                5-e              
+ 40-x               39-y               38-z               37-g              
+;
+             D3 - DIP40           : 70000 5000 3
+ 29-..free..        34-..free..        33-..free..        32-..free..       
+ 31-..free..        36-..free..        35-..free..         7-..free..       
+  8-..free..         9-..free..        10-..free..        11-..free..       
+ 12-..free..        13-..free..        14-..free..        15-..free..       
+ 16-..free..        17-..free..        18-..free..        19-..free..       
+ 20-..free..        21-..free..        22-..free..        23-..free..       
+ 24-..free..        25-..free..        26-..free..        27-..free..       
+ 28-..free..        30-..free..         1-a                6-a              
+  2-b                3-c                4-d                5-e              
+ 40-x               39-y               38-z               37-g              
+;
+$

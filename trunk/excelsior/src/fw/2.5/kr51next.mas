@@ -1,0 +1,4 @@
+:NEXT   = 03FE
+        [ WR_CASH RD_MEM_D DEC_CASH_CNT ]
+        [ FLAG=ZERO FINISH ]
+:INVLD  [ CONST->R1 D=49 ] [ GOTO ADR=TRAPED ]

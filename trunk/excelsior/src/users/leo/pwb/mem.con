@@ -1,0 +1,1017 @@
+: 233750 220000
+             X1 - SNP59           : 12500 210000 0 = 0
+  1-GND              2-Vcc              3-..free..         4-..free..       
+  5-BD00             6-BD02             7-BD04             8-BD06           
+  9-BD08            10-BD10            11-BD12            12-BD14           
+ 13-BD16            14-BD18            15-BD20            16-BD22           
+ 17-BD24            18-BD26            19-BD28            20-BD30           
+ 21-BFA             22-BmADR0          23-BmADR2          24-BINP           
+ 25-BREADY          26-..free..        27-..free..        28-..free..       
+ 29-Vcc             30-Vcc             31-GND             32-GND            
+ 33-GND             34-Vcc             35-..free..        36-..free..       
+ 37-..free..        38-..free..        39-..free..        40-..free..       
+ 41-..free..        42-..free..        43-..free..        44-..free..       
+ 45-..free..        46-..free..        47-..free..        48-..free..       
+ 49-..free..        50-..free..        51-..free..        52-..free..       
+ 53-..free..        54-..free..        55-..free..        56-..free..       
+ 57-..free..        58-..free..        59-..free..        60-..free..
+ 61-Vcc             62-Vcc             63-GND             64-GND            
+ 65-GND             66-Vcc             67-..free..        68-..free..       
+ 69-BD01            70-BD03            71-BD05            72-BD07           
+ 73-BD09            74-BD11            75-BD13            76-BD15           
+ 77-BD17            78-BD19            79-BD21            80-BD23           
+ 81-BD25            82-BD27            83-BD29            84-BD31           
+ 85-BFB             86-BmADR1          87-BmADR3          88-BOUT           
+ 89-..free..        90-BINT            91-..free..        92-BMCL           
+ 93-Vcc             94-Vcc             95-GND             96-GND            
+;
+             X2 - SNP59           : 222500 215000 2 = 0
+  1-BRESET           2-BCAS2            3-GND              4-BCAS0          
+  5-GND              6-BBANK2           7-GND              8-BBANK0         
+  9-GND             10-BADR6           11-BADR4           12-BADR2          
+ 13-BADR0           14-GND             15-GND             16-BDATA          
+ 17-GND             18-BWE             19-GND             20-BRAS
+ 21-GND             22-BLDCODE         23-GND             24-GND            
+ 25-BBYTE3          26-GND             27-BBYTE2          28-GND            
+ 29-BBYTE1          30-GND             31-BBYTE0          32-GND            
+ 33-GND             34-GND             35-GND             36-GND            
+ 37-GND             38-GND             39-GND             40-GND            
+ 41-GND             42-GND             43-GND             44-GND            
+ 45-GND             46-GND             47-GND             48-GND            
+ 49-GND             50-GND             51-GND             52-GND            
+ 53-GND             54-GND             55-GND             56-GND            
+ 57-GND             58-GND             59-GND             60-GND            
+ 61-GND             62-GND             63-GND             64-GND            
+ 65-BCAS3           66-GND             67-BCAS1           68-GND            
+ 69-BBANK3          70-GND             71-BBANK1          72-GND            
+ 73-BADR8           74-BADR7           75-BADR5           76-BADR3          
+ 77-BADR1           78-GND             79-..free..        80-GND            
+ 81-BCODE7          82-GND             83-BCODE6          84-GND
+ 85-BCODE5          86-GND             87-BCODE4          88-GND            
+ 89-GND             90-BCODE3          91-GND             92-BCODE2         
+ 93-GND             94-BCODE1          95-GND             96-BCODE0         
+;
+            dd1 - DIP16           : 22500 152500 3 = 0
+  1-adr8             2-data00           3-we0              4-ras0
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data00          15-cas0            16-GND            
+;
+            dd2 - DIP16           : 15000 150000 1 = 0
+  1-adr8             2-data01           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data01          15-cas0            16-GND            
+;
+            dd3 - DIP16           : 32500 152500 3 = 0
+  1-adr8             2-data02           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data02          15-cas0            16-GND            
+;
+            dd4 - DIP16           : 25000 150000 1 = 0
+  1-adr8             2-data03           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data03          15-cas0            16-GND            
+;
+            dd5 - DIP16           : 42500 152500 3 = 0
+  1-adr8             2-data04           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data04          15-cas0            16-GND            
+;
+            dd6 - DIP16           : 35000 150000 1 = 0
+  1-adr8             2-data05           3-we0              4-ras0
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data05          15-cas0            16-GND            
+;
+            dd7 - DIP16           : 52500 152500 3 = 0
+  1-adr8             2-data06           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data06          15-cas0            16-GND            
+;
+            dd8 - DIP16           : 45000 150000 1 = 0
+  1-adr8             2-data07           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data07          15-cas0            16-GND            
+;
+            dd9 - DIP16           : 67500 152500 3 = 0
+  1-adr8             2-data08           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data08          15-cas0            16-GND            
+;
+           dd10 - DIP16           : 60000 150000 1 = 0
+  1-adr8             2-data09           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data09          15-cas0            16-GND            
+;
+           dd11 - DIP16           : 77500 152500 3 = 0
+  1-adr8             2-data10           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data10          15-cas0            16-GND            
+;
+           dd12 - DIP16           : 70000 150000 1 = 0
+  1-adr8             2-data11           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data11          15-cas0            16-GND            
+;
+           dd13 - DIP16           : 87500 152500 3 = 0
+  1-adr8             2-data12           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data12          15-cas0            16-GND            
+;
+           dd14 - DIP16           : 80000 150000 1 = 0
+  1-adr8             2-data13           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data13          15-cas0            16-GND            
+;
+           dd15 - DIP16           : 97500 152500 3 = 0
+  1-adr8             2-data14           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data14          15-cas0            16-GND            
+;
+           dd16 - DIP16           : 90000 150000 1 = 0
+  1-adr8             2-data15           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data15          15-cas0            16-GND            
+;
+           dd17 - DIP16           : 112500 152500 3 = 0
+  1-adr8             2-data16           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data16          15-cas0            16-GND            
+;
+           dd18 - DIP16           : 105000 150000 1 = 0
+  1-adr8             2-data17           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data17          15-cas0            16-GND            
+;
+           dd19 - DIP16           : 122500 152500 3 = 0
+  1-adr8             2-data18           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data18          15-cas0            16-GND            
+;
+           dd20 - DIP16           : 115000 150000 1 = 0
+  1-adr8             2-data19           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data19          15-cas0            16-GND            
+;
+           dd21 - DIP16           : 132500 152500 3 = 0
+  1-adr8             2-data20           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data20          15-cas0            16-GND            
+;
+           dd22 - DIP16           : 125000 150000 1 = 0
+  1-adr8             2-data21           3-we0              4-ras0
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data21          15-cas0            16-GND            
+;
+           dd23 - DIP16           : 142500 152500 3 = 0
+  1-adr8             2-data22           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data22          15-cas0            16-GND            
+;
+           dd24 - DIP16           : 135000 150000 1 = 0
+  1-adr8             2-data23           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data23          15-cas0            16-GND            
+;
+           dd25 - DIP16           : 157500 152500 3 = 0
+  1-adr8             2-data24           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data24          15-cas0            16-GND            
+;
+           dd26 - DIP16           : 150000 150000 1 = 0
+  1-adr8             2-data25           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data25          15-cas0            16-GND            
+;
+           dd27 - DIP16           : 167500 152500 3 = 0
+  1-adr8             2-data26           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data26          15-cas0            16-GND            
+;
+           dd28 - DIP16           : 160000 150000 1 = 0
+  1-adr8             2-data27           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data27          15-cas0            16-GND            
+;
+           dd29 - DIP16           : 177500 152500 3 = 0
+  1-adr8             2-data28           3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data28          15-cas0            16-GND            
+;
+           dd30 - DIP16           : 170000 150000 1 = 0
+  1-adr8             2-data29           3-we0              4-ras0
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data29          15-cas0            16-GND            
+;
+           dd31 - DIP16           : 187500 152500 3 = 0
+  1-adr8             2-data30           3-we0              4-ras0
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data30          15-cas0            16-GND
+;
+           dd32 - DIP16           : 180000 150000 1 = 0
+  1-adr8             2-data31           3-we0              4-ras0
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data31          15-cas0            16-GND
+;
+           dd33 - DIP16           : 22500 112500 3 = 0
+  1-adr8             2-data00           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data00          15-cas1            16-GND            
+;
+           dd34 - DIP16           : 15000 110000 1 = 0
+  1-adr8             2-data01           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data01          15-cas1            16-GND            
+;
+           dd35 - DIP16           : 32500 112500 3 = 0
+  1-adr8             2-data02           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data02          15-cas1            16-GND            
+;
+           dd36 - DIP16           : 25000 110000 1 = 0
+  1-adr8             2-data03           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data03          15-cas1            16-GND            
+;
+           dd37 - DIP16           : 42500 112500 3 = 0
+  1-adr8             2-data04           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data04          15-cas1            16-GND            
+;
+           dd38 - DIP16           : 35000 110000 1 = 0
+  1-adr8             2-data05           3-we1              4-ras1
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data05          15-cas1            16-GND            
+;
+           dd39 - DIP16           : 52500 112500 3 = 0
+  1-adr8             2-data06           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data06          15-cas1            16-GND            
+;
+           dd40 - DIP16           : 45000 110000 1 = 0
+  1-adr8             2-data07           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data07          15-cas1            16-GND            
+;
+           dd41 - DIP16           : 67500 112500 3 = 0
+  1-adr8             2-data08           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data08          15-cas1            16-GND            
+;
+           dd42 - DIP16           : 60000 110000 1 = 0
+  1-adr8             2-data09           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data09          15-cas1            16-GND            
+;
+           dd43 - DIP16           : 77500 112500 3 = 0
+  1-adr8             2-data10           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data10          15-cas1            16-GND            
+;
+           dd44 - DIP16           : 70000 110000 1 = 0
+  1-adr8             2-data11           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data11          15-cas1            16-GND            
+;
+           dd45 - DIP16           : 87500 112500 3 = 0
+  1-adr8             2-data12           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data12          15-cas1            16-GND            
+;
+           dd46 - DIP16           : 80000 110000 1 = 0
+  1-adr8             2-data13           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data13          15-cas1            16-GND            
+;
+           dd47 - DIP16           : 97500 112500 3 = 0
+  1-adr8             2-data14           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data14          15-cas1            16-GND            
+;
+           dd48 - DIP16           : 90000 110000 1 = 0
+  1-adr8             2-data15           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data15          15-cas1            16-GND            
+;
+           dd49 - DIP16           : 112500 112500 3 = 0
+  1-adr8             2-data16           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data16          15-cas1            16-GND            
+;
+           dd50 - DIP16           : 105000 110000 1 = 0
+  1-adr8             2-data17           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data17          15-cas1            16-GND            
+;
+           dd51 - DIP16           : 122500 112500 3 = 0
+  1-adr8             2-data18           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data18          15-cas1            16-GND            
+;
+           dd52 - DIP16           : 115000 110000 1 = 0
+  1-adr8             2-data19           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data19          15-cas1            16-GND            
+;
+           dd53 - DIP16           : 132500 112500 3 = 0
+  1-adr8             2-data20           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data20          15-cas1            16-GND            
+;
+           dd54 - DIP16           : 125000 110000 1 = 0
+  1-adr8             2-data21           3-we1              4-ras1
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data21          15-cas1            16-GND            
+;
+           dd55 - DIP16           : 142500 112500 3 = 0
+  1-adr8             2-data22           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data22          15-cas1            16-GND            
+;
+           dd56 - DIP16           : 135000 110000 1 = 0
+  1-adr8             2-data23           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data23          15-cas1            16-GND            
+;
+           dd57 - DIP16           : 157500 112500 3 = 0
+  1-adr8             2-data24           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data24          15-cas1            16-GND            
+;
+           dd58 - DIP16           : 150000 110000 1 = 0
+  1-adr8             2-data25           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data25          15-cas1            16-GND            
+;
+           dd59 - DIP16           : 167500 112500 3 = 0
+  1-adr8             2-data26           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data26          15-cas1            16-GND            
+;
+           dd60 - DIP16           : 160000 110000 1 = 0
+  1-adr8             2-data27           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data27          15-cas1            16-GND            
+;
+           dd61 - DIP16           : 177500 112500 3 = 0
+  1-adr8             2-data28           3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data28          15-cas1            16-GND            
+;
+           dd62 - DIP16           : 170000 110000 1 = 0
+  1-adr8             2-data29           3-we1              4-ras1
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data29          15-cas1            16-GND
+;
+           dd63 - DIP16           : 187500 112500 3 = 0
+  1-adr8             2-data30           3-we1              4-ras1
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data30          15-cas1            16-GND
+;
+           dd64 - DIP16           : 180000 110000 1 = 0
+  1-adr8             2-data31           3-we1              4-ras1
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data31          15-cas1            16-GND
+;
+           dd65 - DIP16           : 22500 72500 3 = 0
+  1-adr8             2-data00           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data00          15-cas2            16-GND
+;
+           dd66 - DIP16           : 15000 70000 1 = 0
+  1-adr8             2-data01           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data01          15-cas2            16-GND
+;
+           dd67 - DIP16           : 32500 72500 3 = 0
+  1-adr8             2-data02           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data02          15-cas2            16-GND
+;
+           dd68 - DIP16           : 25000 70000 1 = 0
+  1-adr8             2-data03           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data03          15-cas2            16-GND
+;
+           dd69 - DIP16           : 42500 72500 3 = 0
+  1-adr8             2-data04           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data04          15-cas2            16-GND
+;
+           dd70 - DIP16           : 35000 70000 1 = 0
+  1-adr8             2-data05           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data05          15-cas2            16-GND
+;
+           dd71 - DIP16           : 52500 72500 3 = 0
+  1-adr8             2-data06           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data06          15-cas2            16-GND            
+;
+           dd72 - DIP16           : 45000 70000 1 = 0
+  1-adr8             2-data07           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data07          15-cas2            16-GND            
+;
+           dd73 - DIP16           : 67500 72500 3 = 0
+  1-adr8             2-data08           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data08          15-cas2            16-GND            
+;
+           dd74 - DIP16           : 60000 70000 1 = 0
+  1-adr8             2-data09           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data09          15-cas2            16-GND            
+;
+           dd75 - DIP16           : 77500 72500 3 = 0
+  1-adr8             2-data10           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data10          15-cas2            16-GND            
+;
+           dd76 - DIP16           : 70000 70000 1 = 0
+  1-adr8             2-data11           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data11          15-cas2            16-GND            
+;
+           dd77 - DIP16           : 87500 72500 3 = 0
+  1-adr8             2-data12           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data12          15-cas2            16-GND            
+;
+           dd78 - DIP16           : 80000 70000 1 = 0
+  1-adr8             2-data13           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data13          15-cas2            16-GND            
+;
+           dd79 - DIP16           : 97500 72500 3 = 0
+  1-adr8             2-data14           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data14          15-cas2            16-GND            
+;
+           dd80 - DIP16           : 90000 70000 1 = 0
+  1-adr8             2-data15           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data15          15-cas2            16-GND            
+;
+           dd81 - DIP16           : 112500 72500 3 = 0
+  1-adr8             2-data16           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data16          15-cas2            16-GND            
+;
+           dd82 - DIP16           : 105000 70000 1 = 0
+  1-adr8             2-data17           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data17          15-cas2            16-GND            
+;
+           dd83 - DIP16           : 122500 72500 3 = 0
+  1-adr8             2-data18           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data18          15-cas2            16-GND            
+;
+           dd84 - DIP16           : 115000 70000 1 = 0
+  1-adr8             2-data19           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data19          15-cas2            16-GND            
+;
+           dd85 - DIP16           : 132500 72500 3 = 0
+  1-adr8             2-data20           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data20          15-cas2            16-GND            
+;
+           dd86 - DIP16           : 125000 70000 1 = 0
+  1-adr8             2-data21           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data21          15-cas2            16-GND            
+;
+           dd87 - DIP16           : 142500 72500 3 = 0
+  1-adr8             2-data22           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data22          15-cas2            16-GND            
+;
+           dd88 - DIP16           : 135000 70000 1 = 0
+  1-adr8             2-data23           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data23          15-cas2            16-GND            
+;
+           dd89 - DIP16           : 157500 72500 3 = 0
+  1-adr8             2-data24           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data24          15-cas2            16-GND            
+;
+           dd90 - DIP16           : 150000 70000 1 = 0
+  1-adr8             2-data25           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data25          15-cas2            16-GND            
+;
+           dd91 - DIP16           : 167500 72500 3 = 0
+  1-adr8             2-data26           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data26          15-cas2            16-GND            
+;
+           dd92 - DIP16           : 160000 70000 1 = 0
+  1-adr8             2-data27           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data27          15-cas2            16-GND            
+;
+           dd93 - DIP16           : 177500 72500 3 = 0
+  1-adr8             2-data28           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data28          15-cas2            16-GND            
+;
+           dd94 - DIP16           : 170000 70000 1 = 0
+  1-adr8             2-data29           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data29          15-cas2            16-GND            
+;
+           dd95 - DIP16           : 187500 72500 3 = 0
+  1-adr8             2-data30           3-we2              4-ras2           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data30          15-cas2            16-GND            
+;
+           dd96 - DIP16           : 180000 70000 1 = 0
+  1-adr8             2-data31           3-we2              4-ras2
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data31          15-cas2            16-GND            
+;
+           dd97 - DIP16           : 22500 32500 3 = 0
+  1-adr8             2-data00           3-we3              4-ras3
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data00          15-cas3            16-GND            
+;
+           dd98 - DIP16           : 15000 30000 1 = 0
+  1-adr8             2-data01           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data01          15-cas3            16-GND            
+;
+           dd99 - DIP16           : 32500 32500 3 = 0
+  1-adr8             2-data02           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data02          15-cas3            16-GND
+;
+          dd100 - DIP16           : 25000 30000 1 = 0
+  1-adr8             2-data03           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data03          15-cas3            16-GND            
+;
+          dd101 - DIP16           : 42500 32500 3 = 0
+  1-adr8             2-data04           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data04          15-cas3            16-GND            
+;
+          dd102 - DIP16           : 35000 30000 1 = 0
+  1-adr8             2-data05           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data05          15-cas3            16-GND            
+;
+          dd103 - DIP16           : 52500 32500 3 = 0
+  1-adr8             2-data06           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data06          15-cas3            16-GND            
+;
+          dd104 - DIP16           : 45000 30000 1 = 0
+  1-adr8             2-data07           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data07          15-cas3            16-GND            
+;
+          dd105 - DIP16           : 67500 32500 3 = 0
+  1-adr8             2-data08           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data08          15-cas3            16-GND            
+;
+          dd106 - DIP16           : 60000 30000 1 = 0
+  1-adr8             2-data09           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data09          15-cas3            16-GND            
+;
+          dd107 - DIP16           : 77500 32500 3 = 0
+  1-adr8             2-data10           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data10          15-cas3            16-GND
+;
+          dd108 - DIP16           : 70000 30000 1 = 0
+  1-adr8             2-data11           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data11          15-cas3            16-GND            
+;
+          dd109 - DIP16           : 87500 32500 3 = 0
+  1-adr8             2-data12           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data12          15-cas3            16-GND            
+;
+          dd110 - DIP16           : 80000 30000 1 = 0
+  1-adr8             2-data13           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data13          15-cas3            16-GND            
+;
+          dd111 - DIP16           : 97500 32500 3 = 0
+  1-adr8             2-data14           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data14          15-cas3            16-GND            
+;
+          dd112 - DIP16           : 90000 30000 1 = 0
+  1-adr8             2-data15           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data15          15-cas3            16-GND            
+;
+          dd113 - DIP16           : 112500 32500 3 = 0
+  1-adr8             2-data16           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data16          15-cas3            16-GND            
+;
+          dd114 - DIP16           : 105000 30000 1 = 0
+  1-adr8             2-data17           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data17          15-cas3            16-GND            
+;
+          dd115 - DIP16           : 122500 32500 3 = 0
+  1-adr8             2-data18           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data18          15-cas3            16-GND            
+;
+          dd116 - DIP16           : 115000 30000 1 = 0
+  1-adr8             2-data19           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data19          15-cas3            16-GND            
+;
+          dd117 - DIP16           : 132500 32500 3 = 0
+  1-adr8             2-data20           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data20          15-cas3            16-GND            
+;
+          dd118 - DIP16           : 125000 30000 1 = 0
+  1-adr8             2-data21           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data21          15-cas3            16-GND            
+;
+          dd119 - DIP16           : 142500 32500 3 = 0
+  1-adr8             2-data22           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data22          15-cas3            16-GND            
+;
+          dd120 - DIP16           : 135000 30000 1 = 0
+  1-adr8             2-data23           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data23          15-cas3            16-GND            
+;
+          dd121 - DIP16           : 157500 32500 3 = 0
+  1-adr8             2-data24           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data24          15-cas3            16-GND            
+;
+          dd122 - DIP16           : 150000 30000 1 = 0
+  1-adr8             2-data25           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data25          15-cas3            16-GND            
+;
+          dd123 - DIP16           : 167500 32500 3 = 0
+  1-adr8             2-data26           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data26          15-cas3            16-GND            
+;
+          dd124 - DIP16           : 160000 30000 1 = 0
+  1-adr8             2-data27           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data27          15-cas3            16-GND            
+;
+          dd125 - DIP16           : 177500 32500 3 = 0
+  1-adr8             2-data28           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-data28          15-cas3            16-GND            
+;
+          dd126 - DIP16           : 170000 30000 1 = 0
+  1-adr8             2-data29           3-we3              4-ras3           
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data29          15-cas3            16-GND
+;
+          dd127 - DIP16           : 187500 32500 3 = 0
+  1-adr8             2-data30           3-we3              4-ras3
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data30          15-cas3            16-GND
+;
+          dd128 - DIP16           : 180000 30000 1 = 0
+  1-adr8             2-data31           3-we3              4-ras3
+  5-adr6             6-adr5             7-adr4             8-Vcc
+  9-adr7            10-adr2            11-adr1            12-adr0
+ 13-adr3            14-data31          15-cas3            16-GND
+;
+          dd129 - DIP20           : 37500 192500 2 = 0
+  1-WE               2-BD06             3-BD07             4-BD04
+  5-BD05             6-BD02             7-BD03             8-BD00
+  9-BD01            10-GND             11-data01          12-data00
+ 13-data03          14-data02          15-data05          16-data04         
+ 17-data07          18-data06          19-OPENL           20-Vcc            
+;
+          dd130 - DIP20           : 37500 182500 2 = 0
+  1-BYTE0            2-CODE6            3-data06           4-data04         
+  5-CODE4            6-CODE2            7-data02           8-data00         
+  9-CODE0           10-GND             11-LDCODE          12-CODE1          
+ 13-data01          14-data03          15-CODE3           16-CODE5          
+ 17-data05          18-data07          19-CODE7           20-Vcc            
+;
+          dd131 - DIP14           : 56250 192500 2 = 0
+  1-GND              2-data00           3-..free..         4-data01         
+  5-par0             6-..free..         7-GND              8-data04         
+  9-data05          10-data06          11-data07          12-data02         
+ 13-data03          14-Vcc            
+;
+          dd132 - DIP20           : 82500 192500 2 = 0
+  1-WE               2-BD14             3-BD15             4-BD12           
+  5-BD13             6-BD10             7-BD11             8-BD08           
+  9-BD09            10-GND             11-data09          12-data08         
+ 13-data11          14-data10          15-data13          16-data12         
+ 17-data15          18-data14          19-OPENL           20-Vcc            
+;
+          dd133 - DIP20           : 82500 182500 2 = 0
+  1-BYTE1            2-CODE6            3-data14           4-data12         
+  5-CODE4            6-CODE2            7-data10           8-data08         
+  9-CODE0           10-GND             11-LDCODE          12-CODE1          
+ 13-data09          14-data11          15-CODE3           16-CODE5          
+ 17-data13          18-data15          19-CODE7           20-Vcc            
+;
+          dd134 - DIP14           : 101250 192500 2 = 0
+  1-GND              2-data08           3-..free..         4-data09         
+  5-par1             6-..free..         7-GND              8-data12         
+  9-data13          10-data14          11-data15          12-data10         
+ 13-data11          14-Vcc            
+;
+          dd135 - DIP20           : 127500 192500 2 = 0
+  1-WE               2-BD22             3-BD23             4-BD20           
+  5-BD21             6-BD18             7-BD19             8-BD16           
+  9-BD17            10-GND             11-data17          12-data16         
+ 13-data19          14-data18          15-data21          16-data20         
+ 17-data23          18-data22          19-OPENL           20-Vcc            
+;
+          dd136 - DIP20           : 127500 182500 2 = 0
+  1-BYTE2            2-CODE6            3-data22           4-data20         
+  5-CODE4            6-CODE2            7-data18           8-data16         
+  9-CODE0           10-GND             11-LDCODE          12-CODE1          
+ 13-data17          14-data19          15-CODE3           16-CODE5          
+ 17-data21          18-data23          19-CODE7           20-Vcc            
+;
+          dd137 - DIP14           : 146250 192500 2 = 0
+  1-GND              2-data16           3-..free..         4-data17         
+  5-par2             6-..free..         7-GND              8-data20         
+  9-data21          10-data22          11-data23          12-data18         
+ 13-data19          14-Vcc            
+;
+          dd138 - DIP20           : 172500 192500 2 = 0
+  1-WE               2-BD30             3-BD31             4-BD28           
+  5-BD29             6-BD26             7-BD27             8-BD24           
+  9-BD25            10-GND             11-data25          12-data24         
+ 13-data27          14-data26          15-data29          16-data28         
+ 17-data31          18-data30          19-OPENL           20-Vcc            
+;
+          dd139 - DIP20           : 172500 182500 2 = 0
+  1-BYTE3            2-CODE6            3-data30           4-data28         
+  5-CODE4            6-CODE2            7-data26           8-data24         
+  9-CODE0           10-GND             11-LDCODE          12-CODE1          
+ 13-data25          14-data27          15-CODE3           16-CODE5          
+ 17-data29          18-data31          19-CODE7           20-Vcc            
+;
+          dd140 - DIP14           : 191250 192500 2 = 0
+  1-GND              2-data24           3-..free..         4-data25         
+  5-par3             6-..free..         7-GND              8-data28         
+  9-data29          10-data30          11-data31          12-data26         
+ 13-data27          14-Vcc            
+;
+          dd141 - DIP14           : 191250 182500 2 = 0
+  1-par1             2-par0             3-..free..         4-GND            
+  5-DIN              6-RES              7-GND              8-GND            
+  9-GND             10-GND             11-PAR             12-par3           
+ 13-par2            14-Vcc            
+;
+          dd142 - DIP20           : 165000 207500 2 = 0
+  1-GND              2-BBYTE3           3-BCODE3           4-BBYTE2         
+  5-BCODE2           6-BBYTE1           7-BCODE1           8-BBYTE0         
+  9-BCODE0          10-GND             11-CODE0           12-BYTE0          
+ 13-CODE1           14-BYTE1           15-CODE2           16-BYTE2          
+ 17-CODE3           18-BYTE3           19-TCODEH          20-Vcc            
+;
+          dd143 - DIP20           : 217500 170000 3 = 0
+  1-GND              2-BRESET           3-BANK1            4-BBANK2         
+  5-BANK0            6-BBANK3           7-ADR8             8-BCAS0          
+  9-..free..        10-GND             11-..free..        12-CAS            
+ 13-BADR8           14-BANK3           15-BBANK0          16-BANK2          
+ 17-BBANK1          18-RESET           19-GND             20-Vcc            
+;
+          dd144 - DIP20           : 207500 170000 3 = 0
+  1-GND              2-BADR4            3-ADR0             4-BADR5          
+  5-ADR1             6-BADR6            7-ADR2             8-BADR7          
+  9-ADR3            10-GND             11-BADR3           12-ADR7           
+ 13-BADR2           14-ADR6            15-BADR1           16-ADR5           
+ 17-BADR0           18-ADR4            19-GND             20-Vcc            
+;
+          dd145 - DIP20           : 191250 207500 2 = 0
+  1-GND              2-BDATA            3-BCODE7           4-BWE            
+  5-BCODE6           6-BRAS             7-BCODE5           8-BLDCODE        
+  9-BCODE4          10-GND             11-CODE4           12-LDCODE         
+ 13-CODE5           14-RAS             15-CODE6           16-WE             
+ 17-CODE7           18-DATA            19-TCODEH          20-Vcc            
+;
+          dd146 - DIP16           : 190000 150000 1 = 0
+  1-adr8             2-DIN              3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-DOUT            15-cas0            16-GND            
+;
+          dd147 - DIP16           : 190000 110000 1 = 0
+  1-adr8             2-DIN              3-we0              4-ras0           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-DOUT            15-cas1            16-GND            
+;
+          dd148 - DIP16           : 190000 70000 1 = 0
+  1-adr8             2-DIN              3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-DOUT            15-cas2            16-GND            
+;
+          dd149 - DIP16           : 190000 30000 1 = 0
+  1-adr8             2-DIN              3-we1              4-ras1           
+  5-adr6             6-adr5             7-adr4             8-Vcc            
+  9-adr7            10-adr2            11-adr1            12-adr0           
+ 13-adr3            14-DOUT            15-cas3            16-GND            
+;
+            J01 - PIN             : 212500 207500 0 = 0
+  1-BCAS0          
+;
+            J02 - PIN             : 215000 207500 0 = 0
+  1-BCAS1          
+;
+            J03 - PIN             : 217500 207500 0 = 0
+  1-BCAS2          
+;
+            J04 - PIN             : 220000 207500 0 = 0
+  1-BCAS3          
+;
+            J05 - PIN             : 216250 201250 0 = 0
+  1-BCAS0          
+;
+             R0 - RH              : 202500 161250 0 = 0
+  1-adr0             2-ADR0           
+;
+             R1 - RH              : 205000 163750 0 = 0
+  1-adr1             2-ADR1           
+;
+             R2 - RH              : 202500 166250 0 = 0
+  1-adr2             2-ADR2           
+;
+             R3 - RH              : 205000 158750 0 = 0
+  1-adr3             2-ADR3           
+;
+             R4 - RH              : 190000 166250 0 = 0
+  1-adr4             2-ADR4           
+;
+             R5 - RH              : 192500 163750 0 = 0
+  1-adr5             2-ADR5           
+;
+             R6 - RH              : 190000 161250 0 = 0
+  1-adr6             2-ADR6           
+;
+             R7 - RH              : 195625 180000 1 = 0
+  1-ADR7             2-adr7           
+;
+             R8 - RH              : 192500 152500 0 = 0
+  1-adr8             2-ADR8           
+;
+             R9 - RH              : 190000 155000 0 = 0
+  1-cas0             2-CAS0           
+;
+            R10 - RH              : 192500 158750 0 = 0
+  1-ras0             2-RAS0           
+;
+            R11 - RH              : 202500 155000 0 = 0
+  1-we0              2-WE0            
+;
+          dd150 - DIP14           : 208750 132500 3 = 0
+  1-..free..         2-..free..         3-..free..         4-WE             
+  5-WE               6-WE0              7-GND              8-RAS0           
+  9-RAS             10-RAS             11-CAS0            12-CAS            
+ 13-BANK0           14-Vcc            
+;
+$
