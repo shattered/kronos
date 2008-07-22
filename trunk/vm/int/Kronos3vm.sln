@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Kronos3vm", "Kronos3vm.vcproj", "{C6915E57-5110-4863-9246-A31D9F7F24E5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Hybrid|Win32 = Hybrid|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C6915E57-5110-4863-9246-A31D9F7F24E5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C6915E57-5110-4863-9246-A31D9F7F24E5}.Debug|Win32.Build.0 = Debug|Win32
+		{C6915E57-5110-4863-9246-A31D9F7F24E5}.Hybrid|Win32.ActiveCfg = Hybrid|Win32
+		{C6915E57-5110-4863-9246-A31D9F7F24E5}.Hybrid|Win32.Build.0 = Hybrid|Win32
+		{C6915E57-5110-4863-9246-A31D9F7F24E5}.Release|Win32.ActiveCfg = Release|Win32
+		{C6915E57-5110-4863-9246-A31D9F7F24E5}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
