@@ -1,0 +1,70 @@
+                    Overview of WordMaker.
+
+    Design of WordMaker text processing system was begun in 1984.
+The  goal was to create a portable multi-language word processor.
+First  implementation  of  this  system  (called WordMaker 1) for
+CP/M-80 is currently used in various places of Estonia. Next step
+in  microcomputer word processing technology, WordMaker 2 is more
+powerful and more WordStar-compatible. The version of this system
+for Exelsior II has the  following facilities:
+
+    **  Multi-language  support: full 8-bit code is avalaible for
+characters. Up to three fonts can be displayed simultaneously.
+
+    ** Video editing: text part of the screen looks like a window
+to  the  file  being  edited.  Move  by  column,  word,  line, to
+begin/end of line, screen, file; Scroll by line or screen; Delete
+current/  previous  character, word right, delete to begin/end of
+line,   current   line;   insert  line;  insert/overwrite  modes;
+concatenate lines. Cursor can be moved after logical end of line.
+All changes are immediately displayed;
+
+    **  Help  system:  list  of  available  commands  can be seen
+simultaneously  with  text  being edited; Display of menus can be
+switched off.
+
+    ** Undo: restore current line; recall last deleted line.
+
+    **  Block  operations:  sequence  of  lines  can be marked as
+block; Block can be copied, moved, deleted, written to disk.
+
+    **  Find/Replace:  find ignoring case; find whole words only;
+global  find/replace;  find/replace backwards; display only lines
+matched with find pattern.
+
+    **  Horizontal  rolling:  for  long  lines,  screen  is moved
+horizontally  if user attemps to move out of it. Line can contain
+up to 255 characters.
+
+    **  Word  wrap:  during  text  entry  there is no need to use
+RETURN  key: line is formatted and new line is inserted automati-
+cally; indent mode is available.
+
+    **   Formatting:  from  current  line  to  end  of  paragraph
+(paragraph  is  sequence of lines ending with CTRL-F); justify to
+right margin; center text between margins.
+
+    **  Hyphenation:  words  are  hyphenated automatically during
+reformat.  For irregular words, hyphenation places can be defined
+by  entering CTRL-_ controls into word. Hyphenation of particular
+word  can  be  disabled  by entering CTRL-_ as first character in
+word. Soft hyphenation can be switched off.
+
+    **  Markers:  up to ten places in text are remembered. Cursor
+can be returned to its previous place.
+
+    ** File and directory operations: display directory; display,
+read, delete another file.
+
+    **  Text  printing:  a  separate  program called WordPrint is
+available.  WordPrint  reads  printer  description  from  printer
+definition  file. A number of print controls and dot commands can
+be  used  in  text  to  be printed; Selective page/line printing;
+printable  files  can  contain  references  to another files (.FI
+command); multiple copy printing.
+
+
+
+    Jan 17, 1987    		Andrus Moor (phone 537321 Tallinn)
+
+

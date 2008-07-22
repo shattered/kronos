@@ -1,0 +1,11 @@
+DEFINITION MODULE inNum;
+
+IMPORT pcK;
+
+CONST
+  pc ::= pcK;
+
+PROCEDURE binary(n: pc.NODE; x,y: pc.VALUE; VAR z: pc.VALUE);
+
+END inNum.
+

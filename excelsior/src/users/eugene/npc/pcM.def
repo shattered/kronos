@@ -1,0 +1,135 @@
+DEFINITION MODULE pcM; (* Ned 28-Mar-91. (c) KRONOS *)
+
+IMPORT  SYSTEM;
+
+TYPE
+  BYTE     = CHAR;
+  SHORTINT = INTEGER;
+
+VAR  (* sizes of basic types *)
+  cardinal: LONGINT;
+  integer : LONGINT;
+  longint : LONGINT;
+  real    : LONGINT;
+  longreal: LONGINT;
+  boolean : LONGINT;
+  bitset  : LONGINT;
+  byte    : LONGINT;   (* == shortint, shortcard, char *)
+  word    : LONGINT;
+  addr    : LONGINT;   (* == pointer *)
+  proctype: LONGINT;
+
+VAR nilval: LONGINT;
+
+VAR
+  min_sint,max_sint: LONGINT;
+  min_int ,max_int : LONGINT;
+  max_scard        : LONGINT;
+  max_card         : LONGINT;
+  min_lint,max_lint: LONGINT;
+  min_real,max_real: REAL;
+
+VAR
+  max_hex_dig: SHORTINT; (* :=8 *)
+  max_dig    : INTEGER; (* maximal longreal fraction length *)
+  max_exp    : INTEGER; (* maximal longreal exponent *)
+
+VAR
+  oberon: BOOLEAN; (* not Modula-2, set by main program *)
+
+VAR alpha: ARRAY CHAR OF CHAR;
+
+(* alpha[i] = 2C for digits and latin letters;
+   alpha[i] = 1C for other letters (cyrilic, "_", "?");
+   alpha[i] = 0C otherwise.
+*)
+
+(*----------------------------------------------------------------*)
+
+TYPE
+  GETSTR  = PROCEDURE (VAR ARRAY OF CHAR, VAR BOOLEAN);
+  MESSAGE = PROCEDURE (ARRAY OF CHAR);
+  ERROR   = PROCEDURE (
+                       INTEGER,           (* line          *)
+                       INTEGER,           (* col           *)
+                       ARRAY OF CHAR,     (* source line   *)
+                       ARRAY OF CHAR      (* error message *)
+                       );
+  (* line and col define position of error in source line. *)
+
+VAR
+  getstr : GETSTR;
+  error  : ERROR;
+  message: MESSAGE;
+  pass2  : BOOLEAN;
+
+(*----------------------------------------------------------------*)
+
+PROCEDURE create(name: ARRAY OF CHAR; VAR done: BOOLEAN);
+
+PROCEDURE put(x: LONGINT);
+
+PROCEDURE put2(x: LONGINT);
+PROCEDURE put4(x: LONGINT);
+PROCEDURE put8(x: LONGREAL);
+
+PROCEDURE put_name(s: ARRAY OF CHAR);
+
+PROCEDURE put_bytes(VAR x: ARRAY OF BYTE; len: LONGINT);
+
+PROCEDURE close_new(register: BOOLEAN);
+
+(*----------------------------------------------------------------*)
+
+PROCEDURE open(name: ARRAY OF CHAR; self: BOOLEAN; VAR done: BOOLEAN);
+
+PROCEDURE get(VAR x: LONGINT);
+
+PROCEDURE get2(VAR x: LONGINT);
+PROCEDURE get4(VAR x: LONGINT);
+PROCEDURE get8(VAR x: LONGREAL);
+
+PROCEDURE get_name (VAR s: ARRAY OF CHAR);
+PROCEDURE get_bytes(VAR x: ARRAY OF BYTE; len: LONGINT);
+
+PROCEDURE close;
+
+PROCEDURE equal(pos: LONGINT): BOOLEAN;
+(* compare old & new symfile; pos - start position *)
+
+(*----------------------------------------------------------------*)
+
+PROCEDURE str_equ(a,b: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE str_copy(VAR a: ARRAY OF CHAR; b: ARRAY OF CHAR);
+
+PROCEDURE app     (VAR s: ARRAY OF CHAR; x: ARRAY OF CHAR);
+PROCEDURE app_num (VAR s: ARRAY OF CHAR; x: LONGINT);
+
+PROCEDURE time(): LONGINT;
+
+PROCEDURE err_msg(err: INTEGER; VAR msg: ARRAY OF CHAR);
+
+PROCEDURE abort;
+
+TYPE CLOSURE = PROCEDURE ;
+
+PROCEDURE final(closure_proc: CLOSURE);
+
+(*----------------------------------------------------------------*)
+
+PROCEDURE   ALLOCATE(VAR a: SYSTEM.ADDRESS; size: LONGINT);
+PROCEDURE DEALLOCATE(VAR a: SYSTEM.ADDRESS; size: LONGINT);
+
+PROCEDURE release;
+
+(*----------------------------------------------------------------*)
+
+(* log out: for debug only *)
+
+PROCEDURE wc(c: CHAR);
+PROCEDURE ws(s: ARRAY OF CHAR);
+PROCEDURE wi(x: LONGINT; n: INTEGER);
+PROCEDURE wl;
+
+END pcM.
+

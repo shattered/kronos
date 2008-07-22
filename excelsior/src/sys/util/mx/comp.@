@@ -1,0 +1,1 @@
+{ CD=/sys/util/mx SYM=". /sys /sym /usr/sym" mxOUT=*=/sys } mx mx mxObj mxCmd mxScan mxPars mxGen mxSym turbo2x pm sv $1

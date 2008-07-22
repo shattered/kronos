@@ -1,0 +1,1 @@
+{ SYM='/sys /sym' mxOUT=*=/sys CD=/sys/pure } mx Strings ASCII Formats lowLevel Random $1

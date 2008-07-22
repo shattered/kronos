@@ -1,0 +1,1 @@
+{CD=/usr/util mxOUT=*=/sys} mx senv setkb sort kcScreens.d kcScreens.m kc.m $1

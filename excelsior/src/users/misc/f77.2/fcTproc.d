@@ -1,0 +1,10 @@
+DEFINITION MODULE fcTproc; (* 17-Feb-89.  *)
+
+PROCEDURE TableProc;
+PROCEDURE AllocTemp(VAR offs:INTEGER; len:INTEGER);
+PROCEDURE FreeTemp(offs,len:INTEGER);
+PROCEDURE AllocDesc(VAR D:INTEGER);
+PROCEDURE FreeDesc(D:INTEGER);
+PROCEDURE FreeDescs;
+
+END fcTproc.

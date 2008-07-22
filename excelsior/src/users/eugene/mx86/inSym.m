@@ -1,0 +1,2 @@
+IMPLEMENTATION MODULE inSym; (*  10-Nov-90. (c) KRONOS *)
+END inSym.

@@ -1,0 +1,614 @@
+ident                           int_number
+real_number                     char
+string                          ampersand
+apostrophe                      left_parenthesis
+right_parenthesis               star
+plus                            comma
+minus                           point
+slash                           colon
+semicolon                       less
+equal                           greater
+bar                             arrow
+double_dot                      double_star
+assign                          inequality
+greater_equal                   less_equal
+label_left                      label_right
+box                             abort
+abs                             accept
+access                          all
+and                             array
+at                              begin
+body                            case
+constant                        declare
+delay                           delta
+digits                          do
+else                            elsif
+end                             entry
+exception                       exit
+for                             function
+generic                         goto
+if                              in
+is                              limited
+loop                            mod
+new                             not
+null                            of
+or                              others
+out                             package
+pragma                          private
+procedure                       raise
+range                           record
+rem                             renames
+return                          reverse
+select                          separate
+subtype                         task
+terminate                       then
+type                            use
+when                            while
+with                            xor
+eot
+*
+basic_declaration               object_declaration
+number_declaration              type_declaration
+subtype_declaration             subprogram_declaration
+package_declaration             task_declaration
+generic_declaration             exception_declaration
+generic_instantiation           renaming_declaration
+deferred_constant_declaration   identifier_list
+full_type_declaration           type_definition
+subtype_indication
+type_mark                       constraint
+range_constraint                range_def
+enumeration_type_definition     enumeration_list
+enumeration_literal_specification
+enumeration_literal             integer_type_definition
+real_type_definition            floating_point_constraint
+floating_accuracy_definition    fixed_point_constraint
+fixed_accuracy_definition       array_type_definition
+unconstrained_array_definition  index_subtype_list
+constrained_array_definition    index_subtype_definition
+index_constraint                discrete_range_list
+discrete_range                  expression
+incomplete_type_declaration     private_type_declaration
+discriminant_part               record_type_definition
+access_type_definition          derived_type_definition
+name                            discriminant_constraint
+attribute                       simple_expression
+component_list                  component_declaration_list
+component_declaration           variant_part
+component_subtype_definition    discriminant_specification_list
+discriminant_specification
+discriminant_association_list   discriminant_association
+simple_name_list                simple_name
+variant_list                    variant
+choice_list                     choice
+declarative_part                basic_declarative_item_list
+later_declarative_item_list     basic_declarative_item
+later_declarative_item          representation_clause
+use_clause                      body_def
+proper_body                     body_stub
+subprogram_body                 package_body
+task_body                       operator_symbol
+indexed_component               slice
+selected_component              prefix
+function_call                   expression_list
+selector                        attribute_designator
+aggregate                       component_association_list
+component_association           relation
+and_relation_list               and_then_relation_list
+or_relation_list                or_else_relation_list
+xor_relation_list               relation_operator
+unary_adding_operator           binary_adding_operator_list
+term                            binary_adding_operator
+factor                          multiplying_operator_list
+multiplying_operator            primary
+numeric_literal
+allocator                       type_conversion
+qualified_expression            logical_operator
+highest_precedence_operator     sequence_of_statements
+statement                       label
+simple_statement                compound_statement
+null_statement                  assignment_statement
+procedure_call_statement        exit_statement
+return_statement                goto_statement
+entry_call_statement            delay_statement
+abort_statement                 raise_statement
+code_statement                  if_statement
+case_statement                  loop_statement
+block_statement                 accept_statement
+select_statement
+condition                       case_statement_alternative_list
+case_statement_alternative      iteration_scheme
+loop_parameter_specification    exception_handler_list
+subprogram_specification        formal_part
+designator                      parameter_specification_list
+parameter_specification         mode
+actual_parameter_part           parameter_association_list
+parameter_association           formal_parameter
+actual_parameter                package_specification
+name_list                       task_specification
+entry_declaration               elsif_list
+exception_handler               compilation
+compilation_unit_list           compilation_unit
+context_clause                  library_unit
+secondary_unit                  library_unit_body
+subunit                         with_use_clause_list
+with_use_clause                 with_clause
+use_clause_list                 exception_choice_list
+exception_choice                generic_specification
+generic_formal_part             generic_parameter_declaration_list
+generic_parameter_declaration   generic_type_definition
+generic_actual_part             generic_association_list
+generic_association             generic_formal_parameter
+generic_actual_parameter        type_representation_clause
+address_clause                  length_clause
+enumeration_representation_clause
+record_representation_clause    alignment_clause
+component_clause
+$
+numeric_literal int_number
+numeric_literal real_number
+basic_declaration object_declaration
+basic_declaration number_declaration
+basic_declaration type_declaration
+basic_declaration subtype_declaration
+basic_declaration subprogram_declaration
+basic_declaration package_declaration
+basic_declaration task_declaration
+basic_declaration generic_declaration
+basic_declaration exception_declaration
+basic_declaration generic_instantiation
+basic_declaration renaming_declaration
+basic_declaration deferred_constant_declaration
+object_declaration identifier_list colon constant subtype_indication assign expression semicolon
+object_declaration identifier_list colon subtype_indication assign expression semicolon
+object_declaration identifier_list colon constant subtype_indication semicolon
+object_declaration identifier_list colon subtype_indication semicolon
+object_declaration identifier_list colon constant constrained_array_definition assign expression semicolon
+object_declaration identifier_list colon constrained_array_definition assign expression semicolon
+object_declaration identifier_list colon constant constrained_array_definition semicolon
+object_declaration identifier_list colon constrained_array_definition semicolon
+number_declaration identifier_list colon constant assign expression semicolon
+identifier_list ident
+identifier_list identifier_list comma ident
+type_declaration full_type_declaration
+type_declaration incomplete_type_declaration
+type_declaration private_type_declaration
+full_type_declaration type ident discriminant_part is type_definition semicolon
+full_type_declaration type ident is type_definition semicolon
+type_definition enumeration_type_definition
+type_definition integer_type_definition
+type_definition real_type_definition
+type_definition array_type_definition
+type_definition record_type_definition
+type_definition access_type_definition
+type_definition derived_type_definition
+subtype_declaration subtype ident is subtype_indication semicolon
+subtype_indication type_mark
+subtype_indication type_mark constraint
+type_mark name
+constraint range_constraint
+constraint floating_point_constraint
+constraint fixed_point_constraint
+constraint index_constraint
+constraint discriminant_constraint
+derived_type_definition new subtype_indication
+range_constraint range range_def
+range_def attribute
+range_def simple_expression double_dot simple_expression
+enumeration_type_definition left_parenthesis enumeration_list right_parenthesis
+enumeration_list enumeration_literal_specification
+enumeration_list enumeration_list comma enumeration_literal_specification
+enumeration_literal_specification enumeration_literal
+enumeration_literal ident
+enumeration_literal char
+integer_type_definition range_constraint
+real_type_definition floating_point_constraint
+real_type_definition fixed_point_constraint
+floating_point_constraint floating_accuracy_definition
+floating_point_constraint floating_accuracy_definition range_constraint
+floating_accuracy_definition digits simple_expression
+fixed_point_constraint fixed_accuracy_definition
+fixed_point_constraint fixed_accuracy_definition range_constraint
+fixed_accuracy_definition delta simple_expression
+array_type_definition unconstrained_array_definition
+array_type_definition constrained_array_definition
+unconstrained_array_definition array left_parenthesis index_subtype_list right_parenthesis of subtype_indication
+index_subtype_list index_subtype_definition
+index_subtype_list index_subtype_list comma index_subtype_definition
+constrained_array_definition array index_constraint of subtype_indication
+index_subtype_definition type_mark range box
+index_constraint left_parenthesis discrete_range_list right_parenthesis
+discrete_range_list discrete_range
+discrete_range_list discrete_range_list comma discrete_range
+discrete_range subtype_indication
+discrete_range range_def
+record_type_definition record component_list end record
+component_list component_declaration_list
+component_declaration_list component_declaration_list component_declaration
+component_declaration_list component_declaration
+component_list null
+component_list variant_part
+component_list component_declaration_list variant_part
+component_declaration identifier_list colon component_subtype_definition
+component_declaration identifier_list colon component_subtype_definition assign expression
+component_subtype_definition subtype_indication
+discriminant_part left_parenthesis discriminant_specification_list right_parenthesis
+discriminant_specification_list discriminant_specification_list semicolon discriminant_specification
+discriminant_specification_list discriminant_specification
+discriminant_specification identifier_list colon type_mark
+discriminant_specification identifier_list colon type_mark assign expression
+discriminant_constraint left_parenthesis discriminant_association_list right_parenthesis
+discriminant_association_list discriminant_association_list comma discriminant_association
+discriminant_association_list discriminant_association
+discriminant_association expression
+discriminant_association simple_name_list arrow expression
+simple_name_list simple_name_list bar simple_name
+simple_name_list simple_name
+variant_part case simple_name is variant_list end case semicolon
+variant_list variant_list variant
+variant_list variant
+variant when choice_list arrow component_list
+choice_list choice_list bar choice
+choice_list choice
+choice simple_expression
+choice discrete_range
+choice others
+choice simple_name
+access_type_definition access subtype_indication
+incomplete_type_declaration type ident semicolon
+incomplete_type_declaration type ident discriminant_part semicolon
+declarative_part basic_declarative_item_list
+declarative_part later_declarative_item_list
+declarative_part basic_declarative_item_list later_declarative_item_list
+basic_declarative_item_list basic_declarative_item_list basic_declarative_item
+basic_declarative_item_list basic_declarative_item
+later_declarative_item_list later_declarative_item_list later_declarative_item
+later_declarative_item_list later_declarative_item
+basic_declarative_item basic_declaration
+basic_declarative_item representation_clause
+basic_declarative_item use_clause
+later_declarative_item body_def
+later_declarative_item subprogram_declaration
+later_declarative_item package_declaration
+later_declarative_item task_declaration
+later_declarative_item generic_declaration
+later_declarative_item use_clause
+later_declarative_item generic_instantiation
+body_def proper_body
+body_def body_stub
+proper_body subprogram_body
+proper_body package_body
+proper_body task_body
+name simple_name
+name char
+name operator_symbol
+name indexed_component
+name slice
+name selected_component
+name attribute
+simple_name ident
+prefix name
+prefix function_call
+indexed_component prefix left_parenthesis expression_list right_parenthesis
+expression_list expression_list comma expression
+expression_list expression
+slice prefix left_parenthesis discrete_range right_parenthesis
+selected_component prefix point selector
+selector simple_name
+selector char
+selector operator_symbol
+selector all
+attribute prefix apostrophe attribute_designator
+attribute_designator simple_name
+attribute_designator simple_name left_parenthesis expression right_parenthesis
+aggregate left_parenthesis component_association_list right_parenthesis
+component_association_list component_association_list comma component_association
+component_association_list component_association
+component_association choice_list arrow expression
+component_association expression
+expression relation
+expression relation and_relation_list
+and_relation_list and_relation_list and relation
+and_relation_list and relation
+expression relation and_then_relation_list
+and_then_relation_list and_then_relation_list and then relation
+and_then_relation_list and then relation
+expression relation or_relation_list
+or_relation_list or_relation_list or relation
+or_relation_list or relation
+expression relation or_else_relation_list
+or_else_relation_list or_else_relation_list or else relation
+or_else_relation_list or else relation
+expression relation xor_relation_list
+xor_relation_list xor_relation_list xor relation
+xor_relation_list xor relation
+relation simple_expression
+relation simple_expression relation_operator simple_expression
+relation simple_expression in range_def
+relation simple_expression not in range_def
+relation simple_expression in type_mark
+relation simple_expression not in type_mark
+simple_expression unary_adding_operator term binary_adding_operator_list
+simple_expression term binary_adding_operator_list
+simple_expression unary_adding_operator term
+simple_expression term
+binary_adding_operator_list binary_adding_operator_list binary_adding_operator term
+binary_adding_operator_list binary_adding_operator term
+term factor
+term factor multiplying_operator_list
+multiplying_operator_list multiplying_operator_list multiplying_operator factor
+multiplying_operator_list multiplying_operator factor
+factor primary
+factor primary double_star primary
+factor abs primary
+factor not primary
+primary numeric_literal
+primary null
+primary aggregate
+primary string
+primary name
+primary allocator
+primary function_call
+primary type_conversion
+primary qualified_expression
+primary left_parenthesis expression right_parenthesis
+logical_operator and
+logical_operator or
+logical_operator xor
+relation_operator equal
+relation_operator inequality
+relation_operator less
+relation_operator greater
+relation_operator greater_equal
+relation_operator less_equal
+binary_adding_operator plus
+binary_adding_operator minus
+binary_adding_operator ampersand
+unary_adding_operator plus
+unary_adding_operator minus
+multiplying_operator star
+multiplying_operator slash
+multiplying_operator mod
+multiplying_operator rem
+highest_precedence_operator double_star
+highest_precedence_operator abs
+highest_precedence_operator not
+type_conversion type_mark left_parenthesis expression right_parenthesis
+qualified_expression type_mark apostrophe left_parenthesis expression right_parenthesis
+qualified_expression type_mark apostrophe aggregate
+allocator new subtype_indication
+allocator new qualified_expression
+sequence_of_statements statement
+sequence_of_statements sequence_of_statements statement
+statement label simple_statement
+statement simple_statement
+statement label compound_statement
+statement compound_statement
+simple_statement null_statement
+simple_statement assignment_statement
+simple_statement procedure_call_statement
+simple_statement exit_statement
+simple_statement return_statement
+simple_statement goto_statement
+simple_statement entry_call_statement
+simple_statement delay_statement
+simple_statement abort_statement
+simple_statement raise_statement
+simple_statement code_statement
+compound_statement if_statement
+compound_statement case_statement
+compound_statement loop_statement
+compound_statement block_statement
+compound_statement accept_statement
+compound_statement select_statement
+label label_left simple_name label_right
+null_statement null semicolon
+assignment_statement name assign expression
+if_statement if condition then sequence_of_statements elsif_list else sequence_of_statements end if semicolon
+if_statement if condition then sequence_of_statements else sequence_of_statements end if semicolon
+if_statement if condition then sequence_of_statements elsif_list end if semicolon
+if_statement if condition then sequence_of_statements end if semicolon
+elsif_list elsif_list elsif condition then sequence_of_statements
+elsif_list elsif condition then sequence_of_statements
+condition expression
+case_statement case expression is case_statement_alternative_list end case semicolon
+case_statement_alternative_list case_statement_alternative_list case_statement_alternative
+case_statement_alternative_list case_statement_alternative
+case_statement_alternative when choice_list arrow sequence_of_statements
+loop_statement simple_name colon iteration_scheme loop sequence_of_statements end loop simple_name semicolon
+loop_statement iteration_scheme loop sequence_of_statements end loop semicolon
+loop_statement simple_name colon loop sequence_of_statements end loop simple_name semicolon
+loop_statement loop sequence_of_statements end loop semicolon
+iteration_scheme while condition
+iteration_scheme for loop_parameter_specification
+loop_parameter_specification ident in reverse discrete_range
+loop_parameter_specification ident in discrete_range
+block_statement simple_name colon declare declarative_part begin sequence_of_statements exception exception_handler_list end simple_name semicolon
+block_statement declare declarative_part begin sequence_of_statements exception exception_handler_list end semicolon
+block_statement simple_name colon begin sequence_of_statements exception exception_handler_list end simple_name semicolon
+block_statement begin sequence_of_statements exception exception_handler_list end semicolon
+block_statement simple_name colon declare declarative_part begin sequence_of_statements end simple_name semicolon
+block_statement declare declarative_part begin sequence_of_statements end semicolon
+block_statement simple_name colon begin sequence_of_statements end simple_name semicolon
+block_statement begin sequence_of_statements end semicolon
+return_statement return semicolon
+return_statement return expression semicolon
+exit_statement exit semicolon
+exit_statement exit name semicolon
+exit_statement exit when condition semicolon
+exit_statement exit name when condition semicolon
+goto_statement goto name semicolon
+subprogram_declaration subprogram_specification semicolon
+subprogram_specification procedure ident
+subprogram_specification procedure ident formal_part
+subprogram_specification function designator return type_mark
+subprogram_specification function designator formal_part return type_mark
+designator ident
+designator operator_symbol
+operator_symbol string
+formal_part left_parenthesis parameter_specification_list right_parenthesis
+parameter_specification_list parameter_specification_list semicolon parameter_specification
+parameter_specification_list parameter_specification
+parameter_specification identifier_list colon type_mark
+parameter_specification identifier_list colon type_mark assign expression
+parameter_specification identifier_list colon mode type_mark
+parameter_specification identifier_list colon mode type_mark assign expression
+mode in
+mode in out
+mode out
+subprogram_body subprogram_specification is begin sequence_of_statements end semicolon
+subprogram_body subprogram_specification is declarative_part begin sequence_of_statements end semicolon
+subprogram_body subprogram_specification is begin sequence_of_statements exception exception_handler_list end semicolon
+subprogram_body subprogram_specification is declarative_part begin sequence_of_statements exception exception_handler_list end semicolon
+subprogram_body subprogram_specification is begin sequence_of_statements end designator semicolon
+subprogram_body subprogram_specification is declarative_part begin sequence_of_statements end designator semicolon
+subprogram_body subprogram_specification is begin sequence_of_statements exception exception_handler_list end designator semicolon
+subprogram_body subprogram_specification is declarative_part begin sequence_of_statements exception exception_handler_list end designator semicolon
+procedure_call_statement name actual_parameter_part semicolon
+procedure_call_statement name semicolon
+function_call name actual_parameter_part
+function_call name
+actual_parameter_part left_parenthesis parameter_association_list right_parenthesis
+parameter_association_list parameter_association_list comma parameter_association
+parameter_association_list parameter_association
+parameter_association formal_parameter arrow actual_parameter
+parameter_association actual_parameter
+formal_parameter simple_name
+actual_parameter expression
+actual_parameter name
+actual_parameter type_mark left_parenthesis name right_parenthesis
+package_declaration package_specification semicolon
+package_specification package ident is basic_declarative_item_list private basic_declarative_item_list end simple_name
+package_specification package ident is private basic_declarative_item_list end simple_name
+package_specification package ident is basic_declarative_item_list end simple_name
+package_specification package ident is end simple_name
+package_specification package ident is basic_declarative_item_list private basic_declarative_item_list end
+package_specification package ident is private basic_declarative_item_list end
+package_specification package ident is basic_declarative_item_list end
+package_specification package ident is end
+package_body package body simple_name is declarative_part begin sequence_of_statements exception exception_handler_list end simple_name semicolon
+package_body package body simple_name is declarative_part begin sequence_of_statements exception exception_handler_list end semicolon
+package_body package body simple_name is declarative_part begin sequence_of_statements end simple_name semicolon
+package_body package body simple_name is declarative_part begin sequence_of_statements end semicolon
+package_body package body simple_name is declarative_part end simple_name semicolon
+package_body package body simple_name is declarative_part end semicolon
+package_body package body simple_name is begin sequence_of_statements exception exception_handler_list end simple_name semicolon
+package_body package body simple_name is begin sequence_of_statements exception exception_handler_list end semicolon
+package_body package body simple_name is begin sequence_of_statements end simple_name semicolon
+package_body package body simple_name is begin sequence_of_statements end semicolon
+package_body package body simple_name is end simple_name semicolon
+package_body package body simple_name is end semicolon
+private_type_declaration type ident discriminant_part is limited private semicolon
+private_type_declaration type ident discriminant_part is private semicolon
+private_type_declaration type ident is limited private semicolon
+private_type_declaration type ident is private semicolon
+deferred_constant_declaration identifier_list colon constant type_mark semicolon
+use_clause use name_list semicolon
+name_list name_list comma name
+name_list name
+renaming_declaration ident colon type_mark renames name semicolon
+renaming_declaration ident colon exception renames name semicolon
+renaming_declaration package ident renames name semicolon
+renaming_declaration subprogram_specification renames name semicolon
+task_declaration task_specification semicolon
+task_specification task semicolon
+task_body task body semicolon
+entry_declaration entry semicolon
+entry_call_statement name actual_parameter_part semicolon
+entry_call_statement name semicolon
+accept_statement accept semicolon
+delay_statement delay simple_expression semicolon
+select_statement select semicolon
+abort_statement abort name_list semicolon
+exception_handler_list exception_handler_list exception_handler
+exception_handler_list exception_handler
+compilation compilation_unit_list
+compilation_unit_list compilation_unit_list compilation_unit
+compilation_unit_list compilation_unit
+compilation_unit context_clause library_unit
+compilation_unit library_unit
+compilation_unit context_clause secondary_unit
+compilation_unit secondary_unit
+library_unit subprogram_declaration
+library_unit package_declaration
+library_unit generic_declaration
+library_unit generic_instantiation
+library_unit subprogram_body
+secondary_unit library_unit_body
+secondary_unit subunit
+library_unit_body subprogram_body
+library_unit_body package_body
+context_clause with_use_clause_list
+with_use_clause_list with_use_clause_list with_use_clause
+with_use_clause_list with_use_clause
+with_use_clause with_clause
+with_use_clause with_clause use_clause_list
+use_clause_list use_clause_list use_clause
+use_clause_list use_clause
+with_clause with simple_name_list semicolon
+body_stub subprogram_specification is separate semicolon
+body_stub package body simple_name is separate semicolon
+body_stub task body simple_name is separate semicolon
+subunit separate left_parenthesis name right_parenthesis proper_body
+exception_declaration identifier_list colon exception semicolon
+exception_handler when exception_choice_list arrow sequence_of_statements
+exception_choice_list exception_choice_list bar exception_choice
+exception_choice_list exception_choice
+exception_choice name
+exception_choice others
+raise_statement raise semicolon
+raise_statement raise name semicolon
+generic_declaration generic_specification semicolon
+generic_specification generic_formal_part subprogram_specification
+generic_specification generic_formal_part package_specification
+generic_formal_part generic generic_parameter_declaration_list
+generic_formal_part generic
+generic_parameter_declaration_list generic_parameter_declaration_list generic_parameter_declaration
+generic_parameter_declaration identifier_list colon in out type_mark assign expression semicolon
+generic_parameter_declaration identifier_list colon in type_mark assign expression semicolon
+generic_parameter_declaration identifier_list colon type_mark assign expression semicolon
+generic_parameter_declaration identifier_list colon in out type_mark semicolon
+generic_parameter_declaration identifier_list colon in type_mark semicolon
+generic_parameter_declaration identifier_list colon type_mark semicolon
+generic_parameter_declaration type ident is generic_type_definition semicolon
+generic_parameter_declaration private_type_declaration
+generic_parameter_declaration with subprogram_specification is name semicolon
+generic_parameter_declaration with subprogram_specification is box semicolon
+generic_parameter_declaration with subprogram_specification semicolon
+generic_type_definition left_parenthesis box right_parenthesis
+generic_type_definition range box
+generic_type_definition digits box
+generic_type_definition delta box
+generic_type_definition array_type_definition
+generic_type_definition access_type_definition
+generic_instantiation package ident is new name generic_actual_part semicolon
+generic_instantiation package ident is new name semicolon
+generic_instantiation procedure ident is new name generic_actual_part semicolon
+generic_instantiation procedure ident is new name semicolon
+generic_instantiation function designator is new name generic_actual_part semicolon
+generic_instantiation function designator is new name semicolon
+generic_actual_part left_parenthesis generic_association_list right_parenthesis
+generic_association_list generic_association_list comma generic_association
+generic_association_list generic_association
+generic_association generic_formal_parameter arrow generic_actual_parameter
+generic_association generic_actual_parameter
+generic_formal_parameter simple_name
+generic_formal_parameter operator_symbol
+generic_actual_parameter expression
+generic_actual_parameter name
+generic_actual_parameter type_mark
+representation_clause type_representation_clause
+representation_clause address_clause
+type_representation_clause length_clause
+type_representation_clause enumeration_representation_clause
+type_representation_clause record_representation_clause
+length_clause for attribute use simple_expression semicolon
+enumeration_representation_clause for simple_name use aggregate semicolon
+record_representation_clause for simple_name use record alignment_clause component_clause end record semicolon
+record_representation_clause for simple_name use record component_clause end record semicolon
+record_representation_clause for simple_name use record end record semicolon
+alignment_clause at mod simple_expression semicolon
+component_clause name at simple_expression range range_def semicolon
+address_clause for simple_name use at simple_expression semicolon
+code_statement type_mark apostrophe aggregate semicolon
+$

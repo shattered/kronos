@@ -1,0 +1,7 @@
+DEFINITION MODULE KB_GD; (* 11-Nov-89. (c) KRONOS *)
+
+PROCEDURE read(): CHAR;
+
+PROCEDURE stop;
+
+END KB_GD.

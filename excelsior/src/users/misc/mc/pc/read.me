@@ -1,0 +1,44 @@
+ 0. pcSystem.REALLOCATE !!!
+    release in mc, tester ...
+
+ 1. Options: assign structs & strings dynamic & static checks
+ 4. check simple types   -- type transfer to word
+ 5. base cmp???
+ 6. xpos
+ 8. s:='a' => to string.
+
+
+Sem:
+
+ 0. pcGen.Exi: DISPOSE(des.mg);
+    pcGenExpr: case^.alts
+ 1. застрокивание.
+
+ 2. constant range check
+ 6. formal calls
+ 7. RTS (new,dispose,resize)
+
+---------------------------------------------------------------
+
+NOTES:
+
+profile:
+-------
+
+VAR a,b,c: type  =>      a,b,c: VAR type;
+
+s: ARRAY OF type =>      high: INTEGER;
+                         s: ARRAY [0..high] OF type;
+
+SEQ VAR x: type  =>      x: VAL ARRAY [0..high] OF POINTER TO type;
+
+---------------------------------------------------------------
+
+BITSET = SET OF [0..BITS(INTEGER)-1];
+FOR i:=a TO b BY step DO
+  loop
+     ^.dw  -- body
+     ^.l
+          i:=a | exit b | plus step
+
+

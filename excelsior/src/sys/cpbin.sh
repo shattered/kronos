@@ -1,0 +1,1 @@
+ECHO=TB@ln api|lib|pure|cool|graph/*.d os/Users.d /lib/ -x &T3=$SONln def/*.d /def/ -x &T4=$SONcp -omq *.ref /usr/refcp -omq *.sym /usr/symcp *.ref /ref/ -mo     &T1=$SONcp *.sym /sym/ -mo     &T2=$SONcp util//*.sym /usr/sym/ -mo &T5=$SONcp util//*.ref /usr/ref/ -mo &T6=$SONcp -omq *.cod /bincp -omq *.cod /usr/bincp -omq *.cod /iprwait $T1 $T2 $T3 $T4 $T5 $T6

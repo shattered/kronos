@@ -1,0 +1,5 @@
+        [*]
+:NEXT   [ WR_CASH RD_MEM_D ]
+        [ ALU=A RW_PC ]
+        [ FLAG=ZERO FINISH ]
+        [ ALU=A+1 bus_A=RW_PC RD_MEM_A GOTO ADR=NEXT ] [*]

@@ -1,0 +1,75 @@
+MODULE VD;
+
+FROM SYSTEM     IMPORT  ADDRESS;
+FROM FsDrv      IMPORT  IamDriver, dMode;
+FROM Scheduler  IMPORT  MyTask, ProcessId, InitGate, EnterGate, ExitGate, Gate;
+FROM FsPublic   IMPORT  ok, NoSuchCFE, VisFSerr, NotImplemented
+                      , NoSuchBlock;
+FROM Consol     IMPORT  Show;
+
+VAR Door : Gate;
+
+PROCEDURE read(b: INTEGER; buf: ADDRESS; szB: INTEGER): BOOLEAN;
+CODE 92h END read;
+
+PROCEDURE write(b: INTEGER; buf: ADDRESS; szB: INTEGER): BOOLEAN;
+CODE 93h END write;
+
+PROCEDURE open(): BOOLEAN;
+CODE 94h END open;
+
+PROCEDURE Init(): BOOLEAN;
+BEGIN InitGate(Door); RETURN open() END Init;
+
+PROCEDURE Kill(): BOOLEAN;
+CODE 95h END Kill;
+
+PROCEDURE Read(u,b: INTEGER; buf: ADDRESS; szB: INTEGER): BOOLEAN;
+VAR res: BOOLEAN;
+BEGIN
+  EnterGate(Door);
+  res:=read(b,buf,szB);
+  ExitGate(Door);
+  RETURN res
+END Read;
+
+PROCEDURE Write(u,b: INTEGER; buf: ADDRESS; szB: INTEGER): BOOLEAN;
+VAR res: BOOLEAN;
+BEGIN
+  EnterGate(Door);
+  res:=write(b,buf,szB);
+  ExitGate(Door);
+  RETURN res
+END Write;
+
+VAR MemSize: INTEGER;
+   MemStart: POINTER TO INTEGER;
+
+PROCEDURE CFE(d,Op: CARDINAL; Info: ADDRESS): BOOLEAN;
+BEGIN
+  CASE Op OF
+    |2: (* power off *)
+    |3:
+    |4: RETURN Init();
+    |6: RETURN NotImplemented
+    |5: RETURN NotImplemented
+   |10: (* KILL *) MemSize:=0; IF Kill() THEN END;
+   |11: Info^:=MemStart; INC(Info); Info^:=MemSize
+   |20: RETURN NotImplemented
+  ELSE RETURN BOOLEAN(NoSuchCFE)
+  END; RETURN ok
+END CFE;
+
+VAR p: ProcessId;
+    r: BOOLEAN;
+    s: ARRAY [0..63] OF CHAR;
+ Parm: POINTER TO RECORD
+         Name: ARRAY [0..3] OF CHAR;
+       END;
+
+BEGIN p:=MyTask();
+  Parm:=p^.ParmLink;
+  Parm^.Name[2]:=0c;
+  r:=IamDriver(Parm^.Name,{0},blocked,Read,Write,CFE);
+  IF r THEN VisFSerr(r,s); Show(s); HALT(1) END;
+END VD.

@@ -1,0 +1,2 @@
+mx coDefs.d coErrors.d coIO.d coSym.d inAsm.d inCmd.d inFlow.d inGen.d inNum.d inSym.d inFPP.d mcPars.d mcScan.d pcSystem.d pcTab.d inCmds.d inConst.d inDesig.d inExpr.d inStat.d inVars.d mcObj.d mcGen.d mcSym.d mcVis.d
+mx coDefs.m coErrors.m coIO.m coSym.m inAsm.m inCmd.m inCmds.m inConst.m inDesig.m inExpr.m inFPP.m inFlow.m inGen.m inNum.m inStat.m inSym.m inVars.m m86.m mcGen.m mcObj.m mcPars.m mcScan.m mcSym.m mcVis.m pcSystem.m pcTab.m

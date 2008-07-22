@@ -1,0 +1,10 @@
+:REQ7   [ GOTO ADR=INT_OWR ][*][*][*]
+:REQ6   [ GOTO ADR=STK     ][*][*][*]
+:REQ5   [ GOTO ADR=ACL     ][*][*][*]
+:REQ4   [ GOTO ADR=TIME    ][*][*][*]
+:REQ3   [ GOTO ADR=CONSOL  ][*][*][*]
+:REQ2   [ GOTO ADR=DEBUG   ][*][*][*]
+:REQ1   [ GOTO ADR=CH_INT  ][*][*][*]
+:REQ0   [ GOTO ADR=IO_INT  ]
+$
+

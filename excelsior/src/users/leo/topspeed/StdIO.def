@@ -1,0 +1,31 @@
+DEFINITION MODULE StdIO;
+(*# save *)
+(*# call(o_a_copy=>off,o_a_size=>on) *)
+
+PROCEDURE read (data: ADDRESS; pos,len: CARDINAL);
+PROCEDURE write(data: ADDRESS; pos,len: CARDINAL);
+
+PROCEDURE get(VAR data: ARRAY OF BYTE; pos,len: CARDINAL);
+PROCEDURE put(    data: ARRAY OF BYTE; pos,len: CARDINAL);
+
+
+PROCEDURE getc(VAR ch: BYTE);
+PROCEDURE putc(    ch: BYTE);
+
+PROCEDURE getw(VAR w: WORD);
+PROCEDURE putw(    w: WORD);
+
+PROCEDURE get32(VAR w: LONGWORD);
+PROCEDURE put32(    w: LONGWORD);
+
+
+PROCEDURE gets(VAR data: ARRAY OF CHAR);
+PROCEDURE puts(    data: ARRAY OF CHAR);
+
+(*# save *)
+(*# call(var_arg=>on,c_conv=>on,reg_param=>()) *)
+PROCEDURE print(fmt: ARRAY OF CHAR);
+(*# restore *)
+
+(*# restore *)
+END StdIO.

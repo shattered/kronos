@@ -1,0 +1,247 @@
+DEFINITION MODULE inCmd; (* Sem 26-Feb-91. (c) KRONOS *)
+
+IMPORT pcK;
+
+TYPE
+  adr_mode = (
+    am_STK,       (* TOP                      *)
+    am_FPP,       (* fpp TOP                  *)
+    am_aSTK,      (*  0[TOP+disp]             *)
+    am_imm,       (* n                        *)
+    am_abs,       (*  0[disp]                 *)
+    am_G,         (* DS[disp]                 *)
+    am_L,         (* SS[BP+disp]              *)
+    am_Gimm,      (* n, DS[disp]              *)
+    am_Limm,      (* n, SS[BP+disp]           *)
+    am_aG,        (* MEM[DS[n]+disp]          *)
+    am_aL         (* MEM[SS[BP+n]+disp]       *)
+  );
+
+  access = RECORD
+    n    : LONGINT; (* constant value *)
+    disp : LONGINT; (* offset         *)
+    CASE am : adr_mode OF
+      |am_L,am_aL         : level: CARDINAL;
+      |am_G,am_Gimm,am_aG : mod  : CARDINAL;
+    END;
+  END;
+
+  condition = (c_o,c_no,c_c,c_nc,c_z,c_nz,c_cz,c_ncz,
+               c_s,c_ns,c_p,c_np,c_l,c_ge,c_le,c_g);
+
+
+  LINE      = POINTER TO LINE_REC;
+  LINE_REC  = RECORD
+    no   : CARDINAL;
+    ofs  : CARDINAL;
+    next : LINE;
+  END;
+
+  FIXUP     = POINTER TO fixup_rec;
+  fixup_mode= (fm_rts,fm_call,fm_far_call,fm_mod_call,fm_dft);
+  fixup_rec = RECORD
+    CASE md : fixup_mode OF
+      |fm_rts             : rts: CARDINAL;
+      |fm_call,fm_far_call,
+       fm_mod_call: obj: pcK.OBJECT;
+    END;
+    ofs  : CARDINAL;
+    next : FIXUP;
+  END;
+
+  node      = POINTER TO node_rec;
+  node_mode = (nm_case,nm_cond,nm_goto);
+  node_rec  = RECORD
+    goto : node;
+    CASE md: node_mode OF
+      |nm_case    : ctbl : POINTER TO ARRAY [0..03FFEH] OF node;
+                    jtbl : POINTER TO ARRAY [0..03FFEH] OF CARDINAL;
+                    clen : CARDINAL;
+      |nm_cond    : flag : condition;
+                    else : node;
+    END;
+    (*-------------------------------------------------------------------*)
+    line : LINE;
+    fixup: FIXUP;
+    pos  : CARDINAL;          (* segment offset in code   *)
+    len  : CARDINAL;          (* segment length           *)
+    tpos : CARDINAL;          (* segment tail offset      *)
+    tlen : CARDINAL;          (* segment tail len         *)
+    adr  : CARDINAL;          (* segment PC               *)
+    cnt  : CARDINAL;          (* copy counter             *)
+    next : node;              (* next segment in .obj     *)
+  END;
+
+  reg      = (stack,da,bc);
+  cmd_cop  = (c_mov,c_add,c_sub,c_or,c_xor,c_and,c_cmp);
+  cmd_mode = (m_rm,m_mr,m_ri,m_mi,m_sm);
+  fpp_cop  = (f_mov,f_add,f_sub,f_mul,f_div,f_cmp);
+  fpp_ucop = (u_abs,u_neg);
+
+VAR
+  cnt      : CARDINAL;
+  code     : ARRAY [0..0FFFEH] OF BYTE;
+  block    : node;
+
+  stk      : CARDINAL;
+  fpp_stk  : CARDINAL;
+  pos      : ARRAY [0..99] OF reg;
+  siz      : ARRAY [0..99] OF CARDINAL;
+  level    : CARDINAL;
+  top      : access;
+
+  cpu_type : CARDINAL;
+  cpu_mode : CARDINAL;
+
+PROCEDURE b(n: WORD);
+PROCEDURE w(n: WORD);
+PROCEDURE new_node(): node;
+PROCEDURE finish;
+PROCEDURE start(n: node);
+PROCEDURE gen_jump(n: node; ofs: CARDINAL): INTEGER;
+PROCEDURE mark(line: CARDINAL);
+PROCEDURE fixup;
+PROCEDURE remove_nodes;
+
+PROCEDURE pop_reg  (n: CARDINAL);
+PROCEDURE alloc_reg(sz: CARDINAL);
+
+PROCEDURE gen_access (a: access; sz: CARDINAL; VAR am,sr,ofs: CARDINAL);
+PROCEDURE put_access (am,sr,ofs,reg,cop: CARDINAL);
+PROCEDURE put_access2(am,sr,ofs,reg,cop_1,cop_2: CARDINAL);
+
+PROCEDURE cmd_stk_m(c: cmd_cop; a: access);
+PROCEDURE cmd_m_stk(c: cmd_cop; a: access);
+PROCEDURE cmd_m_imm(c: cmd_cop; a: access; val: LONGINT; sz: CARDINAL);
+
+PROCEDURE swap;
+PROCEDURE drop;
+PROCEDURE copt;
+PROCEDURE save;
+PROCEDURE hold_out;
+PROCEDURE set_flag_z;  (* set flag Z and drop *)
+PROCEDURE func_ret (sz: CARDINAL);
+PROCEDURE set_size (sz: CARDINAL; sign: BOOLEAN);
+
+PROCEDURE load      (a: access; sz: CARDINAL);
+PROCEDURE load_store(to,fr: access; sz: CARDINAL);
+PROCEDURE load_adr  (a: access);
+PROCEDURE store     (a: access);
+PROCEDURE stot      (a: access; sz: CARDINAL);
+PROCEDURE stot_adr  (a: access);
+PROCEDURE add_adr   (a: access; sz: CARDINAL; sg: BOOLEAN);
+PROCEDURE sub_adr   (a: access; sz: CARDINAL; sg: BOOLEAN);
+
+PROCEDURE imul   (a: access);
+PROCEDURE idiv   (a: access);
+
+PROCEDURE fpp_load         (c: fpp_cop; a: access; sz: CARDINAL);
+PROCEDURE fpp_load_integer (c: fpp_cop; a: access; sz: CARDINAL);
+PROCEDURE fpp_store        (a: access; sz: CARDINAL);
+PROCEDURE fpp_store_integer(a: access; sz: CARDINAL);
+PROCEDURE fpp_ucmd         (c: fpp_ucop);
+
+VAR
+  alloc_tmp_var : PROCEDURE (VAR access, CARDINAL);
+  new_glo_const : PROCEDURE (CARDINAL, VAR ADDRESS, VAR CARDINAL);
+  new_proc_const: PROCEDURE (pcK.OBJECT, VAR CARDINAL);
+
+PROCEDURE call_rts(n: CARDINAL);
+
+CONST
+(*---------------------------------------------------------*)
+add_bmr = 00H;  add_wmr = 01H;  add_brm = 02H;  add_wrm = 03H;
+add_bai = 04H;  add_wai = 05H;  push_es = 06H;  pop_es  = 07H;
+adc_bmr = 10H;  adc_wmr = 11H;  adc_brm = 12H;  adc_wrm = 13H;
+adc_bai = 14H;  adc_wai = 15H;  push_ss = 16H;  pop_ss  = 17H;
+and_bmr = 20H;  and_wmr = 21H;  and_brm = 22H;  and_wrm = 23H;
+and_bai = 24H;  and_wai = 25H;  seg_es  = 26H;  daa     = 27H;
+xor_bmr = 30H;  xor_wmr = 31H;  xor_brm = 32H;  xor_wrm = 33H;
+xor_bai = 34H;  xor_wai = 35H;  seg_ss  = 36H;  aaa     = 37H;
+(*---------------------------------------------------------*)
+inc_ax  = 40H;  inc_cx  = 41H;  inc_dx  = 42H;  inc_bx  = 43H;
+inc_sp  = 44H;  inc_bp  = 45H;  inc_si  = 46H;  inc_di  = 47H;
+push_ax = 50H;  push_cx = 51H;  push_dx = 52H;  push_bx = 53H;
+push_sp = 54H;  push_bp = 55H;  push_si = 56H;  push_di = 57H;
+pusha   = 60H;  popa    = 61H;  bound   = 62H;
+jo      = 70H;  jno     = 71H;  jb      = 72H;  jnb     = 73H;
+je      = 74H;  jne     = 75H;  jbe     = 76H;  jnbe    = 77H;
+(*---------------------------------------------------------*)
+imm_bm  = 80H;  imm_wm  = 81H;                  imm_wbm = 83H;
+test_bm = 84H;  test_wm = 85H;  xchg_bmr= 86H;  xchg_wmr= 87H;
+nop     = 90H;  xchg_cx = 91H;  xchg_dx = 92H;  xchg_bx = 93H;
+xchg_sp = 94H;  xchg_bp = 95H;  xchg_si = 96H;  xchg_di = 97H;
+mov_alm =0A0H;  mov_axm =0A1H;  mov_mal =0A2H;  mov_max =0A3H;
+movs_b  =0A4H;  movs_w  =0A5H;  cmps_b  =0A6H;  cmps_w  =0A7H;
+mov_ali =0B0H;  mov_cli =0B1H;  mov_dli =0B2H;  mov_bli =0B3H;
+mov_ahi =0B4H;  mov_chi =0B5H;  mov_dhi =0B6H;  mov_bhi =0B7H;
+(*---------------------------------------------------------*)
+shift_bmi=0C0H; shift_wmi=0C1H; ret_sp  =0C2H;  ret     =0C3H;
+les     =0C4H;  lds     =0C5H;  mov_bmi =0C6H;  mov_wmi =0C7H;
+shift_bm1=0D0H; shift_wm1=0D1H; shift_bmc=0D2H; shift_wmc=0D3H;
+aam     =0D4H;  aad     =0D5H;                  xlat    =0D7H;
+loopne  =0E0H;  loope   =0E1H;  loop    =0E2H;  jcxz    =0E3H;
+in_b    =0E4H;  in_w    =0E5H;  out_b   =0E6H;  out_w   =0E7H;
+lock    =0F0H;                  rep     =0F2H;  rep_z   =0F3H;
+hlt     =0F4H;  cmc     =0F5H;  grp1_bm =0F6H;  grp1_wm =0F7H;
+(*---------------------------------------------------------*)
+or_bmr  = 08H;  or_wmr  = 09H;  or_brm  = 0AH;  or_wrm  = 0BH;
+or_bai  = 0CH;  or_wai  = 0DH;  push_cs = 0EH;
+sbb_bmr = 18H;  sbb_wmr = 19H;  sbb_brm = 1AH;  sbb_wrm = 1BH;
+sbb_bai = 1CH;  sbb_wai = 1DH;  push_ds = 1EH;  pop_ds  = 1FH;
+sub_bmr = 28H;  sub_wmr = 29H;  sub_brm = 2AH;  sub_wrm = 2BH;
+sub_bai = 2CH;  sub_wai = 2DH;  seg_cs  = 2EH;  das     = 2FH;
+cmp_bmr = 38H;  cmp_wmr = 39H;  cmp_brm = 3AH;  cmp_wrm = 3BH;
+cmp_bai = 3CH;  cmp_wai = 3DH;  seg_ds  = 3EH;  aas     = 3FH;
+(*---------------------------------------------------------*)
+dec_ax  = 48H;  dec_cx  = 49H;  dec_dx  = 4AH;  dec_bx  = 4BH;
+dec_sp  = 4CH;  dec_bp  = 4DH;  dec_si  = 4EH;  dec_di  = 4FH;
+pop_ax  = 58H;  pop_cx  = 59H;  pop_dx  = 5AH;  pop_bx  = 5BH;
+pop_sp  = 5CH;  pop_bp  = 5DH;  pop_si  = 5EH;  pop_di  = 5FH;
+push_wi = 68H;  imul_rwim=69H;  push_bi = 6AH;  imul_rbim=6BH;
+ins_b   = 6CH;  ins_w   = 6DH;  outs_b  = 6EH;  outs_w  = 6FH;
+js      = 78H;  jns     = 79H;  jp      = 7AH;  jnp     = 7BH;
+jl      = 7CH;  jge     = 7DH;  jle     = 7EH;  jg      = 7FH;
+(*---------------------------------------------------------*)
+mov_bmr = 88H;  mov_wmr = 89H;  mov_brm = 8AH;  mov_wrm = 8BH;
+mov_msr = 8CH;  lea     = 8DH;  mov_srm = 8EH;  pop_m   = 0FH;
+cbw     = 98H;  cwd     = 99H;  call_id = 9AH;  wait    = 9BH;
+pushf   = 9CH;  popf    = 9DH;  sahf    = 9EH;  lahf    = 9FH;
+test_bi =0A8H;  test_wi =0A9H;  stos_b  =0AAH;  stos_w  =0ABH;
+lods_b  =0ACH;  lods_w  =0ADH;  scas_b  =0AEH;  scas_w  =0AFH;
+mov_axi =0B8H;  mov_cxi =0B9H;  mov_dxi =0BAH;  mov_bxi =0BBH;
+mov_spi =0BCH;  mov_bpi =0BDH;  mov_sii =0BEH;  mov_dii =0BFH;
+(*---------------------------------------------------------*)
+enter   =0C8H;  leave   =0C9H;  ret_isp =0CAH;  ret_i   =0CBH;
+int_3   =0CCH;  int     =0CDH;  into    =0CEH;  iret    =0CFH;
+esc     =0D8H;
+call    =0E8H;  jmp     =0E9H;  jmp_i   =0EAH;  jmp_s   =0EBH;
+in_vb   =0ECH;  in_vw   =0EDH;  out_vb  =0EEH;  out_vw  =0EFH;
+clc     =0F8H;  stc     =0F9H;  cli     =0FAH;  sti     =0FBH;
+cld     =0FCH;  std     =0FDH;  grp2_b  =0FEH;  grp2_w  =0FFH;
+(*---------------------------------------------------------*)
+(* imm  *)
+i_add   = 00B;  i_or    = 10B;  i_adc   = 20B;  i_sbb   = 30B;
+i_and   = 40B;  i_sub   = 50B;  i_xor   = 60B;  i_cmp   = 70B;
+(* shift *)
+s_rol   = 00B;  s_ror   = 10B;  s_rcl   = 20B;  s_rcr   = 30B;
+s_shl   = 40B;  s_shr   = 50B;  s_sal   = 60B;  s_sar   = 70B;
+(* grp1 *)
+g1_test = 00B;                  g1_not  = 20B;  g1_neg  = 30B;
+g1_mul  = 40B;  g1_imul = 50B;  g1_div  = 60B;  g1_idiv = 70B;
+(* grp2 *)
+g2_inc  = 00B;  g2_dec  = 10B;  g2_call_i=20B;  g2_call_ii=30B;
+g2_jmp_i= 40B;  g2_jmp_ii=50B;  g2_push = 60B;
+(* mode *)
+md_0    =000B;  md_b    =100B;  md_w    =200B;  md_reg  =300B;
+md_abs  =006B;
+(* reg / mem *)
+rm_bx_si=  0B;  rm_bx_di=  1B;  rm_bp_si=  2B;  rm_bp_di=  3B;
+rm_si   =  4B;  rm_di   =  5B;  rm_bp   =  6B;  rm_bx   =  7B;
+(* reg *)
+AX = 0; CX = 1; DX = 2; BX = 3; SP = 4; BP = 5; SI = 6; DI = 7;
+AL = 0; CL = 1; DL = 2; BL = 3; AH = 4; CH = 5; DH = 6; BH = 7;
+ES = 0; CS = 1; SS = 2; DS = 3;
+
+END inCmd.
+

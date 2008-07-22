@@ -1,0 +1,89 @@
+DEFINITION MODULE pcB; (* Ned 29-Jun-91. (c) KRONOS *)
+
+IMPORT  pcK;
+
+VAR (* interface with back-end *)
+  WORDs  : pcK.Forms;  (* types compatible with word *)
+  literal: PROCEDURE (pcK.NODE);
+  eval   : PROCEDURE (pcK.NODE, VAR LONGINT, VAR pcK.EXT);
+  ini_gen: PROCEDURE; (* вызывается после разбора заголовка модуля *)
+
+CONST expr = pcK.free;  (* additional mode for ITEM *)
+
+TYPE
+  ITEM = RECORD
+           mode : pcK.Mode;
+           tags : BITSET;
+           type : pcK.STRUCT;
+           node : pcK.NODE;
+           obj  : pcK.OBJECT;
+         END;
+
+PROCEDURE new(VAR x: pcK.NODE; mode: pcK.Mode);
+PROCEDURE dispose(VAR x: pcK.NODE);
+
+PROCEDURE tie(VAR head,tail: pcK.NODE; mode: pcK.Mode);
+PROCEDURE app(VAR head,tail: pcK.NODE; n: pcK.NODE);
+
+PROCEDURE eval_expr(VAR x: ITEM);
+PROCEDURE const_val(VAR i: ITEM; VAR val: LONGINT);
+
+PROCEDURE unary(VAR i: ITEM; op: pcK.Sub; type: pcK.STRUCT);
+PROCEDURE binary(VAR e,e1: ITEM; op: pcK.Sub; type: pcK.STRUCT);
+
+PROCEDURE convert(VAR i: ITEM; type: pcK.STRUCT);
+
+PROCEDURE char2str(VAR i: ITEM);
+
+PROCEDURE err(i: ITEM; no: INTEGER);
+
+PROCEDURE chkScalar(VAR t: pcK.STRUCT);
+
+PROCEDURE char(t: pcK.STRUCT): BOOLEAN;
+
+PROCEDURE type_in(t: pcK.STRUCT; valid: pcK.Forms);
+PROCEDURE type_equ(t: pcK.STRUCT; mode: pcK.Form);
+PROCEDURE type_cmp(t1,t2: pcK.STRUCT);
+PROCEDURE scalar_cmp(t1,t2: pcK.STRUCT);
+
+PROCEDURE cmp_params(p1,p2: pcK.OBJECT; copy: BOOLEAN);
+PROCEDURE proc_cmp(proc1,proc2: pcK.STRUCT; copy: BOOLEAN);
+
+PROCEDURE check_range(l: pcK.STRUCT; VAR r: ITEM);
+PROCEDURE proc_value(VAR r: ITEM);
+
+PROCEDURE len(t: pcK.STRUCT): LONGINT;
+
+PROCEDURE assign_cmp(l: pcK.STRUCT; VAR r: ITEM);
+PROCEDURE parm_cmp(p: pcK.OBJECT; VAR i: ITEM);
+
+PROCEDURE value(VAR i: ITEM);
+
+PROCEDURE numeric(VAR o1,o2: ITEM; valid: pcK.Forms);
+
+PROCEDURE concat(VAR e1,e2: ITEM);
+
+PROCEDURE relation(VAR e1,e2: ITEM; op: pcK.Sub);
+
+PROCEDURE deref(VAR i: ITEM);
+PROCEDURE index(VAR i,ex: ITEM);
+PROCEDURE access(VAR i: ITEM);
+PROCEDURE type_test(VAR i: ITEM; obj: pcK.OBJECT; guard: BOOLEAN);
+PROCEDURE set_item(v: pcK.OBJECT; VAR i: ITEM);
+
+PROCEDURE copy_fn(VAR l,r: ITEM);
+PROCEDURE min_max_fn(VAR i: ITEM; op: pcK.Sub);
+
+PROCEDURE size_fn(VAR i: ITEM; op: pcK.Sub);
+PROCEDURE len_fn(VAR i,v: ITEM; one: BOOLEAN; op: pcK.Sub);
+
+PROCEDURE adr_fn(VAR i: ITEM);
+PROCEDURE ref_fn(VAR i,v: ITEM);
+
+PROCEDURE long_fn(VAR i: ITEM);
+PROCEDURE short_fn(VAR i: ITEM);
+
+PROCEDURE ash_fn(VAR i,v: ITEM);
+PROCEDURE rot_fn(VAR i,v: ITEM);
+
+END pcB.

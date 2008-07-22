@@ -1,0 +1,340 @@
+% процедура чтения возврашает результат:
+%         FLAG=TRUE - удача
+
+%----------------------------------------------------------------------%
+
+:CHECK_DX
+        [ CONST->Etop D=0F SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_Etop CONST D=3C ]
+        [ CALL ADR=GET_IO_ADR ]
+        [ bus_B=R1 RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A bus_A=R2 FLAG=Z ]
+        [ FLAG=NEG(FLAG) RETURN ]
+
+:READ_DX
+        [ CONST->Etop D=0F SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_Etop CONST D=3D ]
+        [ CALL ADR=GET_IO_ADR ]
+        [ CONST->Etop D=0F SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_Etop CONST D=3C ]
+        [ ALU=A bus_A=R1 bus_B=WR_R2 CALL ADR=GET_IO_ADR ]
+        % R1 - csr, R2 - dtr
+        [ CONST->R5 D=1 ]
+        [ CONST->R6 D=0 ]
+        [ CONST->G  D=0 ]
+        [ CONST->R3 D=40 SHIFT_EN ]
+        [ WR_MEM_A bus_B=R1 ]
+        [ WR_MEM_D bus_B=R3 ]   -- reset
+
+:RD_SECTOR_DX
+% R5 - sector, R6 - treak, R1 - CSR, R2 - DTR, G - memory adr
+        [ CALL ADR=WAIT_DX ][ WR_MEM_A bus_B=R1 ][ WR_MEM_D CONST D=7 ]
+        [ CALL ADR=WAIT_DX ][ WR_MEM_A bus_B=R2 ][ WR_MEM_D bus_B=R5 ]
+        [ CALL ADR=WAIT_DX ][ WR_MEM_A bus_B=R2 ][ WR_MEM_D bus_B=R6 ]
+        [ CALL ADR=WAIT_DX ][ RD_MEM_A bus_B=R1 ][ RD_MEM_D bus_B=WR_R3 ]
+        [ CONST->R4 D=80 SHIFT_EN ]
+        [ ALU=A_AND_B bus_A=R4 bus_B=R3 FLAG=Z ]
+        [ RETURN_FALSE ] -- error
+        [ bus_A=R5->STACK ]
+        [ bus_A=R6->STACK ]
+        [ WR_MEM_A bus_B=R1 ][ WR_MEM_D CONST D=3 ]
+        [ CONST->L D=32. ]
+:RD_BUF_DX
+        [ CALL ADR=WAIT_DX ][ RD_MEM_A bus_B=R2 ][ RD_MEM_D bus_B=WR_R3 ]
+        [ ALU=A_AND_B bus_A=RW_R3 CONST D=0FF ]
+        [ CALL ADR=WAIT1_DX ][ RD_MEM_A bus_B=R2 ][ RD_MEM_D bus_B=WR_R4 ]
+        [ ALU=A_AND_B bus_A=RW_R4 CONST D=0FF ]
+        [ CALL ADR=WAIT1_DX ][ RD_MEM_A bus_B=R2 ][ RD_MEM_D bus_B=WR_R5 ]
+        [ ALU=A_AND_B bus_A=RW_R5 CONST D=0FF ]
+        [ CALL ADR=WAIT1_DX ][ RD_MEM_A bus_B=R2 ][ RD_MEM_D bus_B=WR_R6 ]
+        [ ALU=A_AND_B bus_A=RW_R6 CONST D=0FF ]
+        [ bus_B=RW_R6 SHIFT_EN ][ ALU=A_OR_B bus_A=RW_R6 bus_B=R5 ]
+        [ bus_B=RW_R6 SHIFT_EN ][ ALU=A_OR_B bus_A=RW_R6 bus_B=R4 ]
+        [ bus_B=RW_R6 SHIFT_EN ][ ALU=A_OR_B bus_A=RW_R6 bus_B=R3 ]
+        [ WR_MEM_A bus_B=G ]
+        [ WR_MEM_D bus_B=R6 ]
+        [ ALU=A+1 bus_A=RW_G ]
+        [ ALU=A-1 bus_A=RW_L FLAG=Z ]
+        [ GO_FALSE ADR=RD_BUF_DX ]
+
+        [ bus_A=STACK->R6 ]
+        [ bus_A=STACK->R5 ]
+        [ ALU=A+1 bus_A=RW_R5 ]
+        [ ALU=A-B bus_A=R5 CONST D=27. FLAG=Z ]
+        [ GO_FALSE ADR=DX_1 ]
+        [ ALU=A+1 bus_A=RW_R6 ]
+        [ CONST->R5 D=1 ]
+:DX_1   [ CONST->R3 D=04 SHIFT_EN ]
+        [ ALU=A-B bus_A=G bus_B=R3 FLAG=CARRY ]
+        [ GO_FALSE ADR=RD_SECTOR_DX ]
+        [ RETURN ]
+
+:WAIT_DX
+        [ CALL ADR=REFRESH ]
+:WAIT1_DX
+        [ RD_MEM_A bus_B=R1 ]
+        [ RD_MEM_D bus_B=WR_Etop ]
+        [ ALU=A_AND_B bus_A=Etop CONST D=0A0 FLAG=Z ]
+        [ GO_TRUE ADR=WAIT_DX ]
+        [ RETURN ]
+
+%----------------------------------------------------------------------%
+
+:CHECK_DP[ CONST->Etop D=0E SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_Etop CONST D=0E6 ]
+        [ CALL ADR=GET_IO_ADR ]
+        [ bus_B=R1  WR_MEM_A ]
+        [ CONST D=1 WR_MEM_D ]
+        [ CALL ADR=REFRESH ]
+        [ bus_B=R1  RD_MEM_A ]
+        [ bus_B=WR_R1  RD_MEM_D ]
+        [ ALU=A bus_A=R1 FLAG=Z ]
+        [ FLAG=NEG(FLAG) RETURN ]
+
+:READ_DP
+[ FLAG=ZERO RETURN ]
+%        [ CONST->Etop D=0E SHIFT_EN ]
+%        [ ALU=A_OR_B bus_A=RW_Etop CONST D=0E7 ]
+%        [ CALL ADR=GET_IO_ADR ]
+%        [ CONST->R2 D=0F8 SHIFT_EN ]
+%        [ bus_B=R1 WR_MEM_A ]
+%        [ bus_B=R2 WR_MEM_D ]
+%        [ CONST->Etop D=0E SHIFT_EN ]
+%        [ ALU=A_OR_B bus_A=RW_Etop CONST D=0E6 ]
+%        [ CALL ADR=GET_IO_ADR ]
+%        [ bus_B=R1 WR_MEM_A ]
+%        [ CONST D=5 WR_MEM_D ]
+%:WAIT_DP
+%        [ CALL ADR=REFRESH ]
+%        [ bus_B=R1 RD_MEM_A ]
+%        [ bus_B=WR_R2 RD_MEM_D ]
+%        [ ALU=A_AND_B bus_A=R2 CONST D=80 FLAG=Z ]
+%        [ GO_TRUE ADR=WAIT_DP ]
+%        [ CONST->R3 D=80 SHIFT_EN ]
+%        [ ALU=A_AND_B bus_A=R2 bus_B=R3 FLAG=Z ]
+%        [ RETURN_FALSE ]
+%        [ CONST->R3 D=40 SHIFT_EN ]
+%        [ bus_B=RW_R3    SHIFT_EN ]
+%        [ CONST->R4 D=0 ]
+%        [ CONST->R1 D=4  SHIFT_EN ]
+%:RD_BUF_DP
+%        [ bus_B=R3    RD_MEM_A ]
+%        [ bus_B=WR_R5 RD_MEM_D ]
+%        [ bus_B=R4    WR_MEM_A ]
+%        [ bus_B=R5    WR_MEM_D ]
+%        [ ALU=A-1 bus_A=RW_R1 FLAG=Z ]
+%        [ ALU=A+1 bus_A=RW_R3 ]
+%        [ ALU=A+1 bus_A=RW_R4 GO_FALSE ADR=RD_BUF_DP ]
+%        [ RETURN ]
+
+%----------------------------------------------------------------------%
+
+:CHECK_MF
+        [ CONST->R1 D=84 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]% адрес регистра DMA ( 800000h )
+% sec:=1;
+        [ ALU=A+B bus_A=R1 CONST D=12 WR_MEM_A ]
+        [ CONST D=1 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=12 RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A bus_A=R2 FLAG=Z ]
+% if sec=0 then return 0
+        [ FLAG=ZERO RETURN_TRUE ]
+% dma^.csr:=0
+        [ ALU=A+B bus_A=R1 CONST D=8 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+% dma^.adr3:=0
+        [ ALU=A+B bus_A=R1 CONST D=6 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+% dma^.adr3:=0
+        [ ALU=A+B bus_A=R1 CONST D=6 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+% dma^.cnt3:=0FF
+        [ ALU=A+B bus_A=R1 CONST D=7 WR_MEM_A ][ CONST D=0FF WR_MEM_D ]
+% dma^.cnt3:=0BF
+        [ ALU=A+B bus_A=R1 CONST D=7 WR_MEM_A ][ CONST D=0BF WR_MEM_D ]
+% dma^.adr2:=0
+        [ ALU=A+B bus_A=R1 CONST D=4 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+% dma^.adr2:=0
+        [ ALU=A+B bus_A=R1 CONST D=4 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+% dma^.cnt2:=0FF
+        [ ALU=A+B bus_A=R1 CONST D=5 WR_MEM_A ][ CONST D=0FF WR_MEM_D ]
+% dma^.cnt2:=0BF
+        [ ALU=A+B bus_A=R1 CONST D=5 WR_MEM_A ][ CONST D=0BF WR_MEM_D ]
+% dma^.csr:=084
+        [ ALU=A+B bus_A=R1 CONST D=8 WR_MEM_A ][ CONST D=084 WR_MEM_D ]
+
+% slu^:=001
+        [ ALU=A+B bus_A=R1 CONST D=14 WR_MEM_A ][ CONST D=001 WR_MEM_D ]
+        [ CALL ADR=REFRESH ]
+% slu^:=002
+        [ ALU=A+B bus_A=R1 CONST D=14 WR_MEM_A ][ CONST D=002 WR_MEM_D ]
+        [ CALL ADR=REFRESH ]
+% slu^:=000
+        [ ALU=A+B bus_A=R1 CONST D=14 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+        [ CALL ADR=REFRESH ]
+% slu^:=001, выбрали накопитель 0
+        [ ALU=A+B bus_A=R1 CONST D=14 WR_MEM_A ][ CONST D=001 WR_MEM_D ]
+        [ CALL ADR=REFRESH ]
+% slu^:=019, включили шпиндель
+        [ ALU=A+B bus_A=R1 CONST D=14 WR_MEM_A ][ CONST D=019 WR_MEM_D ]
+
+        [ CONST->R2 D=28 SHIFT_EN ]
+:READ_MF1 % ждем разгона шпинделя
+        [ CALL ADR=REFRESH ]
+        [ ALU=A-1 bus_A=RW_R2 FLAG=Z ]
+        [ GO_FALSE ADR=READ_MF1 ]
+
+        [ ALU=A+B bus_A=R1 CONST D=10 RD_MEM_A ][ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A_AND_B bus_A=R2 CONST D=80 FLAG=Z ]
+        [ RETURN ] % если не готов то ошибка
+
+:READ_MF
+        [ CONST->R1 D=84 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]% адрес регистра DMA ( 800000h )
+% csr^:={3,1,0}
+        [ ALU=A+B bus_A=R1 CONST D=10 WR_MEM_A ][ CONST D=00B WR_MEM_D ]
+:READ_MF2
+        [ CALL ADR=REFRESH ]
+        [ ALU=A+B bus_A=R1 CONST D=10 RD_MEM_A ][ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A_AND_B bus_A=R2 CONST D=1 FLAG=Z ]
+        [ GO_FALSE ADR=READ_MF2 ]
+        [ ALU=A_AND_B bus_A=R2 CONST D=4 FLAG=Z ]
+        [ GO_TRUE ADR=MF_ERROR ]
+
+        [ ALU=A+B bus_A=R1 CONST D=8 WR_MEM_A ][ CONST D=084 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=0 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=0 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=1 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=1 WR_MEM_A ][ CONST D=054 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=8 WR_MEM_A ][ CONST D=085 WR_MEM_D ]
+
+        [ CONST->R2 D=1 ]
+:READ_MF3
+        [ ALU=A+B bus_A=R1 CONST D=12 WR_MEM_A ][ bus_B=R2 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=10 WR_MEM_A ][ CONST D=86 WR_MEM_D ]
+:READ_MF5
+        [ CALL ADR=REFRESH ]
+        [ ALU=A+B bus_A=R1 CONST D=10 RD_MEM_A ][ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A_AND_B bus_A=R3 CONST D=1 FLAG=Z ]
+        [ GO_FALSE ADR=READ_MF5 ALU=A bus_A=R3 FLAG=Z ]
+        [ GO_FALSE ADR=READ_MF ]
+        [ ALU=A+1 bus_A=RW_R2 ]
+        [ ALU=A-B bus_A=R2 CONST D=5 FLAG=Z ]
+        [ GO_FALSE ADR=READ_MF3 ]
+
+        [ ALU=A+B bus_A=R1 CONST D=8 WR_MEM_A ][ CONST D=084 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=2 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=2 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=3 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=3 WR_MEM_A ][ CONST D=094 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=8 WR_MEM_A ][ CONST D=086 WR_MEM_D ]
+
+        [ CONST->R2 D=85 SHIFT_EN ]
+        [ bus_B=RW_R2 SHIFT_EN ]
+        [ CONST->R3 D=0 ]
+        [ CONST->R4 D=4 SHIFT_EN ]
+:READ_MF4
+        [ bus_B=R2 RD_MEM_A ][ bus_B=WR_G RD_MEM_D ]
+        [ bus_B=R2 RD_MEM_A ][ bus_B=WR_L RD_MEM_D ]
+        [ bus_B=R2 RD_MEM_A ][ bus_B=WR_S RD_MEM_D ]
+        [ bus_B=R2 RD_MEM_A ][ bus_B=WR_H RD_MEM_D ]
+        [ bus_B=RW_H SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_H bus_B=S ]
+        [ bus_B=RW_H SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_H bus_B=L ]
+        [ bus_B=RW_H SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_H bus_B=G ]
+        [ bus_B=R3 WR_MEM_A ]
+        [ bus_B=H  WR_MEM_D ]
+        [ ALU=A-1 bus_A=RW_R4 FLAG=Z ]
+        [ ALU=A+1 bus_A=RW_R3 ]
+        [ GO_FALSE ADR=READ_MF4 ]
+        [ ALU=A+B bus_A=R1 CONST D=14 WR_MEM_A ][ CONST D=001 WR_MEM_D ]
+        [ CALL ADR=REFRESH ]
+        [ ALU=A+B bus_A=R1 CONST D=14 WR_MEM_A ]
+        [ CONST D=000 WR_MEM_D FLAG=ZERO ]
+        [ FLAG=NEG(FLAG) RETURN ]
+
+:MF_ERROR
+        [ ALU=A+B bus_A=R1 CONST D=14 WR_MEM_A ][ CONST D=001 WR_MEM_D ]
+        [ CALL ADR=REFRESH ]
+        [ ALU=A+B bus_A=R1 CONST D=14 WR_MEM_A ][ CONST D=000 WR_MEM_D ]
+        [ FLAG=ZERO RETURN ]
+
+%----------------------------------------------------------------------%
+
+:CHECK_WD
+        [ CONST->R1 D=90 SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R1 CONST D=03 ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+% R1 = 900300
+        [ ALU=A+B bus_A=R1 CONST D=0FB RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A bus_A=R2 FLAG=Z ]
+        [ FLAG=NEG(FLAG) RETURN ]
+
+:READ_WD
+        [ CALL ADR=CHECK_WD ]
+:READ_WD1 % wait until ready
+        [ CALL ADR=REFRESH ]
+        [ ALU=A+B bus_A=R1 CONST D=0FF RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A bus_A=R2 FLAG=N ]
+        [ GO_FALSE ADR=READ_WD1 ]
+        [ ALU=A+B bus_A=R1 CONST D=0FE WR_MEM_A ]
+        [ CONST D=000 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=0F6 WR_MEM_A ]
+        [ CONST D=000 WR_MEM_D ]
+        [ ALU=A+B bus_A=R1 CONST D=0F7 WR_MEM_A ]
+        [ CONST D=000 WR_MEM_D ]
+        [ CONST->R2 D=84 SHIFT_EN ]
+        [ bus_B=RW_R2 SHIFT_EN ]
+        [ bus_B=RW_R2 SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R2 CONST D=7 ]
+        [ ALU=A+B bus_A=R1 CONST D=0FF WR_MEM_A ]
+        [ bus_B=R2 WR_MEM_D ]
+:READ_WD2 % wait until ready
+        [ CALL ADR=REFRESH ]
+        [ ALU=A+B bus_A=R1 CONST D=0FF RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A bus_A=R2 FLAG=N ]
+        [ GO_FALSE ADR=READ_WD2 ]
+        [ ALU=A+B bus_A=R1 CONST D=0FD RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A_AND_B bus_A=R2 CONST D=0FF FLAG=Z ]
+        [ RETURN_FALSE ]
+        [ CONST->R2 D=0 ]
+        [ CONST->R3 D=3 SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_R3 CONST D=80 ]
+        [ CONST->R4 D=90 SHIFT_EN ]
+        [ bus_B=RW_R4 SHIFT_EN ]
+:READ_WD3
+        [ bus_B=R4 RD_MEM_A ]
+        [ bus_B=WR_R5 RD_MEM_D ]
+        [ bus_B=R2 WR_MEM_A ]
+        [ bus_B=R5 WR_MEM_D ]
+        [ ALU=A-1 bus_A=RW_R3 FLAG=Z ]
+        [ ALU=A+1 bus_A=RW_R2 ]
+        [ ALU=A+1 bus_A=RW_R4 GO_FALSE ADR=READ_WD3 ]
+        [ RETURN ]
+
+%----------------------------------------------------------------------%
+
+:RUN_QROM
+        [ CONST->F D=4F SHIFT_EN ]
+        [ ALU=A_OR_B bus_A=RW_F CONST D=0F8 ]
+        [ bus_B=RW_F SHIFT_EN RD_MEM_A ]
+:RUN_QROM1
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ ALU=A bus_A=R2 FLAG=Z ]
+        [ RETURN_TRUE ]
+        [ CALL ADR=CREATE_DESC_F ]
+        [ CALL ADR=RESTORE_REGS ]
+        [ FLAG=ZERO FINISH ]
+
+%----------------------------------------------------------------------%
+
+:RUN_MROM
+        [ CONST->F D=80 SHIFT_EN ]
+        [ bus_B=RW_F SHIFT_EN RD_MEM_A GOTO ADR=RUN_QROM1 ]
+
+%----------------------------------------------------------------------%

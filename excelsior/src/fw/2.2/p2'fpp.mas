@@ -1,0 +1,442 @@
+        % Legende
+        % mLd == R0     mantise Left  down (low)
+        % mLu == R1     mantise Left  up   (high)
+        % mRd == R2     mantise Right down (low)
+        % mRu == R3     mantise Right up   (high)
+        % sL  == R4     sign    Left       ( 0 for +  1 for -)
+        % sR  == R5     sign    Right      ( 0 for +  1 for -)
+        % eL  == R6     exp     Left       ( 0..FF  0 == -128   FF ==127)
+        % eR  == R7     exp     Right      ( 0..FF  0 == -128   FF ==127)
+
+        %  31      23          00       Real representation
+        % |s|<-exp->|<-mantise->|
+        %  1    8        23         val=s*(m+2**24)*2**(e-80h)
+        % |<-  mLu  ->|<- mLd ->|
+        % 31         15         0
+
+        [ F ] [ F ]
+
+@FABS 9D[ ALU=ROR(B)   CONST->R2  D=1 ]                 % r2:={15}
+        [ ALU=A_BIC_B  BUS_A=RW_mLu  BUS_B=R2           % mLu:=mLu-{15}
+          FLAG=ZERO    GOTO ADR=MAP_A ]
+
+@FNEG 9E[ ALU=A_OR_B   BUS_A=mLu BUS_B=mLd FLAG=Z ]
+        [              GO_FALSE  ADR=fneg  ]            % if Pop()#0.0
+        [ FLAG=ZERO    GOTO ADR=MAP_A ]                 % then
+:fneg   [ ALU=ROR(B)   CONST->R2  D=1 ]                 %   r2:={15}
+        [ ALU=A_XOR_B  BUS_A=RW_mLu  BUS_B=R2           %   mLu:=mLu xor r2
+          FLAG=ZERO    GOTO ADR=MAP_A ]
+
+
+:ror8(eL)
+        [ ALU=ROR(A)  BUS_A=RW_eL ]
+:ror7(eL)
+        [ ALU=ROR(A)  BUS_A=RW_eL ] [ ALU=ROR(A)  BUS_A=RW_eL ]
+        [ ALU=ROR(A)  BUS_A=RW_eL ] [ ALU=ROR(A)  BUS_A=RW_eL ]
+        [ ALU=ROR(A)  BUS_A=RW_eL ] [ ALU=ROR(A)  BUS_A=RW_eL ]
+        [ ALU=ROR(A)  BUS_A=RW_eL     RETURN                  ]
+
+:fUnpack                                        % T=20max
+        % input:   (r0,r1) -- Real
+        %  if r0=0 & r1=0 then R4=0 & R6=0
+
+        % output:
+        %   R4 -- sign Real [0..1]
+        %   (r0,r1) -- ASL( mantisa Right + {23} , 2)
+        %   R6 -- exp Real [0..FF]
+
+        [ ALU=A_OR_B BUS_A=mLd BUS_B=mLu FLAG=Z]          % sL:=0
+        [ ALU=A-B BUS_A=RW_sL BUS_B=sL GO_FALSE ADR=un1 ] % if mLd=0 & mLu=0
+          % real=0.0
+          [ ALU=A-B BUS_A=RW_eL BUS_B=eL FLAG=ZERO RETURN ] % eL:=0; return
+
+:un1    % (mLu#0 OR mLd#0) & (sL=0)
+        [ ALU=A+B BUS_A=mLu BUS_B=mLu FLAG=CARRY ]
+        [ GO_FALSE ADR=un2 ]      % sL==0
+        [ ALU=A+1  BUS_A=RW_sL ]  % sL:=1
+
+:un2
+        [ ALU=A BUS_A=mLu BUS_B=WR_eL  CALL ADR=ror7(eL) ]
+        [ ALU=A_AND_B BUS_A=RW_mLu CONST D=7F  ]
+        [ ALU=A_OR_B  BUS_A=RW_mLu CONST D=80  ] % 24th bit on!
+        [ ALU=A_AND_B BUS_A=RW_eL CONST D=0FF ]
+
+        [ ALU=A+B  BUS_A=RW_mLd BUS_B=mLd SAVE_CARRY ] % asl(mL,1)
+        [ ALU=A+B  BUS_A=RW_mLu BUS_B=mLu    ]
+        [ ALU=A+B  BUS_A=RW_mLd BUS_B=mLd SAVE_CARRY ] % asl(mL,1)
+        [ ALU=A+B  BUS_A=RW_mLu BUS_B=mLu FLAG=ZERO RETURN ]
+
+% -----------------------------------------------------
+
+:trap42 [ CONST->R2 D=42 ] [ GOTO ADR=TRAP_SUB ]
+:trap43 [ CONST->R2 D=43 ] [ GOTO ADR=TRAP_SUB ]
+
+% shrR1R0 & shrR3R2 assumes that there is 1 in P register
+% at any float comand B->P D=1 makes before command start its execution
+% and no other contens moved to P at any subprogramms called from them
+% Find all '@' to assert this fact!!!
+
+:shrR1R0  % Not destroy FLAG!!!     == asr(R1R0) BIC {31}
+%       [ ALU=B->P CONST D=1 ]
+        [ ALU=A&NP+B&P  BUS_A=RW_R0 BUS_B=R1 ]
+        [ ALU=ROR(A_BIC_B) BUS_A=RW_R1 CONST D=1 ]
+        [ ALU=ROR(A) BUS_A=RW_R0 RETURN ]
+
+:shrR3R2  % Not destroy FLAG!!!
+%       [ ALU=B->P CONST D=1 ]
+        [ ALU=A&NP+B&P  BUS_A=RW_R2 BUS_B=R3 ]
+        [ ALU=ROR(A_BIC_B) BUS_A=RW_R3 CONST D=1 ]
+        [ ALU=ROR(A) BUS_A=RW_R2 RETURN ]
+
+:fPack
+        % input: (r0,r1) mantisa                T=230 avg
+        %         r4     sign
+        %         r6     exp
+
+        % output (r0,r1) Real
+
+        [ ALU=A_OR_B BUS_A=mLd BUS_B=mLu FLAG=Z ]    % if mL=0 then Push(0)
+          [ GO_FALSE ADR=fp0 ]
+          [ FLAG=ZERO RETURN ]
+
+        % while m>={26} do inc(e); m:=shr(m) end
+                % note! if m>={26} then BITSET(m)-{0..15} also >= {26}
+
+
+:fp0    [ ALU=A-B BUS_A=mLu CONST D=400 FLAG=CARRY ]
+                                [ GO_FALSE ADR=fp2 ]
+:fp1      [ ALU=A+1  BUS_A=RW_eL  CALL ADR=shrR1R0 ]    % max 2 iter
+        [ ALU=A-B BUS_A=mLu CONST D=400 FLAG=CARRY ]
+        [ GO_TRUE ADR=fp1 ]
+
+        % while m<{25} do dec(e); m:=shl(m) end         % max 25 iter min 0
+             % note! if m>={25} then BITSET(m)-{0..15} >= {25}
+:fp2    [ ALU=A-B BUS_A=mLu CONST D=200 FLAG=CARRY ]
+                               [ GO_TRUE ADR=fp5 ]
+          [ ALU=A+B    BUS_A=RW_mLd BUS_B=mLd SAVE_CARRY ]
+          [ ALU=A+B    BUS_A=RW_mLu BUS_B=mLu   ]
+          [ ALU=A-1    BUS_A=RW_eL
+        GOTO ADR=fp2 ]
+
+        % (25 IN BITSET(mL)) !!!
+        % loop m:=m+2           % max 2 iter
+        %   if {26}*m=0 then exit else inc(e) m=shr(m) end
+        % end
+:fp5    [ ALU=A+B  D=2  BUS_A=RW_mLd CONST SAVE_CARRY ]  % mLd:=mLd+2
+          [ ALU=A       BUS_A=RW_mLu ]                   % mLu:=mLu+CARRY
+          [ ALU=A_AND_B BUS_A=mLu CONST D=400 FLAG=Z ]
+          [ GO_TRUE ADR=fp6 ]
+          [ ALU=A+1  BUS_A=RW_eL  CALL ADR=shrR1R0 ]
+        [ GOTO ADR=fp5 ]
+
+        % NOT (26 IN BITSET(mL) & (25 IN BITSET(mL)) !!!
+        % if e>0FF then goto TRAP42
+:fp6    [ ALU=A-B  BUS_A=eL  CONST D=100  FLAG=CARRY ]
+                        [        GO_TRUE ADR=trap42  ]
+        % if e<000 then goto TRAP43 end
+        [ ALU=A+B  BUS_A=eL  BUS_B=eL FLAG=CARRY ]
+                        [        GO_TRUE  ADR=trap43
+          ALU=ROR(A) BUS_A=RW_eL ]
+        [ ALU=A_AND_B   BUS_A=RW_mLu CONST D=1FF   ]    % m:=m-{25}
+        [ CALL ADR=ror8(eL)                             % e:=ROR(e,9)
+          ALU=ROR(A)    BUS_A=RW_sL                ]    % s:=ROL(s,15)
+        [ ALU=A_OR_B    BUS_A=RW_sL BUS_B=eL            % s:=s OR e
+          CALL ADR=shrR1R0                         ]    % m:=shr(m,1)
+        [ CALL ADR=shrR1R0                         ]    % m:=shr(m,1)
+        [ ALU=A_OR_B   BUS_A=RW_mLu BUS_B=sL            % m:=m OR s
+          RETURN FLAG=ZERO ]
+
+%       [F][F][F][F]
+%       [F][F][F][F]
+%       [F][F][F][F]
+%       [F][F][F][F]
+%       [F][F][F][F]
+%       [F][F][F]
+%
+
+% -----------------------------------------------------
+
+@FSUB 99[ ALU=A_OR_B BUS_A=R0 BUS_B=R1 FLAG=Z
+          CALL ADR=fSUB ] [ MAP ]
+@FADD 98[ ALU=A_OR_B BUS_A=R0 BUS_B=R1 FLAG=Z
+          CALL ADR=fADD ] [ MAP ]
+
+:fswap  [ eL->STACK  ] [ALU=A BUS_A=eR  BUS_B=WR_eL ] [STACK->eR ]
+        [ sL->STACK  ] [ALU=A BUS_A=sR  BUS_B=WR_sL ] [STACK->sR ]
+        [ mLd->STACK ] [ALU=A BUS_A=mRd BUS_B=WR_mLd] [STACK->mRd]
+        [ mLu->STACK ] [ALU=A BUS_A=mRu BUS_B=WR_mLu] [STACK->mRu RETURN ]
+
+:fdrop  [ STACK->R0 FLAG=ZERO ]
+        [ STACK->R1 RETURN ]
+
+:fSUB   [ GO_TRUE ADR=fdrop ]  % x-0=x
+        [ ALU=ROR(B)  CONST->R2  D=1 ]          % Right:=-REAL(Right)
+        [ ALU=A_XOR_B  BUS_A=RW_mLu  BUS_B=R2   % R0R1:=FNEG(R0R1) ... fADD
+          GOTO ADR=fadd0 ]
+
+:fADD   [ GO_TRUE ADR=fdrop ]  % x+0=x
+:fadd0
+        [ STACK->R2 ]
+        [ STACK->R3 ]
+        [ ALU=A_OR_B BUS_A=R2 BUS_B=R3 FLAG=Z REG_EN ADR=fadd#0 ]
+        [ GO_REG_FALSE           % == GO_FALSE ADR=fadd#0
+          ALU=B->P CONST D=1 ]   % for SHR ops!!!
+        [ FLAG=ZERO RETURN ] % 0+x=x
+
+:fadd#0 [ R3->STACK ]
+        [ R2->STACK
+          CALL ADR=fUnpack ]
+        % output:
+        %   R4 -- sign Real [0..1]
+        %   (r0,r1) -- ASL( mantisa Right + {23} , 2)
+        %   R6 -- exp Real [0..FF]
+        [ ALU=A BUS_A=mLd BUS_B=WR_mRd ]
+        [ ALU=A BUS_A=mLu BUS_B=WR_mRu ]
+        [ ALU=A BUS_A=sL  BUS_B=WR_sR  ]
+        [ ALU=A BUS_A=eL  BUS_B=WR_eR  ]
+        [ STACK->R0 ]
+        [ STACK->R1
+          CALL ADR=fUnpack ]
+        % r4(r0,r1)r6  Left     sL(mL)eL
+        % r5(r2,r3)r7  Right    sR(mR)eR
+
+        [ ALU=A-B  BUS_A=eL BUS_B=eR  FLAG=CARRY ]  % if eL<eR then
+        [ CALL_FALSE  ADR=fswap ]                   %   swap(L,R)
+
+
+:fadd1  % eL>=eR
+
+        [ sL->STACK ]  % sL == r4  -- FREE
+
+        [ ALU=A BUS_A=eL BUS_B=WR_R4    ] % tmp:=eL (r4)
+        [ ALU=A-B BUS_A=RW_R4  BUS_B=eR ] % tmp:=tmp-eR    tmp==eL-eR
+
+        [ ALU=A-B BUS_A=R4 CONST D=1B FLAG=CARRY ] % if tmp<27 then
+                            [ GO_FALSE ADR=fadd8 ] %    goto fadd8
+          [ STACK->sL ]  % if eL>eR+27 then result:=Left end
+          [ CALL ADR=fPack ]
+          [ FLAG=ZERO RETURN ]
+
+:fadd8  % r4 == eL-eR    mR:=shr(mR,eL-eR)
+        [ ALU=A BUS_A=R4 FLAG=Z ] [ GO_TRUE ADR=fadd3 ]
+:fadd4    [ ALU=A-1 BUS_A=RW_R4 FLAG=Z CALL ADR=shrR3R2 ]
+        [ GO_FALSE  ADR=fadd4 ]
+
+:fadd3  [ STACK->sL ]
+        [ ALU=A-B BUS_A=sR BUS_B=sL FLAG=Z  ]   % if s1#s2 then
+                       [ GO_FALSE ADR=fadd5 ]   %          goto fadd5
+        [ ALU=A+B BUS_A=RW_mLd BUS_B=mRd SAVE_CARRY ]
+        [ ALU=A+B BUS_A=RW_mLu BUS_B=mRu
+          CALL ADR=fPack ]
+        [ RETURN ]
+
+:fadd5  % s1#s2
+        [ ALU=A-B   BUS_A=RW_mLd BUS_B=mRd SAVE_CARRY ] % mL:=mL-mR
+        [ ALU=A-B-1 BUS_A=RW_mLu BUS_B=mRu ]
+        [ ALU=A+B   BUS_A=mLu BUS_B=mLu FLAG=CARRY ]    % if mL>=0 then
+        [ GO_FALSE  ADR=fadd6 ]                         %        goto fadd6
+          [ ALU=NEG(A) BUS_A=RW_mLd SAVE_CARRY ]  % mL:=0-mL  so...
+          [ ALU=NE(A)  BUS_A=RW_mLu ]             % mL==mR-mL
+          [ ALU=B      BUS_A=WR_sL  BUS_B=sR ]
+:fadd6  [ CALL ADR=fPack ] [ RETURN ]
+
+
+% -----------------------------------------------------
+
+@FMUL 9A[ ALU=A_OR_B BUS_A=R0 BUS_B=R1 FLAG=Z REG_EN ADR=dropmap ]
+        [ ALU=B->P CONST D=1
+                                       GO_REG_TRUE ]
+        [ CALL ADR=fUnpack ]
+        % output:
+        %   R4 -- sign Real [0..1]
+        %   (r0,r1) -- ASL( mantisa Right + {23} , 2)
+        %   R6 -- exp Real [0..FF]
+        [ ALU=A BUS_A=mLd BUS_B=WR_mRd ]
+        [ ALU=A BUS_A=mLu BUS_B=WR_mRu ]
+        [ ALU=A BUS_A=sL  BUS_B=WR_sR  ]
+        [ ALU=A BUS_A=eL  BUS_B=WR_eR  ]
+        [ STACK->R0 ]
+        [ STACK->R1
+          CALL ADR=fUnpack ]
+        % r4(r0,r1)r6  Left
+        % r5(r2,r3)r7  Right
+
+        [ ALU=A_OR_B BUS_A=R0 BUS_B=R1 FLAG=Z ]
+                        [ GO_FALSE ADR=fmul#0 ]
+        [ FLAG=ZERO GOTO ADR=MAP_A ]
+
+:fmul#0 [ ALU=A+B     BUS_A=RW_eL  BUS_B=eR ]
+        [ ALU=A-B     BUS_A=RW_eL  CONST D=80 ]    % eL:=eL+eR-80
+        [ ALU=A_XOR_B BUS_A=RW_sL  BUS_B=sR ]      % sL:=sL XOR sR
+
+        [ sL->STACK ]           % R4,R5,R7 free   (sL,sR,eR)
+
+        [ ALU=B  BUS_A=WR_R4 BUS_B=mLd ]
+        [ ALU=B  BUS_A=WR_R5 BUS_B=mLu ]      % r4r5:=mL
+        [ ALU=B  BUS_A=WR_R0 CONST->R1 D=0 ]  % mL:=0
+
+:fmul1  [ ALU=A_AND_B BUS_A=mRd CONST D=1 FLAG=Z ]   % repeat nz:=0 IN mR
+
+        [ CALL ADR=shrR3R2 ]                         %   mR:=shr(mR,1)
+        [ GO_TRUE ADR=fmul2 ]                        %   if nz then
+          [ ALU=A+B SAVE_CARRY BUS_A=RW_mLd BUS_B=R4 ] %  mL:=mL+r4r5
+          [ ALU=A+B            BUS_A=RW_mLu BUS_B=R5 ] % end
+:fmul2  [ CALL ADR=shrR1R0                           %   mL:=shr(mL)
+          ALU=A_OR_B BUS_A=mRd  BUS_B=mRu  FLAG=Z ]  % until mR=0
+        [ GO_FALSE ADR=fmul1 ]
+
+        [ STACK->sL CALL ADR=fPack ]
+        [ MAP ]
+
+:dropmap
+        [ STACK->R2 ] [ STACK->R2 ]
+        [ FLAG=ZERO  GOTO ADR=MAP_A ]
+%       [F][F]
+
+% -----------------------------------------------------
+
+@FDIV 9B[ ALU=B->P D=1 CONST ]
+        [ CALL ADR=fUnpack ]
+        % output:
+        %   R4 -- sign Real [0..1]
+        %   (r0,r1) -- ASL( mantisa Right + {23} , 2)
+        %   R6 -- exp Real [0..FF]
+        [ ALU=A BUS_A=mLd BUS_B=WR_mRd ]
+        [ ALU=A BUS_A=mLu BUS_B=WR_mRu ]
+        [ ALU=A BUS_A=sL  BUS_B=WR_sR  ]
+        [ ALU=A BUS_A=eL  BUS_B=WR_eR  ]
+        [ STACK->R0 ]
+        [ STACK->R1
+          CALL ADR=fUnpack ]
+        % r4(r0,r1)r6  Left
+        % r5(r2,r3)r7  Left
+
+        [ ALU=A_OR_B  BUS_A=mRu BUS_B=mRd FLAG=Z ]
+                                [ GO_TRUE ADR=trap42
+          ALU=A-B  BUS_A=RW_eL BUS_B=eR ]            % eL:=eL-eR
+        [ ALU=A_OR_B  BUS_A=mLu BUS_B=mLd FLAG=Z ]
+        [ ALU=A_XOR_B  BUS_A=RW_sL BUS_B=sR          % sL:=sL XOR sR
+                             GO_FALSE ADR=fdiv#0 ]
+        [ FLAG=ZERO GOTO ADR=MAP_A ]
+:fdiv#0 [ ALU=A+B  BUS_A=RW_eL CONST D=80 ]          % eL:=eL+80
+
+
+
+        [ sL->STACK ]           % R4,R5,R7 free (sL,sR,eR)
+
+        [ ALU=B  BUS_A=WR_R4 BUS_B=mLd ]
+        [ ALU=B  BUS_A=WR_R5 BUS_B=mLu ]      % r4r5:=mL
+        [ ALU=B  BUS_A=WR_R0 CONST->R1 D=0 ]  % mL:=0
+                                                        % repeat   26 iters
+:fdiv1  [ ALU=A-B    BUS_A=R4 BUS_B=mRd SAVE_CARRY ]    %
+        [ ALU=A-B-1  BUS_A=R5 BUS_B=mRu FLAG=CARRY ]    %   if tmp-mR<0 then
+                              [ GO_FALSE ADR=fdiv3 ]    %        goto fdiv3
+          [ ALU=A-B   BUS_A=RW_R4 BUS_B=mRd SAVE_CARRY ]%     tmp:=tmp-mR;
+          [ ALU=A-B-1 BUS_A=RW_R5 BUS_B=mRu  ]          %     mLd:=mLd+1
+          [ ALU=A+1 BUS_A=RW_mLd SAVE_CARRY ]           %     mLu:=mLu+CARRY
+          [ ALU=A BUS_A=RW_mLu ]                        %   end
+:fdiv3  [ CALL ADR=shrR3R2 ]                            %   mR:=shr(mR,1)
+        [ ALU=A+B BUS_A=RW_mLd BUS_B=mLd SAVE_CARRY ]   %   mL:=rol(mL,1)
+        [ ALU=A+B BUS_A=RW_mLu BUS_B=mLu ]              %
+        [ ALU=A_OR_B BUS_A=mRd BUS_B=mRu FLAG=Z     ]   % until mR=0
+                        [ GO_FALSE ADR=fdiv1    ]       %
+
+        [ STACK->sL
+          CALL ADR=fPack ]
+        [ MAP ]
+
+
+
+@FCMP 9C
+        [ STACK->R2 ]
+        [ STACK->R3 ]
+
+        [ ALU=A-B BUS_A=R0 BUS_B=R2 FLAG=Z REG_EN ADR=fcmp1 ]
+        [ ALU=B->P CONST D=1
+                                           GO_REG_FALSE ]
+        [ ALU=A-B BUS_A=R1 BUS_B=R3 FLAG=Z ]
+        [ GO_FALSE ADR=fcmp1 ]
+        % L=R
+          [ ALU=B BUS_A=WR_R0  CONST->R1 D=0   ] % mL:=0
+          [ R1->STACK ] [ R0->STACK FLAG=ZERO   % Push(0)
+            GOTO ADR=MAP_A ]
+
+:fcmp1
+        [ ALU=A+B BUS_A=R1 BUS_B=R1 FLAG=CARRY ]
+        [ GO_FALSE ADR=fcmp2 ]
+        % R<0
+          [ ALU=A+B BUS_A=R3 BUS_B=R3 FLAG=CARRY ]
+          [ GO_TRUE ADR=fCMP ]
+          % R<0 L>=0
+:fcmp>    [ ALU=B BUS_A=WR_R0  CONST->R1 D=0   ]   % mL:=0 (eTop)
+          [ R1->STACK CONST->R2 D=1 ]
+          [ R2->STACK FLAG=ZERO                    % Push(1)
+            GOTO ADR=MAP_A ]
+
+:fcmp2  % R>=0
+          [ ALU=A+B BUS_A=R3 BUS_B=R3 FLAG=CARRY ]
+          [ GO_FALSE ADR=fCMP ]
+          % R>=0 L<0
+:fcmp<    [ ALU=B BUS_A=WR_R0  CONST->R1 D=0   ]    % mL:=0
+          [ R1->STACK ] [ R0->STACK ]               % Push(0)
+          [ ALU=A+1 BUS_A=RW_R0  FLAG=ZERO
+                                 GOTO ADR=MAP_A  ]  % mL:=1
+
+:fCMP   [ R3->STACK ]
+        [ R2->STACK ]
+        [ ALU=A_OR_B BUS_A=R0 BUS_B=R1 FLAG=Z
+          CALL ADR=fSUB ]
+        [ ALU=A+B BUS_A=mLu BUS_B=mLu FLAG=CARRY ]
+        [ GO_TRUE ADR=fcmp< ]  [ GOTO ADR=fcmp> ]
+
+@FFCT 9F[ UPDATE_CASH ]
+        [ CASH0->R2 ]
+        [ ALU=A BUS_A=R2 FLAG=Z REG_EN ADR=fFLOAT ]
+        [ ALU=B->P CONST D=1
+                                      GO_REG_TRUE ]
+        [ ALU=A-B BUS_A=R2 CONST D=1 FLAG=Z ]
+        [ GO_TRUE ADR=fTRUNC ]
+          [ CALL ADR=GET_PC ]
+          [ ALU=A-1 BUS_A=RW_R8
+            CALL ADR=PUT_PC ]
+          [ CONST->R2 D=7 ] [ GOTO ADR=TRAP_SUB ]
+:fFLOAT
+        [ ALU=A+B BUS_A=R1 BUS_B=R1 FLAG=CARRY ]
+        [ ALU=A-B BUS_A=RW_sL BUS_B=sL GO_FALSE ADR=ffct1 ]
+          [ ALU=A+1 BUS_A=RW_sL ]
+          [ ALU=NEG(A) BUS_A=RW_R0 SAVE_CARRY ]
+          [ ALU=NE(A)  BUS_A=RW_R1 ]
+:ffct1  [ CONST->R6 D=9A ]   % R6 == eL
+        [ CALL ADR=fPack ]
+        [ MAP ]
+
+:fTRUNC
+        [ CALL ADR=fUnpack ]
+        [ ALU=A-B BUS_A=RW_eL CONST D=80 FLAG=CARRY ]  % eL:=eL-80
+        [ GO_TRUE  ADR=ffct2 ]
+          [ ALU=B BUS_A=WR_R0 CONST->R1 D=0 ]
+          [ FLAG=ZERO GOTO ADR=MAP_A ]                 % eTop:=0
+
+:ffct2  [ ALU=A-B BUS_A=RW_eL CONST D=1A FLAG=CARRY ]
+        [ GO_FALSE ADR=ffct3 ]
+
+        % (eL:=eL-80-26)>0
+        % while eL>0 do dec(eL); mL:=shl(mL) end
+:ffct6  [ ALU=A+B BUS_A=RW_R0 BUS_B=R0 SAVE_CARRY ]
+        [ ALU=A+B BUS_A=RW_R1 BUS_B=R1 FLAG=OWR ]
+        [ GO_TRUE ADR=INT_OWR ]
+        [ ALU=A-1 BUS_A=RW_eL FLAG=Z ]
+        [ GO_FALSE ADR=ffct6 ]
+        [ FLAG=ZERO GOTO ADR=MAP_A ]
+
+:ffct3  % (eL:=eL-80-26)<=0
+        % while eL<0 do inc(eL); mL:=shr(mL) end
+        [ ALU=A BUS_A=eL FLAG=Z ] [ GO_TRUE ADR=ffct4 ]
+:ffct5  [ ALU=A+1 BUS_A=RW_eL FLAG=Z
+          CALL ADR=shrR1R0 ]
+        [ GO_FALSE ADR=ffct5 ]
+:ffct4  [ ALU=A BUS_A=sL FLAG=Z ]
+        [ GO_FALSE ADR=NEG ]
+        [ FLAG=ZERO GOTO ADR=MAP_A ]
+
+%       [F][F][F][F]

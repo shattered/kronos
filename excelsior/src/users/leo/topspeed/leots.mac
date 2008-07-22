@@ -1,0 +1,54 @@
+<Alt=><F12><Alt-><Alt=>
+<Alt=><Alt-><p>PROCEDURE <Alt=>
+<Alt=><Alt-><P><AltK>b<LeftArr*4>
+<|>
+<Home><DownArr><AltJ>END <End>;<CtrlK><CtrlH><UpArr><End><Home>PROCEDURE <Home><DownArr>
+<|>
+<UpArr>BEGIN<UpArr><End><Alt=>
+<Alt=><Alt-><7><Home>IMPORT <Alt=>
+<Alt=><Alt-><(>BEGIN <Alt=>
+<Alt=><Alt-><)>END<Alt=>
+<Alt=><Alt-><0>END<Alt=>
+<Alt=><Alt-><9>BEGIN <Alt=>
+<Alt=><Alt-><t>TRUE<Alt=>
+<Alt=><Alt-><f>FALSE<Alt=>
+<Alt=><Alt-><n>THEN<Alt=>
+<Alt=><Alt-><z>FOR i:=0 TO<Alt=>
+<Alt=><Alt-><j>VAR i: INTEGER;<Alt=>
+<Alt=><Alt-><->DEC()<LeftArr><Alt=>
+<Alt=><Alt-><+>INC()<LeftArr><Alt=>
+<Alt=><Alt-></> DIV <Alt=>
+<Alt=><Alt-><\> MOD <Alt=>
+<Alt=><Alt-><^>POINTER TO<Alt=>
+<Alt=><Alt-><i>INTEGER<Alt=>
+<Alt=><Alt-><a>CARDINAL<Alt=>
+<Alt=><Alt-><A>LONGCARD<Alt=>
+<Alt=><Alt-><c>CHAR<Alt=>
+<Alt=><Alt-><v>VAR<Alt=>
+<Alt=><Alt-><l>LOOP <Alt=>
+<Alt=><Alt-><I>LONGINT<Alt=>
+<Alt=><Alt-><x>EXIT<Alt=>
+<Alt=><Alt-><w>WHILE<Alt=>
+<Alt=><Alt-><d>DO<Alt=>
+<Alt=><Alt-><C>CONST<Alt=>
+<Alt=><Alt-><R>REPEAT<Alt=>
+<Alt=><Alt-><u>UNTIL<Alt=>
+<Alt=><Alt-><r>RETURN<Alt=>
+<Alt=><Alt-><1><Home>DEFINITION MODULE <Alt=>
+<Alt=><Alt-><2><Home>IMPLEMENTATION MODULE<Alt=>
+<Alt=><Alt-><e>ELSE <Alt=>
+<Alt=><Alt-><E>ELSIF<Alt=>
+<Alt=><Alt-><B>BYTE<Alt=>
+<Alt=><Alt-><T>TYPE<Alt=>
+<Alt=><Alt-><[><CtrlK>B<Alt=>
+<Alt=><Alt-><]><CtrlK>K<Alt=>
+<Alt=><Alt-><.><CtrlK>L<Alt=>
+<Alt=><F11><CtrlK>C<CtrlK>H<Alt=>
+<Alt=><CtrlF11><CtrlK>H<CtrlK>B<End>
+<|>
+<CtrlQ>B<End><CtrlK>K<CtrlQ>B<DownArr><CtrlK>C<CtrlK>H<Alt=>
+<Alt=><AltF11><DownArr><CtrlK>H<CtrlK>B<End><CtrlK>K<CtrlQ>B<CtrlK>Y
+<UpArr><CtrlK>B<End><CtrlK>K<CtrlQ>B<DownArr><CtrlK>C<CtrlK>H<Alt=>
+<Alt=><CtrlF9><CtrlK>L<DownArr*2><Home><CtrlK>V<CtrlK>H<Alt=>
+<Alt=><CtrlF8><CtrlK>L<UpArr><Home><CtrlK>V<CtrlK>H<Alt=>
+

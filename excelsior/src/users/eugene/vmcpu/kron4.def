@@ -1,0 +1,232 @@
+%---------------------------------------------------------------%
+%                                                               %
+%           Firmware for Kronos-P4.0 processor                  %
+%                                                               %
+%---------------------------------------------------------------%
+%    Computer center, Acadimy of Sience, Sybiria department,    %
+%                  Novosibirsk, USSR.                           %
+%                                                               %
+%    (c)  Start, Kronos research groop.                         %
+%                                         20-Aug-87             %
+%---------------------------------------------------------------%
+
+FIELD F 3F:00 = 0
+
+% инициализация обрабатывающего тракта
+FIELD RESET 49. 46. 45. 44. 43. 42. 41. = 1011111#
+
+% микропрограмный генератор констант
+FIELD   D   15. 14. 13. 12. 11. 10. 9. 8. = 0
+
+% адрес микроперехода
+FIELD ADR   18. 17. 16. 15. 14. 13. 12. 11. 10. 9. 8. = 0
+
+% код операции АЛУ и сдвигателя, значение входного переноса АЛУ
+FIELD ALU   49. 48. 47. 46. 45. 44. 43. 42. 41.
+   {    A_AND_B                 101000001#
+        A_AND_B-1               110000001#
+        A_BIC_B                 101000010#
+        A                       101000011#
+        A-1                     110000011#
+        A_OR_NE(B)              110000100#
+        A_AND_B+(A_OR_NE(B))    110000101#
+        A-B                     101000110#
+        A-B-1                   110000110#
+        A+(A_OR_NE(B))          110000111#
+        A_OR_B                  110001000#
+        A+B                     110001001#
+        A+B+1                   101001001#
+        A+B+FLAG                100001001#
+        A_AND_NE(B)+A_OR_B      110001010#
+        A_OR_B+A                110001011#
+        A+1                     101001100#
+        A+FLAG                  100001100#
+        A_AND_B+A               110001101#
+        A_AND_NE(B)+A           110001110#
+        A+A                     110001111#
+        A+A+1                   101001111#
+        ROL(B)                  000100001#
+        ROL(B,2)                000100010#
+        ROL(B,8)                000101000#
+        ROR(B)                  010100001#
+        ROR(B,8)                010101000#
+   } = A
+
+% управление шиной A
+%              POP1 POP PUSH  WR  RD  A3  A2  A1  A0
+FIELD bus_A     52. 51.  50.  28. 29. 33. 32. 31. 30.
+ { NOTHING 1C0
+        Etop    1D0     R1      1D1     R2      1D2     R3      1D3
+        R4      1D4     R5      1D5     R6      1D6     Time    1D7
+        G       1D8     L       1D9     PC      1DA     M       1DB
+        S       1DC     H       1DD     P       1DE     F       1DF
+        e1      1D2     m1      1D3     s1      1D4     e2      1D5
+        m2      1D6     s2      1D7     constFF 1D8     const02 1D9
+        tmp1    1DA     tmp2    1DB
+        WR_Etop 1E0     WR_R1   1E1     WR_R2   1E2     WR_R3   1E3
+        WR_R4   1E4     WR_R5   1E5     WR_R6   1E6     WR_Time 1E7
+        WR_G    1E8     WR_L    1E9     WR_PC   1EA     WR_M    1EB
+        WR_S    1EC     WR_H    1ED     WR_P    1EE     WR_F    1EF
+        WR_tmp1 1EA     WR_tmp2 1EB     WR_e1   1E2     WR_s1   1E4
+        RW_Etop 1F0     RW_R1   1F1     RW_R2   1F2     RW_R3   1F3
+        RW_R4   1F4     RW_R5   1F5     RW_R6   1F6     RW_Time 1F7
+        RW_G    1F8     RW_L    1F9     RW_PC   1FA     RW_M    1FB
+        RW_S    1FC     RW_H    1FD     RW_P    1FE     RW_F    1FF
+        RW_e1   1F2     RW_m1   1F3     RW_s1   1F4
+        RW_e2   1F5     RW_m2   1F6     RW_s2   1F7
+        RW_tmp1 1FA     RW_tmp2 1FB
+        STACK   080     STACK->Etop 0A0 STACK->R1 0A1   STACK->R2 0A2
+        STACK->R3 0A3   STACK->R4 0A4   STACK->R5 0A5   STACK->R6 0A6
+        STACK->Time 0A7 STACK->G  0A8   STACK->L  0A9   STACK->tmp1 0AA
+        STACK->tmp2 0AB STACK->M  0AB   STACK->PC 0AA   STACK->e2 0A5
+        STACK->m2 0A6   STACK->s2 0A7   STACK->P 0AE    STACK->H 0AD
+        Etop->STACK 190 R1->STACK 191   R2->STACK 192   R3->STACK 193
+        R4->STACK 194   R5->STACK 195   R6->STACK 196   Time->STACK 197
+        G->STACK 198    L->STACK 199    tmp1->STACK 19A tmp2->STACK 19B
+        PC->STACK 19A   M->STACK 19B    e1->STACK 192   m1->STACK 193
+        P->STACK 19E    s1->STACK 194   H->STACK 19D
+ } = NOTHING
+
+% управление шиной B
+%               CONST   WR  RD  A3  A2  A1  A0
+FIELD bus_B      26.    34. 35. 39. 38. 37. 36.
+ { NOTHING 0
+        Etop    10      R1      11      R2      12      R3      13
+        R4      14      R5      15      R6      16      Time    17
+        G       18      L       19      PC      1A      M       1B
+        S       1C      H       1D      P       1E      F       1F
+        constFF 18      const02 19      e1      12      m1      13
+        s1      14      e2      15      m2      16      s2      17
+        tmp1    1A      tmp2    1B      WR_Etop 20      WR_R1   21
+        WR_R2   22      WR_R3   23      WR_R4   24      WR_R5   25
+        WR_R6   26      WR_G    28      WR_L    29      WR_PC   2A
+        WR_M    2B      WR_S    2C      WR_Time 27      WR_H    2D
+        WR_P    2E      WR_F    2F      WR_constFF 28   WR_const02 29
+        WR_e2   25      WR_e1   22      WR_tmp1 2A      WR_tmp2 2B
+        WR_m2   26      WR_s1   24      WR_m1   23
+        RW_Etop 30      RW_R1   31      RW_R2   32      RW_R3   33
+        RW_R4   34      RW_R5   35      RW_R6   36      RW_Time 37
+        RW_G    38      RW_L    39      RW_PC   3A      RW_M    3B
+        RW_S    3C      RW_H    3D      RW_P    3E      RW_F    3F
+        RW_e1   32      RW_m1   33      RW_s1   34
+        RW_e2   35      RW_m2   36      RW_s2   37
+        RW_tmp1 3A      RW_tmp2 3B
+ } = NOTHING
+GENERIC CONST->Etop bus_B = 060
+GENERIC CONST->R1   bus_B = 061
+GENERIC CONST->R2   bus_B = 062
+GENERIC CONST->R3   bus_B = 063
+GENERIC CONST->R4   bus_B = 064
+GENERIC CONST->R5   bus_B = 065
+GENERIC CONST->R6   bus_B = 066
+GENERIC CONST->Time bus_B = 067
+GENERIC CONST->G    bus_B = 068
+GENERIC CONST->L    bus_B = 069
+GENERIC CONST->PC   bus_B = 06A
+GENERIC CONST->M    bus_B = 06B
+GENERIC CONST->P    bus_B = 06E
+GENERIC CONST->F    bus_B = 06F
+GENERIC CONST->S    bus_B = 06C
+GENERIC CONST->H    bus_B = 06D
+GENERIC CONST->e1   bus_B = 062
+GENERIC CONST->m1   bus_B = 063
+GENERIC CONST->s1   bus_B = 064
+GENERIC CONST->m2   bus_B = 066
+GENERIC CONST->s2   bus_B = 067
+GENERIC CONST->tmp1 bus_B = 06A
+GENERIC CONST->tmp2 bus_B = 06B
+FIELD CONST 26. = 1
+
+% управление выборкой адреса следующей микрокоманды
+FIELD SEQUENSER 6. 5. 4. 3. 2. 1. 0.
+
+GENERIC GOTO              SEQUENSER = 0001011#
+GENERIC GO_REG            SEQUENSER = 1001010#
+GENERIC GO_TRUE           SEQUENSER = 0110011#
+GENERIC GO_REG_TRUE       SEQUENSER = 1110010#
+GENERIC GO_FALSE          SEQUENSER = 0101011#
+GENERIC GO_REG_FALSE      SEQUENSER = 1101010#
+GENERIC GO_IF_STACK_EMPTY SEQUENSER = 0111011#
+GENERIC GO_IF_NO_MP_ERR   SEQUENSER = 0000011#
+GENERIC GO_IF_CASH_EMPTY  SEQUENSER = 0011011#
+GENERIC CALL              SEQUENSER = 0001111#
+GENERIC CALL_REG          SEQUENSER = 1001110#
+GENERIC CALL_TRUE         SEQUENSER = 0110111#
+GENERIC CALL_FALSE        SEQUENSER = 0101111#
+GENERIC RETURN            SEQUENSER = 0001101#
+GENERIC RETURN_TRUE       SEQUENSER = 0110101#
+GENERIC RETURN_FALSE      SEQUENSER = 0101101#
+
+% разрешение записи в регистр микроадреса
+FIELD REG_EN 7. = 1
+
+% выбор информации заносимой в триггер FLAG
+FIELD FLAG 56. 55. 54. 53.
+  {     Z               0       % равенство нулю результата на АЛУ
+        OVR             1       % переполнение при сложении или вычитании
+        CARRY           2       % перенос из старшего разряда АЛУ
+        N               3       % знаковый разряд результата
+        N_XOR_OVR       4       % признак a<b
+        ZERO            5       % логический ноль
+        SAVE            6       % запрет записи в триггер
+        NEG(FLAG)       7       % инвертирование значения триггера
+        Z+FLAG          8
+        CARRY+FLAG      9
+        N+FLAG         0A
+        OVR+FLAG       0B
+        SET_FLAG       0C       % логическая еденица
+        SHIFT_OVR      0D       % переполнение при арифметическом сдвиге
+        STK_EMPTY      0E       % стек выражений пуст
+  } = SAVE
+
+% управление внешней шиной микропроцессора
+FIELD MEMORY  ^25. 24. 23. 22. 21. 20.
+
+GENERIC RD_MEM_A    MEMORY = 11100#     % выдача адреса перед чтением
+GENERIC WR_MEM_A    MEMORY = 11100#     % выдача адреса перед записью
+GENERIC RD_MEM_D    MEMORY = 00000#     % чтение памяти
+GENERIC WR_MEM_D    MEMORY = 00100#     % запись памяти
+
+%      mADR
+%     11100     memory address
+%     00000     read  memory
+%     11000     read lock memory
+%     00100     write memory
+
+FIELD INTE 27. = 1
+
+$
+DEFAULT[ SEQUENSER=0    % переход к следующему микроадресу
+         REG_EN=0       % режим хранения в регистре микроадреса
+         ALU=100010000# % запрет функционирования АЛУ и сдвигателя
+         FLAG=SAVE      % режим хранения в триггере FLAG
+         bus_A          % обмен на шине A отсутствует
+         bus_B          % обмен на шине B отсутствует
+         INTE=0         % прерывания запрещены
+         CONST=0        % генератор констант выключен
+         MEMORY=100000# % внешняя шина не используется
+       ]
+
+
+% Мнемоники регистров
+%       R7  - Time      счетчик реального времени
+%       R8  - G         сегмент глобальных данных текущего модуля
+%       R9  - L         сегмент локальных данных текущей процедуры
+%       R0A - PC        счетчик команд
+%       R0B - M         маска прерываний
+%       R0C - S         начало свободного места на процедурном стеке
+%       R0D - H         конец свободного места на процедурном стеке
+%       R0E - P         текущий процесс
+%       R0F - F         сегмент кода текущего модуля
+%
+% Мнемоники в микропрограммах арифметики с плавающей точкой
+%       R2  - e1        порядок 1
+%       R3  - m1        мантиса 1
+%       R4  - s1        знак 1
+%       R5  - e2        порядок 2
+%       R6  - m2        мантиса 2
+%       R7  - s2        знак 2
+%       R8  - constFF   константа 0FF000000
+%       R9  - const02   константа 002000000
+%       R0A - tmp1      рабочий регистр
+%       R0B - tmp2      рабочий регистр

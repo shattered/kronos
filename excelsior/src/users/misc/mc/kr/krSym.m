@@ -1,0 +1,2 @@
+IMPLEMENTATION MODULE krSym; (*  10-Nov-90. (c) KRONOS *)
+END krSym.

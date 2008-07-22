@@ -1,0 +1,1 @@
+{ SYM='/sys /sym' mxOUT=*=/sys CD=/sys/os } mx system osKernel osLoader osFiles Users deBug $1

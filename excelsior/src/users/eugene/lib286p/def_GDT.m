@@ -1,0 +1,3 @@
+IMPLEMENTATION MODULE def_GDT; (*  06-May-91. (c) KRONOS *)
+
+END def_GDT.

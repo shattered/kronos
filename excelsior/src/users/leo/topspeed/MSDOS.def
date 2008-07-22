@@ -1,0 +1,33 @@
+DEFINITION MODULE MSDOS;  (* Leo 7-Jul-91 *)
+(*# module(implementation=>off, init_code=>off) *)
+(*# call(reg_saved=>(bx,cx,dx,si,di,es,ds,st1,st2),o_a_copy=>off,o_a_size=>off) *)
+
+
+
+                                                                        (*# call ( reg_param=>(dx,ds,ax,si,es), reg_return=>(ax) ) *)
+PROCEDURE fopen(name: ARRAY OF CHAR;  atr: BITSET; VAR err: BOOLEAN): CARDINAL;
+                                                                        (*# call ( reg_param=>(dx,ds,ax,si,es), reg_return=>(ax) ) *)
+PROCEDURE fcreate(name: ARRAY OF CHAR; atr: BITSET; VAR err: BOOLEAN): CARDINAL;
+                                                                        (*# call ( reg_param=>(ax,si,es), reg_return=>(ax) ) *)
+PROCEDURE fclose(file: INTEGER; VAR err: BOOLEAN): CARDINAL;
+                                                                        (*# call ( reg_param=>(ax,si,es), reg_return=>(ax) ) *)
+PROCEDURE fdup(file: INTEGER; VAR err: BOOLEAN): CARDINAL;
+                                                                        (*# call ( reg_param=>(bx,dx,ds,cx,si,es), reg_return=>(ax) ) *)
+PROCEDURE fread (file: CARDINAL;     buf: ADDRESS;
+                 size: CARDINAL; VAR err: BOOLEAN): CARDINAL;
+                                                                        (*# call ( reg_param=>(bx,dx,ds,cx,si,es), reg_return=>(ax) ) *)
+PROCEDURE fwrite(file: CARDINAL;     buf: ADDRESS;
+                 size: CARDINAL; VAR err: BOOLEAN): CARDINAL;
+                                                                        (*# call ( reg_param=>(bx,dx,dx,cx,si,es), reg_return=>(ax) ) *)
+PROCEDURE fseek(file: CARDINAL; pos: LONGINT; origin: CARDINAL;
+                                             VAR err: BOOLEAN): CARDINAL;
+                                                                        (*# call ( reg_param=>(bx), reg_return=>(ax,dx) ) *)
+PROCEDURE fpos(file: CARDINAL): LONGINT;
+
+(*# call (reg_param=>(bx,si,es), reg_return=>(bx,ax) ) *)
+PROCEDURE alloc(para: CARDINAL; VAR err: BOOLEAN): ADDRESS;
+(*# call (reg_param=>(ax,bx)) *)
+PROCEDURE free (VAR addr: ADDRESS);
+
+END MSDOS.
+

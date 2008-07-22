@@ -1,0 +1,12 @@
+m2 fcDefs.d  fcObj.d  fcExpr.d  fcScan.d fcDcl.d
+m2 fcTproc.d fcStm.d  fcInOut.d fcGen.d  fcInd.d
+m2 fcProc.d  fcHeap.d fcBugs.d  objFile.d
+m2 fcDefs.m  fcObj.m  fcExpr.m  fcScan.m fcDcl.m
+m2 fcTproc.m fcStm.m  fcInOut.m fcGen.m  fcInd.m
+m2 fcProc.m  fcHeap.m fcBugs.m  objFile.m
+m2 for.m
+m2 lkPass.d lkOpt.d
+m2 lkPass.m lkOpt.m
+m2 link.m
+m2 ForIO.d ForIO.m
+m2 ForLib.d ForLib.m

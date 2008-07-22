@@ -1,0 +1,335 @@
+%---------------------------------------------------------------%
+%                                                               %
+%           Firmware for Kronos-P2.6 processor                  %
+%                                                               %
+%---------------------------------------------------------------%
+%    Computer center, Acadimy of Sience, Sybiria department,    %
+%                  Novosibirsk, USSR.                           %
+%                                                               %
+%    (c)  Start, Kronos research groop.                         %
+%                                         20-Aug-87             %
+%---------------------------------------------------------------%
+%       режим работы микропрограммы определяется                %
+%       следующими перемычками на плате П2.6АЛУ                 %
+%                                                               %
+%          В12  1  + регенерация ОЗУ 128 циклов                 %
+%                  - регенерация ОЗУ 256 циклов                 %
+%                                                               %
+%---------------------------------------------------------------%
+%       приоритеты:   4        3            2          1        %
+%-------------------------+                                     %
+% B12 14 | B12 15 | пульт | загрузчик | загрузчик | загрузка    %
+%        |        |       | Qbus ROM  | И41 ROM   | fdc/wdc     %
+%        |        |       | 17760000b |           |             %
+%        |        |       | (4FF800h) | 8007FFh   |             %
+%        |        |       |           |           |             %
+%   -    |   -    |адаптер|    +      |     -     |    +        %
+%        |        |       |           |           |             %
+%        |        |       |           |           |             %
+%   -    |   +    | Qbus  |    +      |     -     |    +        %
+%        |        |       |           |           |             %
+%   +    |   -    |   -   |    -      |     +     |    +        %
+%        |        |       |           |           |             %
+%   +    |   +    | И41   |    -      |     +     |    +        %
+%        |        |       |           |           |             %
+%                                                               %
+%  RAM          000000..0FFFFF  (4 Mbyte)                       %
+%  charmap 1    17C000..17DFFF                                  %
+%  charmap 0    17E000..17FFFF                                  %
+%  bitmap 1     1E0000..1FFFFF                                  %
+%  bitmap 0     1F0000..1FFFFF                                  %
+%  адаптер Qbus 200000..27FFFF  - reset                         %
+%               400000..5FFFFF  - memory                        %
+%               6FE000..6FFFFF  - io even                       %
+%               7FE000..7FFFFF  - io odd                        %
+%               A00000..A7FFFF  - reset                         %
+%               C00000..DFFFFF  - memory                        %
+%               EFE000..EFFFFF  - io even                       %
+%               FFE000..FFFFFF  - io odd                        %
+% адаптер И41   800000..8007FF  - rom                           %
+%               F00000..FFFFFF  - ram                           %
+% адаптер SCSI0 800000..8007FF  - rom                           %
+%               800800..800FFF  - ram                           %
+% адаптер SCSI1 801000..8017FF  - rom                           %
+%               801800..801FFF  - ram                           %
+% fdc           840000..85FFFF                                  %
+% wdc           900000..9FFFFF                                  %
+%---------------------------------------------------------------%
+
+% Bit  11. locked for parity
+% Bit 15. 16. reserved
+
+FIELD F 3F:00 = 0
+FIELD   D  23. ^20. ^29. ^26. ^30. ^31. ^43. ^50. ^47. = 0
+FIELD ADR ^23. ^39. ^32. ^38. ^37. ^20. ^29. ^26. ^30. ^31. ^43. ^50. ^47. = 0
+FIELD ALU ^18. 9. 10. 51. 40. 41. 54. 49. 57. 48. 42.
+   {   A            3D5         B            3DE
+       B+1          2DE         B+FLAG       1DE
+       A+NE_FLAG    0D5         B+NE_FLAG    0DE
+       A+1          2D5         A+FLAG       1D5
+       A-1          3D1         A+B          3D6
+       A-B          2DC         B-A          2DF
+       A-B-1        3DC         A+B+1        2D6
+       ASL(A-B)     20C         A+B+FLAG     1D6
+       A_OR_B       3DB         A_AND_B      3D0
+       A_XOR_B      3DD         A_BIC_B      3D9
+       NE(A)        3D2         NE(B)        3D8
+       NEG(A)       2D2         NEG(B)       2D8
+       ROL(A)       345         ROR(A)       3C5
+       ROR(A+1)     2C5         ROR(A-1)     3C1
+       ROL(B)       34E         ROR(B)       3CE
+       ROL(A-B)     24C         ROL(A_AND_B) 340
+       ROR(A-B)     2CC    % Andy 18-Sep-87. (c) KRONOS
+       ROR(A_BIC_B) 3C9         ROR(A_AND_B) 3C0
+       ROL(A_BIC_B) 349         ASL(A)       305
+       ROR(A_OR_B)  3CB         B->P         32E
+       ASR(A)       355         ROR(NE(B))   3C8
+       ASL(A+B)     306         ASR(A+FLAG)  155
+                                ASR(A+1)     255
+       A&NP+B&P     3FE
+
+       P            31E    % Обе команды читают P-register
+%      P            33E    % что установлено чисто эмпирически. Sem&Leo
+       A->P         325
+
+   } = A
+%              WRSTK RDSTK  WR  RD  A3  A2  A1  A0
+FIELD bus_A     ^0.   ^1.   13.  7. 22. 46. 45. 52.
+ { NOTHING 0
+        Etop    10      R1      11      R2      12      R3      13
+        R4      14      R5      15      R6      16      Time    17
+        G       18      L       19      PC      1A      M       1B
+        S       1C      H       1D      P       1E      F       1F
+        e1      12      m1      13      s1      14
+        e2      15      m2      16      s2      17
+        constFF 18      const02 19
+        tmp1    1A      tmp2    1B
+
+        WR_Etop 20      WR_R1   21      WR_R2   22      WR_R3   23
+        WR_R4   24      WR_R5   25      WR_R6   26      WR_Time 27
+        WR_G    28      WR_L    29      WR_PC   2A      WR_M    2B
+        WR_S    2C      WR_H    2D      WR_P    2E      WR_F    2F
+        WR_e1   22      WR_m1   23      WR_s1   24
+        WR_e2   25      WR_m2   26      WR_s2   27
+        WR_tmp1 2A      WR_tmp2 2B
+
+        RW_Etop 30      RW_R1   31      RW_R2   32      RW_R3   33
+        RW_R4   34      RW_R5   35      RW_R6   36      RW_Time 37
+        RW_G    38      RW_L    39      RW_PC   3A      RW_M    3B
+        RW_S    3C      RW_H    3D      RW_P    3E      RW_F    3F
+        RW_e1   32      RW_m1   33      RW_s1   34
+        RW_e2   35      RW_m2   36      RW_s2   37
+        RW_tmp1 3A      RW_tmp2 3B
+
+        STACK  040
+        STACK->Etop     060     STACK->R1       061
+        STACK->R2       062     STACK->R3       063
+        STACK->R4       064     STACK->R5       065
+        STACK->R6       066     STACK->Time     067
+        STACK->G        068     STACK->L        069
+        STACK->tmp1     06A     STACK->tmp2     06B
+        STACK->M        06B     STACK->PC       06A
+        STACK->e2       065     STACK->m2       066
+        STACK->s2       067     STACK->P        06E
+        STACK->H        06D     STACK->S        06C
+        Etop->STACK      90     R1->STACK        91
+        R2->STACK        92     R3->STACK        93
+        R4->STACK        94     R5->STACK        95
+        R6->STACK        96     Time->STACK      97
+        G->STACK         98     L->STACK         99
+        tmp1->STACK      9A     tmp2->STACK      9B
+        PC->STACK        9A     M->STACK         9B
+        e1->STACK        92     m1->STACK        93
+        P->STACK         9E     s1->STACK        94
+        H->STACK         9D     S->STACK         9C
+ } = NOTHING
+
+FIELD DEC_CASH_PC ^8. ^6. 5. 4. 17. = 3
+FIELD STACK_UP    ^8. ^6. 5. 4. 17. = 2
+FIELD LOAD_CNT    ^8. ^6. 5. 4. 17. = 1
+FIELD WR_CASH     ^8. ^6. 5. 4. 17. = 0
+FIELD RW_CASH_PC  ^8.  6. ^5. = 0
+
+%                       WR  RD  A3  A2  A1  A0
+FIELD bus_B              3. 14.  6.  5.  4. 17.
+ { NOTHING 0
+        Etop    10      R1      11      R2      12      R3      13
+        R4      14      R5      15      R6      16      Time    17
+        G 18
+   L 19 PC 1A M 1B S 1C H 1D P 1E F 1F constFF 18 const02 19
+   e1 12 m1 13 s1 14 e2 15 m2 16 s2 17 tmp1 1A tmp2 1B
+   WR_Etop 20 WR_R1 21 WR_R2 22 WR_R3 23 WR_R4 24 WR_R5 25 WR_R6 26
+   WR_G 28 WR_L 29 WR_PC 2A WR_M 2B WR_S 2C WR_Time 27
+   WR_H 2D WR_P 2E WR_F 2F WR_constFF 28 WR_const02 29 WR_e2 25 WR_e1 22
+   WR_tmp1 2A WR_tmp2 2B WR_m2 26 WR_s1 24 WR_m1 23
+        RW_Etop 30      RW_R1   31      RW_R2   32      RW_R3   33
+        RW_R4   34      RW_R5   35      RW_R6   36      RW_Time 37
+        RW_G    38      RW_L    39      RW_PC   3A      RW_M    3B
+        RW_S    3C      RW_H    3D      RW_P    3E      RW_F    3F
+        RW_e1   32      RW_m1   33      RW_s1   34
+        RW_e2   35      RW_m2   36      RW_s2   37
+        RW_constFF 38
+        RW_const02 39
+        RW_tmp1 3A      RW_tmp2 3B
+ } = NOTHING
+
+%                CNST  WR  RD  A3  A2  A1  A0
+FIELD CONST->Etop ^24. 3.  14. 6.  5.  4.  17. = 020
+FIELD CONST->R1   ^24. 3.  14. 6.  5.  4.  17. = 021
+FIELD CONST->R2   ^24. 3.  14. 6.  5.  4.  17. = 022
+FIELD CONST->R3   ^24. 3.  14. 6.  5.  4.  17. = 023
+FIELD CONST->R4   ^24. 3.  14. 6.  5.  4.  17. = 024
+FIELD CONST->R5   ^24. 3.  14. 6.  5.  4.  17. = 025
+FIELD CONST->R6   ^24. 3.  14. 6.  5.  4.  17. = 026
+FIELD CONST->Time ^24. 3.  14. 6.  5.  4.  17. = 027
+FIELD CONST->G    ^24. 3.  14. 6.  5.  4.  17. = 028
+FIELD CONST->L    ^24. 3.  14. 6.  5.  4.  17. = 029
+FIELD CONST->PC   ^24. 3.  14. 6.  5.  4.  17. = 02A
+FIELD CONST->M    ^24. 3.  14. 6.  5.  4.  17. = 02B
+FIELD CONST->P    ^24. 3.  14. 6.  5.  4.  17. = 02E
+FIELD CONST->F    ^24. 3.  14. 6.  5.  4.  17. = 02F
+FIELD CONST->S    ^24. 3.  14. 6.  5.  4.  17. = 02C
+FIELD CONST->H    ^24. 3.  14. 6.  5.  4.  17. = 02D
+FIELD CONST->e1   ^24. 3.  14. 6.  5.  4.  17. = 022
+FIELD CONST->m1   ^24. 3.  14. 6.  5.  4.  17. = 023
+FIELD CONST->s1   ^24. 3.  14. 6.  5.  4.  17. = 024
+FIELD CONST->m2   ^24. 3.  14. 6.  5.  4.  17. = 026
+FIELD CONST->s2   ^24. 3.  14. 6.  5.  4.  17. = 027
+FIELD CONST->constFF ^24. 3.  14. 6.  5.  4.  17. = 028
+FIELD CONST->const02 ^24. 3.  14. 6.  5.  4.  17. = 029
+FIELD CONST->tmp1 ^24. 3.  14. 6.  5.  4.  17. = 02A
+FIELD CONST->tmp2 ^24. 3.  14. 6.  5.  4.  17. = 02B
+FIELD CONST        24. = 1
+
+%                         C2  C1  C0 FILE S1 S0
+FIELD GOTO                56. 55. 58. 35. 34. 33.  { NEXT 20} = 23
+FIELD GO_TRUE             56. 55. 58. 35. 34. 33.  = 0B
+FIELD GO_FALSE            56. 55. 58. 35. 34. 33.  = 03
+FIELD GO_IF_REQUEST       56. 55. 58. 35. 34. 33.  = 13
+FIELD GO_IF_NOT_REQUEST   56. 55. 58. 35. 34. 33.  = 1B
+FIELD GO_IF_ANY_INT       56. 55. 58. 35. 34. 33.  = 33
+FIELD CALL                56. 55. 58. 35. 34. 33.  = 27
+FIELD CALL_TRUE           56. 55. 58. 35. 34. 33.  = 0F
+FIELD CALL_FALSE          56. 55. 58. 35. 34. 33.  = 07
+FIELD CALL_IF_REQUEST     56. 55. 58. 35. 34. 33.  = 17
+FIELD CALL_IF_NOT_REQUEST 56. 55. 58. 35. 34. 33.  = 1F
+FIELD RETURN              56. 55. 58. 35. 34. 33.  = 25
+FIELD RETURN_TRUE         56. 55. 58. 35. 34. 33.  = 0D
+FIELD RETURN_FALSE        56. 55. 58. 35. 34. 33.  = 05
+FIELD GO_REG              56. 55. 58. 35. 34. 33.  = 22
+FIELD GO_REG_TRUE         56. 55. 58. 35. 34. 33.  = 0A
+FIELD GO_REG_FALSE        56. 55. 58. 35. 34. 33.  = 02
+FIELD CALL_REG            56. 55. 58. 35. 34. 33.  = 26
+
+FIELD REG_EN       ^36. = 1
+
+FIELD FLAG 19. 44. 63. 53.
+  { SAVE 0  OVR 1 Z 2 CARRY 3 N 4 N_XOR_OVR 5 NEG(FLAG) 6 N_XOR_OVR+Z 7
+    SET_FLAG 8 ZERO 9 STK_EMPTY 0A CNT_ZERO 0E CASH_FULL 0F
+    REF256 0B CONF0 0C CONF1 0D }=SAVE
+
+FIELD MEMORY  ^27. 12. ^28. 59. 60. 62. 61.
+
+GENERIC RD_MEM_A    MEMORY = 1F
+GENERIC WR_MEM_A    MEMORY = 1F
+
+FIELD   RD_MEM_D    2. 18. ^27. 12. ^28. 59. 60. 62. 61. = 6E
+FIELD   RD_MEM_LOCK 2. 18. ^27. 12. ^28. 59. 60. 62. 61. = 6D
+
+GENERIC WR_MEM_D    MEMORY = 5E
+GENERIC RD_CONSOL   MEMORY = 2A
+GENERIC WR_CONSOL   MEMORY = 1A
+GENERIC RD_VECTOR   MEMORY = 2B
+GENERIC RD_IO_D     MEMORY = 69
+GENERIC WR_IO_D     MEMORY = 59
+GENERIC RD_PIO_D    MEMORY = 68
+GENERIC WR_PIO_D    MEMORY = 58
+
+%      mADR             read                    write
+%       0               ...             memory & io address
+%       1       read memory             write memory
+%       2       read memory lock                 ...
+%       3       read PC                 write PC
+%       4       interrupt no                     ...
+%       5       read consol             write consol
+%       6       read io data            write io data
+%       7       read УА data            write УА data
+%       8               ...                      ...
+%       9               ...                      ...
+%      0A               ...                      ...
+%      0B               ...                      ...
+%      0C               ...                      ...
+%      0D               ...                      ...
+%      0E               ...             FPP command
+%      0F       FPP result              FPP data
+
+FIELD INTE 25. = 1
+
+FIELD CFE  8. = 1
+
+FIELD FAST 27. = 1
+
+FIELD LONG 27. = 0
+
+FIELD DEC_CNT 21. = 1
+
+FIELD SHIFT_EN 2. = 1
+
+FIELD SHIFT
+^19. ^44. ^63. 53. ^9. ^10.
+^18. ^2. ^21. 56. ^55. 58. 35. ^34. ^33.
+51. ^40. 41. 54. ^49. ^57. ^48. 42.
+^23. ^39. ^32. ^38. ^37. ^20. ^29. ^26. ^30. ^31. ^43. ^50. ^47. = 0
+
+FIELD UPDATE_CASH
+  ^19. ^44. ^63. ^53.           % intreq := cash empty
+  56. ^55. 58. ^35. ^34. ^33.   % call if intreq
+ ^23. ^39. ^32. ^38. ^37. ^20. ^29. ^26. ^30. ^31. ^43. ^50. ^47. =
+  UPDATE_CASH_S
+
+FIELD INC_PC  ^23. ^24. = 0
+
+FIELD PARITY 11. = 1
+
+FIELD IPTS 28. ^56. ^55. ^58. 31. 43. 50. 47.
+
+GENERIC IDLE_ON         IPTS=02
+GENERIC IDLE_OFF        IPTS=06
+GENERIC QUIT_ON         IPTS=0E
+GENERIC QUIT_OFF        IPTS=06
+GENERIC RESET_ACL       IPTS=04
+GENERIC RESET_TIMER     IPTS=05
+GENERIC RESET_DEBUG     IPTS=06
+GENERIC RESET_HARD_ERR  IPTS=07
+
+FIELD FINISH ^25. 23. ^34. ^33. 58. 55. ^56. = 0
+
+FIELD DATA 23. = 0
+
+$
+DEFAULT[ GOTO=NEXT REG_EN=0 ALU=400 FLAG bus_A bus_B INTE=0 FAST DEC_CNT=0
+         DATA CFE=0 CONST=0 MEMORY=0 SHIFT_EN=0 PARITY=0 ]
+
+
+% Reserved registers:
+%       R7  - timer
+%       R8  - G  global data segment
+%       R9  - L  local data segment
+%       R0A - PC program counter
+%       R0B - M  process mask
+%       R0C - S  first free word on procedure stack
+%       R0D - H  procedure stack limit
+%       R0E - P  current process
+%       R0F - F  code segment
+%
+% Floating point arithmetic registers:
+%       R2  - e1 exponent 1
+%       R3  - m1 mantith  1
+%       R4  - s1 sign     1
+%       R5  - e2 exponent 2
+%       R6  - m2 mantith  2
+%       R7  - s2 sign     2
+%       R8  - constFF
+%       R9  - const02
+%       R0A - tmp1
+%       R0B - tmp2

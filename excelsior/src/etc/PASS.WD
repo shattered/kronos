@@ -1,0 +1,1 @@
+G    000 rootG    016 guestsU +  000 su         0 ""        [8]shell home='/usr'U +  002 sys        0 ""        [8]shell home='/sys'U    009 guest     16 ""        [8]shell home='/usr/guest'U    048 park       0 ""        dsu -p

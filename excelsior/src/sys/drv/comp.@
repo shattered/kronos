@@ -1,0 +1,1 @@
+{ SYM='/sys /sym' mxOUT=*=/sys CD=/sys/drv } mx LEXICON LD%{ SYM='/sys /sym' mxOUT=*=/sys CD=/sys/drv } mx LPcm6329 LPcanonLBP8A1 PLfokGIEM PLvgBM $1

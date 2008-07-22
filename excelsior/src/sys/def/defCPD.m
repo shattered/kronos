@@ -1,0 +1,1 @@
+IMPLEMENTATION MODULE defCPD[1]; (*  19-Oct-90. (c) KRONOS *) END defCPD.

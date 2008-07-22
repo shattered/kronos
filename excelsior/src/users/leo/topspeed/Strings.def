@@ -1,0 +1,138 @@
+DEFINITION MODULE Strings; (* Leo  25-Aug-91. *)
+
+IMPORT  SYSTEM;
+
+(*# call(o_a_copy=>off,o_a_size=>on) *)
+
+PROCEDURE len(str: ARRAY OF CHAR): CARDINAL;
+
+PROCEDURE app (VAR dst: ARRAY OF CHAR; str: ARRAY OF CHAR);
+
+PROCEDURE copy(VAR dst: ARRAY OF CHAR; str: ARRAY OF CHAR);
+
+
+
+PROCEDURE delete (VAR str: ARRAY OF CHAR; pos,len: CARDINAL);
+PROCEDURE insert (VAR str: ARRAY OF CHAR; pos,len: CARDINAL; ch: CHAR);
+
+PROCEDURE substr (VAR dst: ARRAY OF CHAR;
+                      str: ARRAY OF CHAR; pos,len: CARDINAL);
+
+PROCEDURE subarr (VAR dst: ARRAY OF CHAR;
+                      str: ARRAY OF CHAR; pos,len: CARDINAL);
+
+PROCEDURE replace(VAR dst: ARRAY OF CHAR;
+                      str: ARRAY OF CHAR; pos,len: CARDINAL);
+
+PROCEDURE skip  (str: ARRAY OF CHAR; VAR pos: CARDINAL; ch: CHAR);
+PROCEDURE search(str: ARRAY OF CHAR; VAR pos: CARDINAL; ch: CHAR);
+
+PROCEDURE scan(str : ARRAY OF CHAR;
+           VAR pos : CARDINAL;
+               patt: ARRAY OF CHAR;
+           VAR done: BOOLEAN);
+
+PROCEDURE iscan(VAR num : SYSTEM.LONGWORD;
+                    str : ARRAY OF CHAR;
+                VAR pos : CARDINAL;
+                VAR done: BOOLEAN);
+
+PROCEDURE rscan(VAR real: LONGREAL;
+                    str : ARRAY OF CHAR;
+                VAR pos : CARDINAL;
+                VAR done: BOOLEAN);
+
+PROCEDURE move(VAR to: ARRAY OF CHAR; t_ofs: CARDINAL;
+                 from: ARRAY OF CHAR; f_ofs: CARDINAL; len: CARDINAL);
+
+
+
+
+
+(*# save *)
+(*# call(var_arg=>on,c_conv=>on,reg_param=>()) *)
+PROCEDURE print (VAR str: ARRAY OF CHAR; fmt: ARRAY OF CHAR);
+
+PROCEDURE append(VAR str: ARRAY OF CHAR; fmt: ARRAY OF CHAR);
+
+PROCEDURE image (VAR str: ARRAY OF CHAR; VAR pos: CARDINAL; fmt: ARRAY OF CHAR);
+
+(*# restore *)
+
+PROCEDURE format(VAR str: ARRAY OF CHAR; fmt: ARRAY OF CHAR; args: ADDRESS);
+
+
+END Strings.
+
+(***************************************************************
+
+  format     ::= { text | "%" format | "%%" | "\n"
+                   | "\r" | "\l" | "\\" } 0c.
+  text       ::= "sequence of any ASCII chracters except '%','\',000c".
+                  To output charater '%' repeat it twice:
+                     '%%' will output '%'.
+                  To output charater '\' repeat it twice:
+                     '\\' will output '\'.
+  format     ::= { modifier } base .
+  base       ::= ["l"] ("d"|"u"|"h"|"b"|"s"|"{}"|"i") .
+  width      ::= digit { digit } | "*" .
+  precision  ::= "." digit { digit } | ".*" .
+  modifier   ::= ( space | "$" | "-" | "+" | "#" | "|" | width
+                   | precision | position ) .
+  d   (Decimal)
+  h,H (Hexidecimal)   (h -- "A".."F" capital)
+  x,X (Hexidecimal)   (X -- "a".."f"  small)
+  b,B (Octal)
+  o,O (Octal)
+  s,S (String)
+  c,C (Char  )
+  {}  (bitset)
+  i,I (bInary)
+  f,F (Float)         - fixed point format
+                          [+|-]dddddddd.ddddd
+                            |___  i ___|_ f _|
+                        "width" specified width of the field (i+f).
+                        "precision" specifies number of digits after point.
+                        (Default 6.3)
+
+  e,E (Exponent)      - engeniering form:
+                          [+|-]d.ddddddE(+|-)dd    or
+                          [+|-]D.DDDDDDe(+|-)DD
+                        Number of digits before point is always 1.
+                        Numbers of digits after point is "precision".
+                        Small or capital letter in output deterfimes by
+                        base: base='e'  output 'E', base='E' outputs 'e'
+
+  g,G (General)       - fixed point or engeniering form.
+  #                   - output base
+  -                   - left   justified output
+  |                   - center justified output
+  +                   - output number with sign
+  $,0 (zero)          - extend by leading zeros
+  space               - output sign if negative otherwise space
+  precision           - determines number of digits after point
+                        in 'f', 'e', 'g' formats.
+                        Lenght to wich string truncated in
+                        's' format.
+                        Number of char repeation in 'c' format.
+  width               - determines the width of field
+                        for output. Output field may be automaticaly
+                        extended if needed.
+  position            - position from wich the output of string
+                        started.
+
+
+  Any one of "width", "precision" and "position"
+  may be replaced by "*". In this case
+  SHORTCARD (!) value will be taken from arguments flow
+  and used as a field width, precision or position respectevly.
+
+  WARNING! integer constants in JPI TS v2.0 have type LONGINT or LONGCARD,
+           real    constants in JPI TS v2.0 have type LONGREAL.
+  So sometimes you must convert type of constant to use it in
+  argument flow!
+
+
+***************************************************************)
+
+

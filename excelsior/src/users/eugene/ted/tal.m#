@@ -1,0 +1,336 @@
+IMPLEMENTATION MODULE tal; (* 26-Oct-89. (c) KRONOS *)
+
+FROM SYSTEM     IMPORT  ADR;
+FROM Heap       IMPORT  ALLOCATE, DEALLOCATE;
+FROM VIDEO      IMPORT  rect, rep, color, mode, start, finish, patt, vect, com;
+FROM Terminal   IMPORT  print, Read;
+
+CONST
+  min_integer=-10000h;
+  max_integer=10000h;
+  board=min_integer;
+
+VAR
+  new_dt  : INTEGER;
+  new_x   : INTEGER;
+  new_y   : INTEGER;
+  new_sx  : INTEGER;
+  new_sy  : INTEGER;
+
+PROCEDURE show(t: tile);
+  VAR x,y,x1,y1: INTEGER;
+BEGIN
+  x:=t^.x; y:=t^.y;
+  x1:=t^.rt^.x-1; y1:=t^.up^.y-1;
+  mode(rep); patt(1);
+  IF (t^.dt=board) OR (t^.dt=0) THEN
+    color(0);
+  ELSE
+    color(t^.dt)
+  END;
+  rect(x,y,x1,y1);
+  mode(com); patt(1); color(3);
+  vect(x,y,x,y1);
+  vect(x,y,x1,y);
+END show;
+
+PROCEDURE xe(t: tile): INTEGER;
+BEGIN
+  ASSERT(t#NIL);
+  ASSERT(t^.rt#NIL);
+  RETURN t^.rt^.x-1;
+END xe;
+
+PROCEDURE ye(t: tile): INTEGER;
+BEGIN
+  ASSERT(t#NIL);
+  ASSERT(t^.up#NIL);
+  RETURN t^.up^.y-1;
+END ye;
+
+PROCEDURE go(x,y: INTEGER);
+BEGIN
+  LOOP
+    IF    xe(wsp)<x THEN wsp:=wsp^.rt
+    ELSIF ye(wsp)<y THEN wsp:=wsp^.up
+    ELSIF wsp^.x>x  THEN wsp:=wsp^.lf
+    ELSIF wsp^.y>y  THEN wsp:=wsp^.dw
+    ELSE RETURN
+    END;
+  END;
+END go;
+
+PROCEDURE div_h(t: tile; y: INTEGER);
+  VAR s,u: tile;
+BEGIN
+  ASSERT(t#NIL);
+  IF t^.y=y THEN RETURN END;
+  ASSERT(t^.up^.y>y);
+  ALLOCATE(u,SIZE(u^));
+  u^:=t^; u^.y:=y; u^.dw:=t; t^.up:=u;
+  s:=t^.lf;
+  WHILE ye(s)<y DO s:=s^.up END;
+  ASSERT(s^.y<=y);
+  u^.lf:=s;
+  WHILE ye(s)<=ye(u) DO s^.rt:=u; s:=s^.up END;
+  s:=u^.rt;
+  WHILE s^.y>=y DO s^.lf:=u; s:=s^.dw END;
+  t^.rt:=s;
+  s:=u^.up;
+  WHILE s^.x>=u^.x DO s^.dw:=u; s:=s^.lf END;
+END div_h;
+
+PROCEDURE cat_h(t: tile);
+  VAR s,u: tile;
+BEGIN
+  ASSERT(t#NIL);
+  u:=t^.up;
+  ASSERT(u^.x=t^.x);
+  ASSERT(xe(u)=xe(t));
+  t^.up:=u^.up; t^.rt:=u^.rt;
+  s:=u^.lf;
+  WHILE ye(s)<=ye(u) DO s^.rt:=t; s:=s^.up END;
+  s:=u^.rt;
+  WHILE s^.y>=u^.y DO s^.lf:=t; s:=s^.dw END;
+  s:=u^.up;
+  WHILE s^.x>=u^.x DO s^.dw:=t; s:=s^.lf END;
+  DEALLOCATE(u,SIZE(u^));
+END cat_h;
+
+PROCEDURE div_v(t: tile; x: INTEGER);
+  VAR s,u: tile;
+BEGIN
+  ASSERT(t#NIL);
+  IF t^.x=x THEN RETURN END;
+  ASSERT(t^.rt^.x>x);
+  ASSERT(t^.x<x);
+  ALLOCATE(u,SIZE(u^));
+  u^:=t^; u^.x:=x; u^.lf:=t; t^.rt:=u;
+  s:=t^.dw;
+  WHILE xe(s)<x DO s:=s^.rt END;
+  ASSERT(s#NIL);
+  ASSERT(s^.x<=x);
+  u^.dw:=s;
+  WHILE xe(s)<=xe(u) DO s^.up:=u; s:=s^.rt END;
+  s:=u^.up;
+  WHILE s^.x>=x DO s^.dw:=u; s:=s^.lf END;
+  t^.up:=s;
+  s:=u^.rt;
+  WHILE s^.y>=u^.y DO s^.lf:=u; s:=s^.dw END;
+END div_v;
+
+PROCEDURE cat_v(t: tile);
+  VAR s,u: tile;
+BEGIN
+  ASSERT(t#NIL);
+  u:=t^.rt;
+  ASSERT(u^.y=t^.y);
+  ASSERT(ye(u)=ye(t));
+  t^.rt:=u^.rt; t^.up:=u^.up;
+  s:=u^.dw;
+  WHILE xe(s)<=xe(u) DO s^.up:=t; s:=s^.rt END;
+  s:=u^.up;
+  WHILE s^.x>=u^.x DO s^.dw:=t; s:=s^.lf END;
+  s:=u^.rt;
+  WHILE s^.y>=u^.y DO s^.lf:=t; s:=s^.dw END;
+  DEALLOCATE(u,SIZE(u^));
+END cat_v;
+
+PROCEDURE new(t: tile);
+BEGIN
+  IF t^.x<new_x THEN
+    ASSERT(xe(t)>=new_x);
+    div_v(t,new_x); new(t^.rt);
+  ELSIF t^.y<new_y THEN
+    ASSERT(ye(t)>=new_y);
+    div_h(t,new_y); new(t^.up);
+  ELSIF t^.rt^.x>new_x+new_sx THEN
+    div_v(t,new_x+new_sx); new(t);
+  ELSIF t^.up^.y>new_y+new_sy THEN
+    div_h(t,new_y+new_sy); new(t);
+  ELSE t^.dt:=new_dt
+  END;
+END new;
+
+PROCEDURE cat(t: tile);
+BEGIN
+  LOOP
+    IF (t^.rt^.dt=t^.dt) & (t^.y=t^.rt^.y) & (t^.up^.y=t^.rt^.up^.y) THEN
+      cat_v(t)
+    ELSIF (t^.up^.dt=t^.dt) & (t^.x=t^.up^.x) & (t^.rt^.x=t^.up^.rt^.x) THEN
+      cat_h(t)
+    ELSE RETURN
+    END;
+  END;
+END cat;
+
+PROCEDURE app(x,y,sx,sy,dt: INTEGER);
+  VAR new: tile;
+  PROCEDURE compress(): BOOLEAN;
+    VAR d: INTEGER;
+  BEGIN
+    go(x,y);
+    LOOP
+      IF (sx=0) OR (sy=0) THEN RETURN TRUE END;
+      IF wsp^.dt=dt THEN
+        IF (wsp^.x<=x) & (wsp^.rt^.x>=x+sx) THEN
+          d:=wsp^.up^.y-y;
+          IF d>=sy THEN d:=sy END;
+          DEC(sy,d); INC(y,d);
+          wsp:=wsp^.up;
+          WHILE wsp^.x>x DO wsp:=wsp^.lf END;
+        ELSIF (wsp^.y<=y) & (wsp^.up^.y>=y+sy) THEN
+          d:=wsp^.rt^.x-x;
+          IF d>=sx THEN d:=sx END;
+          DEC(sx,d); INC(x,d);
+          wsp:=wsp^.rt;
+          WHILE wsp^.y>y DO wsp:=wsp^.dw END;
+        ELSE EXIT
+        END;
+      ELSE EXIT
+      END;
+    END;
+    RETURN FALSE;
+  END compress;
+  PROCEDURE kill(t: tile);
+    VAR s,v: tile; rem: BOOLEAN;
+  BEGIN
+    ASSERT(t^.y<=y+sy); ASSERT(ye(t)>=y);
+    ASSERT(t^.x<=x+sx); ASSERT(xe(t)>=x); -- тайл t попал в окно
+    rem:=TRUE;
+    IF xe(t)<x+sx THEN
+      IF (ye(t^.rt)=ye(t)) & (xe(t^.up)=xe(t)) THEN
+        s:=t^.up^.rt; WHILE s^.y>ye(t)+1 DO s:=s^.dw END;
+      ELSE
+        s:=t^.rt;
+      END;
+      WHILE s^.y>y+sy DO s:=s^.dw END;
+      WHILE s^.y>=t^.y DO v:=s^.dw; kill(s); s:=v END;
+    ELSE
+      IF (t^.y>=y) & (t^.y<y+sy) THEN t^.lf:=new; t^.x:=x+sx END;
+      rem:=FALSE;
+    END;
+    IF ye(t)<y+sy THEN
+      s:=t^.up;
+      WHILE s^.x>x+sx DO s:=s^.lf END;
+      WHILE s^.x>=t^.x DO v:=s^.lf; kill(s); s:=v END;
+    ELSE
+      IF (t^.x>=x) & (t^.x<x+sx) THEN t^.dw:=new; t^.y:=y+sy END;
+      rem:=FALSE;
+    END;
+    IF rem THEN DEALLOCATE(t,SIZE(t^)) END;
+  END kill;
+  VAR t,s: tile;
+BEGIN
+  IF compress() THEN RETURN END;
+  ASSERT(wsp^.x<=x); ASSERT(wsp^.y<=y);
+  ASSERT(xe(wsp)>=x); ASSERT(ye(wsp)>=y); -- (x,y) внутри тайла wsp
+  ALLOCATE(new,SIZE(new^));
+  new^.x:=x; new^.y:=y;
+  new^.lf:=NIL; new^.rt:=NIL;
+  new^.up:=NIL; new^.dw:=NIL;
+  new^.an:=0; new^.dt:=dt;
+
+  t:=wsp; IF t^.y=y THEN t:=t^.dw END;
+  LOOP
+    IF ye(t)>=y THEN div_h(t,y) END;
+    IF t^.rt^.x>=x+sx THEN EXIT END;
+    t:=t^.rt;
+  END;
+  t:=t^.up;
+  WHILE t^.x>=x+sx DO t:=t^.lf END;
+  LOOP
+    IF xe(t)>=x+sx THEN div_v(t,x+sx) END;
+    IF t^.up^.y>=y+sy THEN EXIT END;
+    t:=t^.up;
+  END;
+  IF ye(t)<y+sy THEN t:=t^.up END;
+  LOOP
+    IF t^.y<y+sy THEN div_h(t,y+sy); t:=t^.up END;
+    IF t^.x<=x THEN EXIT END;
+    t:=t^.lf;
+  END;
+  t:=t^.dw;
+  WHILE xe(t)<x DO t:=t^.rt END;
+  LOOP
+    IF t^.x<x THEN div_v(t,x); t:=t^.rt END;
+    IF t^.y<=y THEN EXIT END;
+    t:=t^.dw;
+  END;
+  new^.dw:=t^.dw; new^.lf:=t^.lf;
+END app;
+
+PROCEDURE box(x,y,sx,sy: INTEGER; p: iter_proc);
+  PROCEDURE bend(t: tile);
+    VAR y0: INTEGER;
+  BEGIN
+    ASSERT(t^.y<y+sy); ASSERT(ye(t)>=y);
+    ASSERT(t^.x<x+sx); ASSERT(xe(t)>=x); -- тайл t попал в окно
+    y0:=t^.y; t:=t^.rt;
+    IF t^.x>=x+sx THEN RETURN END;
+    IF y0<=y THEN y0:=y+1 END;
+    WHILE t^.y>=y+sy DO t:=t^.dw END;
+    WHILE t^.y>=y0 DO bend(t); p(t); t:=t^.dw END;
+  END bend;
+  VAR t,s: tile;
+BEGIN
+  go(x,y); s:=wsp;
+  bend(s); p(s);
+  t:=s^.rt;
+  WHILE t^.x<x+sx DO
+    WHILE t^.y>y DO t:=t^.dw END;
+    bend(t); p(t); t:=t^.rt;
+  END;
+  t:=s^.up;
+  WHILE t^.y<y+sy DO
+    WHILE t^.x>x DO t:=t^.lf END;
+    bend(t); p(t); t:=t^.up;
+  END;
+END box;
+
+PROCEDURE nab(s: tile; p: iter_proc);
+  VAR t: tile;
+BEGIN
+  t:=s^.dw;
+  IF (t^.x=s^.x) & (s^.lf^.y=s^.y) THEN
+    t:=t^.lf;
+    WHILE t^.up^.y<s^.y DO t:=t^.up END;
+  END;
+  REPEAT p(t); t:=t^.rt UNTIL t^.x>s^.rt^.x;
+  t:=s^.lf;
+  REPEAT p(t); t:=t^.up UNTIL t^.y>s^.up^.y;
+  t:=s^.up;
+  IF (xe(t)=xe(s)) & (ye(s^.rt)=ye(s)) THEN
+    t:=t^.rt;
+    WHILE t^.y>s^.up^.y DO t:=t^.dw END;
+  END;
+  REPEAT p(t); t:=t^.lf UNTIL t^.rt^.x<=s^.x;
+  t:=s^.rt;
+  REPEAT p(t); t:=t^.dw UNTIL t^.up^.y<=s^.y;
+END nab;
+
+VAR
+  t: ARRAY [0..10] OF tile_rec;
+
+PROCEDURE brd(n,x,y,lf,dw,rt,up: INTEGER);
+BEGIN
+  t[n].x:=x; t[n].y:=y;
+  t[n].lf:=ADR(t[lf]); t[n].rt:=ADR(t[rt]);
+  t[n].dw:=ADR(t[dw]); t[n].up:=ADR(t[up]);
+  t[n].an:=0; t[n].dt:=board;
+END brd;
+
+BEGIN
+  brd( 0,min_integer  ,min_integer  ,9,10,1,3);
+  brd( 1,min_integer+1,min_integer  ,0,10,2,4);
+  brd( 2,max_integer-1,min_integer  ,1,10,9,5);
+  brd( 3,min_integer  ,min_integer+1,9,0,4,6);
+  brd( 4,min_integer+1,min_integer+1,3,1,5,7);
+  brd( 5,max_integer-1,min_integer+1,4,2,9,8);
+  brd( 6,min_integer  ,max_integer-1,9,3,7,10);
+  brd( 7,min_integer+1,max_integer-1,6,4,8,10);
+  brd( 8,max_integer-1,max_integer-1,7,5,9,10);
+  brd( 9,max_integer  ,min_integer  ,2,10,6,10);
+  brd(10,min_integer  ,max_integer  ,10,6,10,9);
+  wsp:=ADR(t[4]);
+END tal.

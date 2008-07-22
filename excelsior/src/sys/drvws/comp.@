@@ -1,0 +1,1 @@
+{ SYM='/sys /sym /usr/sym' mxOUT=*=/sys CD=/sys/drvws } mx bootWS DKwsFD DKwsSCSI DKwsScsi DKwsWD KTV480 KTVcm SIOws SIOcm TTwsBM TTwsCMat TTwsCMlrm MOUSEwsi SCwsIO PRwsIO IGD480 $1

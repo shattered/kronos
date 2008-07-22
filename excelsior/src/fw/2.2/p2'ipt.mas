@@ -1,0 +1,469 @@
+
+%     TYPE Link=POINTER TO
+%       RECORD
+%    [0]  size: INTEGER;  (* in bytes, must be even for 16bit i/o *)
+%    [1]  addr: ADDRESS;  (* address of buffer*4 *)
+%    [2]  dtr : INTEGER;  (* 12 bits + {15} if 16bit interface *)
+%    [3]  sum : INTEGER;  (* 2 bytes *)
+%    [4]  trap: INTEGER;  (* trapno*2 *)
+%    [5]  vec0: INTEGER;
+%       END;
+%
+%     PROCEDURE BIO;
+%       VAR t,a: ADDRESS; l: Link;
+%     BEGIN                       (* BIO(trap,dtr,adr,size,work6words) *)
+%       l      :=Pop();
+%       l^.size:=Pop();
+%       l^.addr:=Pop()*4;
+%       dtr    :=Pop();
+%       t      :=Pop()*2;
+%       IF (t<0Bh*2) OR (t>=3Fh*2) THEN TRAP(4Ah) END;
+%       a:=t;
+%       l^.vec0:=a^;
+%       l^.trap:=t;
+%       l^.dtr :=dtr;
+%       IF (15 IN BITSET(dtr)) & ODD(l^.size)) OR (l^.size=0) THEN
+%         TRAP(4Ah)
+%       END;
+%       l^.sum:=0;
+%       a:=t;      a^:=l+{31}
+%     END BIO;
+%     T=53+12q (* 25 mks *)
+
+@BIO 093[ ALU=A BUS_A=R0 BUS_B=WR_R7     ]
+        [ ALU=A BUS_A=R1 BUS_B=WR_R7 OLD ]  % l<r7>:=Pop()
+        [ STACK->R2              ]  % sz<r2>:=Pop()
+        [ ALU=A   STACK->R6 FLAG=Z ]  % drop(High16 of size)
+        [ GO_TRUE  ADR=BIOszOK    ]
+        [ ALU=A+1 BUS_A=R6 FLAG=Z ]
+        [ GO_FALSE ADR=CHECK_BND_ERR ]
+:BIOszOK
+        [ Q_BUS
+          STACK->R3 ]                           % addr<r3>:=Pop16()
+        [ BUS_A=R7    WR_Q_BUS0   BUS_B=R2 ]    % l^.size:=sz
+        [ STACK->R4 ]                           % addr<r4>:=Pop16()
+        [ ALU=A+B     BUS_A=RW_R3 BUS_B=R3
+                                  SAVE_CARRY ]  % addr<r3>:=r3*2
+        [ ALU=A+B     BUS_A=RW_R4 BUS_B=R4 ]    % addr<r4>:=r4*2+carry
+        [ ALU=A+B     BUS_A=RW_R3 BUS_B=R3
+                                  SAVE_CARRY ]  % addr<r3>:=r3*2
+        [ ALU=A+B     BUS_A=RW_R4 BUS_B=R4 ]    % addr<r4>:=r4*2+carry
+        [ ALU=A+1     BUS_A=RW_R7               % <r7>=ADR(l^.addr)
+          Q_BUS ]
+        [ BUS_A=R7 WR_Q_BUS1 BUS_B=R4 ]
+        [ Q_BUS
+          STACK->R4 ]                           % dtr<r4>:=Pop16()
+        [ BUS_A=R7 WR_Q_BUS0 BUS_B=R3 ]
+        [ STACK->R6 ]                           % Drop(High of dtr)
+        [ ALU=A+B     BUS_A=R4    BUS_B=R4  FLAG=CARRY ]
+        [ ALU=A+1     BUS_A=RW_R7               % <r7>=ADR(l^.dtr)
+          GO_FALSE ADR=BIOszEVEN ]
+        [ ALU=A_AND_B BUS_A=R2    CONST D=1 FLAG=Z ]
+        [ GO_FALSE ADR=CHECK_BND_ERR   ]            % word io & ODD(sz)
+:BIOszEVEN
+        [ ALU=ASL(A)  STACK->R5  Q_BUS    ]     % trap<R5>:=Pop16()*2
+        [ BUS_A=R7    WR_Q_BUS0  BUS_B=R4 ]     % l^.dtr:=dtr
+        [ ALU=A STACK->R6 FLAG=Z ]
+        [ GO_FALSE    ADR=CHECK_BND_ERR   ]     % trap>2**16 or trap<0
+
+        [ ALU=A-B     BUS_A=R5    CONST D=16  FLAG=CARRY ]
+        [ GO_FALSE ADR=CHECK_BND_ERR
+          ALU=A+1     BUS_A=RW_R7       ]       % <r7>=ADR(l^.sum)
+        [ Q_BUS  ALU=B BUS_A=WR_R0 CONST D=0 ]
+        [ BUS_A=R7    BUS_B=R0    WR_Q_BUS0  ]   % l^.sum<lo>:=0
+        [ ALU=A-B     BUS_A=R5    CONST D=7E  FLAG=CARRY
+          Q_BUS ]
+        [ BUS_A=R7    BUS_B=R0    WR_Q_BUS1  ]   % l^.sum<hi>:=0
+        [ GO_TRUE ADR=CHECK_BND_ERR
+          ALU=A+1     BUS_A=RW_R7       ]       % <r7>=ADR(l^.trap)
+        % if trap NOT IN {0Bh*2..3Fh*2} then trap(4Ah) end
+        [ Q_BUS ]
+        [ BUS_A=R7    WR_Q_BUS0   BUS_B=R5 ]    % l^.trap:=trap;
+
+        [ Q_BUS    CONST->R5   D=0  OLD  ]
+        [ BUS_A=R5 BUS_B=WR_R0 RD_Q_BUS0 ]      % r0,r1:=t^
+        [ Q_BUS ]
+        [ BUS_A=R5 BUS_B=WR_R1 RD_Q_BUS1 ]
+
+        [ Q_BUS ALU=A+1 BUS_A=RW_R7 ]           % <r7>=ADR(l^.vec0)
+        [ BUS_A=R7 BUS_B=R0 WR_Q_BUS0 ]         % l^.vec0:=r6,r7
+        [ Q_BUS ]
+        [ BUS_A=R7 BUS_B=R1 WR_Q_BUS1 ]
+
+        [ Q_BUS ALU=A-B BUS_A=RW_R7 CONST D=5 ] % r7==adr(l^.size)
+
+        [ BUS_A=R5   BUS_B=R7    WR_Q_BUS0 ]         % t^:=l + {31}
+        [ ALU=B      BUS_A=WR_R7 BUS_B=R7 OLD ]
+        [ ALU=ROR(B) BUS_A=WR_R1 CONST D=1  ]
+        [ ALU=A_OR_B BUS_A=RW_R7 BUS_B=R1 Q_BUS REG_EN ADR=DROP ]
+        [ BUS_A=R5   BUS_B=R7    WR_Q_BUS1      GO_REG ]
+%******** E N D  O F   B*I*O    C O M M A N D  **********
+
+:microIN % r4:=QIN(r4)                                        Time=6+1q
+    %****  R4=DTR   R5=adr   R2=sz r3=offset
+        [ R2->STACK REG_EN ADR=finishIN ]
+        [ ALU=ROR(A_OR_B)  BUS_A=R4  CONST->R2  D=1 ]
+        [ CONST->R2  OLD  D=0F ]
+        [ ALU=A_AND_B  BUS_A=R4  CONST  D=1  FLAG=Z ]
+        [ Q_BUS  GO_FALSE  ADR=mIN_1 ]
+        [ BUS_A=R2  BUS_B=WR_R4  INP_Q_BUS0  FLAG=ZERO GO_REG ]
+:mIN_1  [ BUS_A=R2  BUS_B=WR_R4  INP_Q_BUS1  FLAG=ZERO ]
+:finishIN
+        [ STACK->R2 RETURN ]
+
+:microOUT % QOUT(r4,r6)                                         Time=7+1q
+    %****  R4=DTR   R5=adr   R2=sz
+        [ R2->STACK REG_EN ADR=finishOUT ]
+        [ ALU=A  BUS_A=R4  BUS_B=WR_R2 ]
+        [ ALU=ROR(A_OR_B)  BUS_A=R2  CONST->R2  D=1 ]
+        [ CONST->R2  OLD  D=0F ]
+        [ ALU=A_AND_B  BUS_A=R4  CONST  D=1  FLAG=Z ]
+        [ Q_BUS  GO_FALSE  ADR=mOUT_1 ]
+        [ BUS_A=R2  BUS_B=R6  OUT_Q_BUS0  FLAG=ZERO GO_REG ]
+:mOUT_1 [ BUS_A=R2  BUS_B=R6  OUT_Q_BUS1  FLAG=ZERO ]
+:finishOUT
+        [ STACK->R2 GOTO ADR=mFIN ]
+
+:Fetch  % r6:=rd_q_bus(adr,offset)                                Time=3+1q
+    %
+    % Выборка полуслова из массива по адресу R5 в зависимости смещения R3
+    % (нужный байт окажется младшим или старшим в выбранном полуслове R6
+    % Если R3 IN {0..1} выбирается МЛАДШЕЕ полуслово иначе СТАРШЕЕ
+    %
+    %****  R4=DTR   R5=adr   R2=sz  R3=offset
+        [ ALU=A_AND_B BUS_A=R3  CONST D=2  FLAG=Z]
+        [ Q_BUS GO_FALSE ADR=Fetch_1 ]
+        [ BUS_A=R5 BUS_B=WR_R6 RD_Q_BUS0
+          FLAG=ZERO RETURN ]
+:Fetch_1
+        [ BUS_A=R5 BUS_B=WR_R6 RD_Q_BUS1
+          FLAG=ZERO RETURN ]
+
+%       IF NOT (31 IN (t*2)^) THEN goto INTERRUPT END;
+%       t:=t*2;
+%       l:=t^;
+%       sz :=l^.size;
+%       adr:=(l^.addr) DIV 4;
+%       ofs:=(l^.addr) MOD 4;
+%       dtr:=l^.dtr;
+%       IF (15 IN dtr) THEN  inc(l^.addr,2) ELSE inc(l^.addr,1) END;
+%       IF NOT (15 IN dtr) THEN
+%         (* byte I/O *)
+%         IF sz>0 THEN  (* OUTPUT *)
+%           IF ofs IN {0,1} THEN
+%                w:=adr^*{0..15}          (* RD_Q_BUS0 *)
+%           ELSE w:=ROR(adr^,16)*{0..15}  (* RD_Q_BUS1 *)
+%           END;
+%           IF ODD(ofs) THEN ch:=ROR(w,8) ELSE ch:=w END;
+%           ch:=ch*{0..7};
+%           QOUT(dtr,ch);
+%           dec(sz);
+%         ELSE  (* INPUT *)
+%           ch:=QIN(dtr);
+%           IF ofs IN {0,1} THEN w:=adr^*{0..15}           (* RD_Q_BUS0 *)
+%           ELSE                 w:=ROR(adr^,16)*{0..15}   (* RD_Q_BUS1 *)
+%           END;
+%           IF ODD(ofs) THEN
+%                w:=ROR((ROR(w,8)-{0..7})+ch,8)
+%           ELSE w:=(w-{0..7})+ch
+%           END;
+%           IF ofs IN {0,1}  THEN adr^:=(adr^-{15..00})+w  (* WR_Q_BUS0 *)
+%           ELSE        adr^:=(adr^-{31..16})+ROR(w,16)    (* WR_Q_BUS1 *)
+%           END
+%           INC(sz);
+%         END
+%         inc(l^.addr,1);
+%       ELSE
+%         (* word I/O *)
+%         IF sz>0 THEN  (* OUTPUT *)
+%           IF ofs IN {0,1} THEN
+%                w:=adr^*{0..15}          (* RD_Q_BUS0 *)
+%           ELSE w:=ROR(adr^,16)*{0..15}  (* RD_Q_BUS1 *)
+%           END;
+%           QOUT(dtr,w);
+%           dec(sz,2);
+%         ELSE  (* INPUT *)
+%           w:=QIN(dtr);
+%           IF ofs IN {0,1}  THEN adr^:=(adr^-{15..00})+w  (* WR_Q_BUS0 *)
+%           ELSE        adr^:=(adr^-{31..16})+ROR(w,16)    (* WR_Q_BUS1 *)
+%           END
+%           INC(sz,2);
+%         END
+%         inc(l^.addr,2);
+%       END
+%       inc(l^.sum,w);
+%       l^.size:=sz;
+%       IF sz=0 THEN
+%         t:=l^.trap;
+%         t^:=l^.vec0;
+%         TRAP(t DIV 2);
+%       END;
+%
+
+
+:mTRAPio        % I/O ipts after BIO
+
+        %  Time= 18 + 7q + ( btIO | wrIO ) + mFin
+        %  word OUT = 18+7q+10+2q+14+4q   47+12q == 100   25 micsec
+        %  word IN  = 18+7q+15+3q+14+4q   44+12q == 100   25 micsec
+
+        [ ALU=A BUS_A=R2 FLAG=Z ]   % if trapno=0 then  (*TRAP(6)*)
+        [ GO_TRUE ADR=INTERRUPT ]   % NOTE!!  0 не надо делить на 2
+        [ CONST->R2 D=0 OLD ]                     % t<hi>:=0
+        [ ALU=ASL(A) BUS_A=R2 BUS_B=WR_R3 ]       % r3:=r2*2
+        [ CONST->R3 D=0 OLD Q_BUS ]               % t<hi>:=0
+        [ BUS_A=R3 BUS_B=WR_R5 RD_Q_BUS1 ]
+        [ ALU=A+B BUS_A=R5  BUS_B=R5 FLAG=CARRY ] % 31 IN t^
+        [ GO_FALSE ADR=INTERRUPT ]
+
+        % Ура! Это micro вектор!
+
+        [ Q_BUS ]
+        [ BUS_A=R3 BUS_B=WR_R7 RD_Q_BUS0 ]
+        [ Q_BUS ALU=A BUS_A=R5 BUS_B=WR_R7 OLD ] % l<R7>:=t^;
+
+        [ BUS_A=R7 BUS_B=WR_R2 RD_Q_BUS0 ]      % sz<R2>:=l^.size
+        [ Q_BUS    ALU=A+1     BUS_A=RW_R7 ]    % r7:=r7+1 (r7==ADR(l^.addr)
+        [ BUS_A=R7 BUS_B=WR_R3 RD_Q_BUS0 ]      % addr(lo)<R3>:=l^.addr(0..15)
+        [ Q_BUS ]
+        [ BUS_A=R7 BUS_B=WR_R4 RD_Q_BUS1 ]      % addr(hi)<R4>:=l^.addr(16..31)
+
+        [ Q_BUS ALU=A+1 BUS_A=RW_R7      ]      % r7:=r7+1 (r7==ADR(l^.dtr)
+        [ BUS_A=R7 BUS_B=WR_R6 RD_Q_BUS0 ]      % dtr<R6-tmp>:=l^.dtr
+
+%**** If 15 in dtr then inc(l^.addr,2) else inc(l^.addr,1)
+        [ R6->STACK ]
+        [ ALU=A    BUS_A=R3  BUS_B=WR_R5 ]
+        [ ALU=A+B  BUS_A=R6  BUS_B=R6      SAVE_CARRY ]
+        [ ALU=A+B  BUS_A=RW_R5  CONST D=1  SAVE_CARRY ]
+        [ ALU=A    BUS_A=R4  BUS_B=WR_R6              ]
+        [ Q_BUS    ALU=A-1   BUS_A=RW_R7 ]
+        [ BUS_A=R7 BUS_B=R5    WR_Q_BUS0 ]
+        [ Q_BUS
+          ALU=B->P     CONST  D=3   ]           % Note! P={0,1}
+        [ BUS_A=R7 BUS_B=R6    WR_Q_BUS1 ]      %l^.addr:=addr+(1|2)
+
+        [ ALU=A  BUS_A=R3    BUS_B=WR_R5 ]      %ofs<R3> остается в R3
+
+%**** Распаковка адреса в адрес 32-разр. слова и смещение
+%**** R4 - старшая половина байтового адреса
+%**** R5 - младш. половина.
+%**** Адрес получается в R5, Offset остается в R3
+
+        [ ALU=A&NP+B&P BUS_A=RW_R5  BUS_B=R4 ]  % P={0,1} see below
+        [ ALU=ROR(A)   BUS_A=RW_R5  ]
+        [ ALU=ROR(A)   BUS_A=RW_R5  ]
+        [ ALU=ROR(A)   BUS_A=RW_R4 ]
+        [ ALU=ROR(A)   BUS_A=RW_R4 ]
+        [ ALU=A        BUS_A=R4 BUS_B=WR_R5 OLD ] % <r5>:=full addr
+
+        [ STACK->R4 ]                            % dtr<R4>:=l^.dtr
+
+%       R4=dtr  R5=addr R3=ofs R2=sz
+
+%   If 15 in dtr then goto WordIO
+        [ REG_EN       ADR=microOUT
+          ALU=A+B      BUS_A=R4     BUS_B=R4  FLAG=CARRY ]
+        [                        GO_TRUE      ADR=WordIO ]
+%***** Byte IO ******
+%   If 15 in sz then goto ByteIN
+        [ ALU=A+B      BUS_A=R2     BUS_B=R2  FLAG=CARRY ]
+        [                        GO_TRUE      ADR=ByteIN ]
+
+        % - - - -  byte OUT - - - - - OUTPUTED BYTE ON STACK! for -sum-
+        [ ALU=A-1     BUS_A=RW_R2               % dec(sz)
+          CALL ADR=Fetch      ]                 % r6:=rd_q_bus(r5,r3)
+        [ ALU=A_AND_B BUS_A=R3  CONST D=1 FLAG=Z ]
+        % NOTE! R6=eL
+        [ CALL_FALSE ADR=ror8(eL) ]
+
+        [ ALU=A_AND_B BUS_A=RW_R6 CONST D=0FF ]
+        [ R6->STACK
+          GO_REG  ]  % == [ GOTO ADR=microOUT ] % qout(r4,r6)
+%       after microOUT control goes to -mFIN-
+
+:ByteIN
+        % - - - -  byte IN  - - - - INPUTED BYTE ON STACK! for -sum-
+    %****  R4=DTR   R5=adr   R2=sz      R3=offset
+        [ CALL ADR=microIN    ]                 % r4:=q_in(r4)
+        [ ALU=A_AND_B BUS_A=RW_R4 CONST D=0FF ] % r4:=r4*{0..7}
+        [ ALU=A+1   BUS_A=RW_R2                 % inc(sz)
+          CALL ADR=Fetch      ]                 % r6:=rd_q_bus(r5,r3)
+        [ REG_EN ADR=mFIN
+          R4->STACK ]
+        [ ALU=A_AND_B BUS_A=R3 CONST D=1 FLAG=Z]% if ODD(offset)
+
+        [ CALL_FALSE ADR=ror8(eL) ]             % Note! ror8(eL) not
+        [ ALU=A_BIC_B BUS_A=RW_R6 CONST D=0FF ] % changed FLAG!!!
+        [ ALU=A_OR_B  BUS_A=RW_R6 BUS_B=R4
+          CALL_FALSE  ADR=ror8(eL) ]
+:btIN_3
+        [ ALU=A_AND_B BUS_A=R3 CONST D=2 FLAG=Z ]
+        [ Q_BUS GO_FALSE  ADR=btIN_4 ]
+        [ BUS_A=R5  BUS_B=R6     WR_Q_BUS0  GO_REG ]
+:btIN_4 [ BUS_A=R5  BUS_B=R6     WR_Q_BUS1  GO_REG ]
+
+
+:WordIO %********  word I/O ******** FLAG=in?=(sz<0)  Time IN=15+3q OUT=10+2q
+    %     R4=DTR   R5=adr   R2=sz   R3=offset
+
+        [ ALU=A+B      BUS_A=R2     BUS_B=R2  FLAG=CARRY ]
+        [                   GO_TRUE ADR=wrIN_1 ] % if sz<0 then goto wrIN_1
+        % - - - -  word OUT - - - - -  OUTPUTED WORD ON STACK! for -sum-
+        [ ALU=A-B     BUS_A=RW_R2 CONST D=2 ]   % dec(sz,2)
+        [ CALL ADR=Fetch      ]                 % r6:=rd_q_bus(r5,r3)
+        [ R6->STACK
+          GO_REG ] % [ == GOTO ADR=microOUT ]   % qout(r4,r6)
+%       after microOUT control goes to -mFIN-
+
+:wrIN_1
+        % - - - -  word IN  - - - - - INPUTED WORD ON STACK! for -sum-
+
+        [ CALL ADR=microIN ]                    % r4:=QIN(r4)
+        [ ALU=A+B  BUS_A=RW_R2 CONST D=2 ]      % inc(sz,2)
+        [ ALU=A_AND_B BUS_A=R3 CONST D=2 FLAG=Z ]
+        [ R4->STACK
+          Q_BUS    GO_FALSE  ADR=wrIN_2 ]
+        [ BUS_A=R5 BUS_B=R4 WR_Q_BUS0 ] [ GOTO ADR=mFIN ]
+:wrIN_2 [ BUS_A=R5 BUS_B=R4 WR_Q_BUS1 ]
+
+        %********* finish I/O  *********         Time 14+4q
+    %     R4=DTR   R5=adr   R2=sz   R3=offset
+:mFIN
+        [ Q_BUS    ALU=A-1  BUS_A=RW_R7 ]       %l<R7>:=ADR(l^.size)
+        [ BUS_A=R7 BUS_B=R2 WR_Q_BUS0 ]         % l^.size:=sz
+        [ ALU=A+B  BUS_A=RW_R7 CONST D=3        %l<R7>:=ADR(l^.sum)
+          Q_BUS ]
+        [ BUS_A=R7 BUS_B=WR_R4 RD_Q_BUS0 ]      % sum<R4>:=l^.sum
+        [ ALU=A+B  STACK->R6 BUS_B=R4 SAVE_CARRY ] % CRC(sum,STACK)
+        [ Q_BUS    ALU=A  BUS_A=RW_R6 ]
+        [ BUS_A=R7 BUS_B=R6    WR_Q_BUS0 ]      % l^.sum:=sum
+
+        [ ALU=A   BUS_A=R2   FLAG=Z  REG_EN ADR=MAP_A ]
+        [ GO_FALSE ADR=mTrapExit ]
+
+:mFIN_2 % trap(t)
+        [ Q_BUS ALU=A+1 BUS_A=RW_R7           ]     %l<R7>:=ADR(l^.trap)
+        [ BUS_A=R7 BUS_B=WR_R2 RD_Q_BUS0      ]     % r2:=l^.trap
+
+        [ Q_BUS ALU=A+1 BUS_A=RW_R7 ]
+        [ BUS_A=R7 BUS_B=WR_R5 RD_Q_BUS0      ]     % r5:=l^.vec0[Lo]
+        [ Q_BUS  CONST->R2 D=0  OLD           ]
+        [ BUS_A=R2 BUS_B=R5 WR_Q_BUS0         ]     % r2^:=r5(vec0[Lo])
+
+        [ Q_BUS ]
+        [ BUS_A=R7 BUS_B=WR_R5 RD_Q_BUS1      ]     % r5:=l^.vec0[Hi]
+        [ Q_BUS REG_EN ADR=INTERRUPT ]
+        [ BUS_A=R2 BUS_B=R5 WR_Q_BUS1         ]     % r4^:=r5(vec0[Hi])
+
+        [ ALU=ROR(A_BIC_B) BUS_A=RW_R2 CONST D=1    %trap:=trap DIV 2
+          FLAG=ZERO  GO_REG ]                       % R2=trapno
+
+
+%-----------------------------------------------------------------------
+
+@INVOP 0FF
+        [ CONST->R2  D=49 ]
+:TRAP_SUB       % Othes
+        [ Q_BUS  ALU=A+B  BUS_A=R11  CONST->R3  D=6 ]
+        [ BUS_A=R3  BUS_B=R2  WR_Q_BUS0 ]
+        [ Q_BUS  CONST->R5  D=0 ]
+        [ BUS_A=R3  BUS_B=R5  WR_Q_BUS1 ]
+        [ ALU=A-B  BUS_A=R2  CONST  D=3F  FLAG=CARRY ]
+        [ ALU=A  BUS_A=R2  BUS_B=WR_R6  GO_FALSE  ADR=T1 ]
+        [ CONST->R2  D=3F ]
+        [ ALU=A+B  BUS_A=R10  BUS_B=R10  FLAG=CARRY ]
+        [ GO_TRUE  ADR=T1 ]
+        [ ALU=A-B  BUS_A=R6  CONST  D=4A  FLAG=Z ]
+        [ GO_TRUE  ADR=CONSOL ]
+        [ ALU=A-B  BUS_A=R6  CONST  D=49  FLAG=Z ]
+        [ GO_TRUE  ADR=CONSOL ]
+        [ ALU=A-B  BUS_A=R6  CONST  D=4B  FLAG=Z ]
+        [ GO_TRUE  ADR=CONSOL ]
+        [ CONST->MASK  D=1 ]
+        [ GOTO  ADR=NOP  FLAG=ZERO ]
+:T1     [ ALU=A  BUS_A=R2  FLAG=Z ]
+        [ GO_FALSE  ADR=T3 ]
+        [ ALU=B  BUS_A=WR_R2  CONST->R6  D=6 ]
+:T3     [ ALU=A-B  BUS_A=R2  CONST  D=9  FLAG=CARRY ]
+        [ ALU=A  BUS_A=R2  BUS_B=WR_R5  GO_TRUE  ADR=T2 ]
+        [ CONST->R3  D=1 ]
+:T4     [ ALU=A-1  BUS_A=RW_R5  FLAG=Z ]
+        [ ALU=A+B  BUS_A=RW_R3  BUS_B=R3  GO_FALSE  ADR=T4 ]
+        [ ALU=A_AND_B  BUS_A=R3  BUS_B=R10  FLAG=Z  REG_EN  ADR=NOP ]
+        [ GO_FALSE  ADR=T2 ]
+        [ ALU=A_AND_B  BUS_A=R3  CONST  D=0F4  FLAG=Z ]
+        [ GO_FALSE  ADR=CONSOL ]
+        [ CONST->MASK  D=1  FLAG=ZERO  GO_REG ]
+:T2 % R2 - Vector number, R6 - interruption number
+        [ CONST->R2  OLD  D=0 ]
+        [ Q_BUS  ALU=A+B  BUS_A=R2  BUS_B=RW_R2 ]
+        [ BUS_A=R2  BUS_B=WR_R7  RD_Q_BUS0 ]
+        [ Q_BUS ]
+        [ BUS_A=R2  BUS_B=WR_R7  OLD  RD_Q_BUS1 ]
+        [ Q_BUS  ALU=A_OR_B  BUS_A=RW_R2  CONST  D=1 ]
+        [ BUS_A=R2  BUS_B=WR_R3  RD_Q_BUS0 ]
+        [ Q_BUS ]
+        [ BUS_A=R2  BUS_B=WR_R3  OLD  RD_Q_BUS1 ]
+        [ Q_BUS  ALU=A  BUS_A=R6  BUS_B=WR_R4 ]
+        [ BUS_A=R3  BUS_B=R11  WR_Q_BUS0 ]
+        [ Q_BUS  REG_EN  ADR=SAVE_REG ]
+        [ BUS_A=R3  BUS_B=R11  OLD  WR_Q_BUS1  CALL_REG ]
+        [ ALU=A  BUS_A=R7  BUS_B=WR_R11  CALL  ADR=RES_REG ]
+        [ MAP ]  % R4 - Interruption number
+
+
+
+:INT7   [ FLAG=ZERO  GO_REG  CONST->MASK  D=1 ]
+:INT0_SUB
+          [ BUS_B=WR_R2  RD_VECTOR ]
+          [ ALU=ROR(A_AND_B)  BUS_A=RW_R2  CONST  D=0FC ]
+          [ ALU=ROR(A)  BUS_A=RW_R2  GOTO  ADR=mTRAPio  ]
+
+:INT6   [ Q_BUS  R10->MASK ]
+        [ BUS_A=R8  BUS_B=WR_CASH  RD_Q_BUS_PC ]
+        [ ALU=A  CARRYIN<-PC2  BUS_A=RW_R8  MAP ]
+:INTERRUPT      % Power, timer, I/O
+          [ ALU=A  BUS_A=R2  BUS_B=WR_R6  GOTO  ADR=T1 ]
+
+
+:INT5   [ CONST->R2  D=4 ]
+        [ GOTO  ADR=INTERRUPT ]
+:E-STACK_OWR
+          [ CONST->R2  D=4C ]
+          [ GOTO  ADR=TRAP_SUB ]
+
+:INT4   [ CONST->R2  D=3 ]
+        [ GOTO  ADR=TRAP_SUB ]
+@noCOM0 094
+@noCOM1 0BD
+@noCOM2 0EC:0EF
+@noCOM3 0F5:0F9
+@noCOM4 0FB
+@NII    0FD
+          [ CONST->R2  D=7 ]
+          [ GOTO  ADR=TRAP_SUB ]
+
+:INT3   [ CONST->R4  D=1 ]
+        [ GOTO  ADR=HALTED ]
+:CHECK_BND_ERR
+          [ CONST->R2  D=4A ]
+          [ GOTO  ADR=TRAP_SUB ]
+
+:INT2   [ CONST->MASK  D=1 ]
+        [ CALL  ADR=REFRESH_SUB ]
+        [ MAP ]
+:mTrapExit
+          [ CONST->MASK D=1 FLAG=ZERO GO_REG ]
+
+:INT1   [ CONST->R2  D=1 ]
+        [ GOTO  ADR=INTERRUPT ]
+:INT_OWR
+          [ CONST->R2  D=41 ]
+          [ GOTO  ADR=TRAP_SUB ]
+
+:INT0   [ Q_BUS  GOTO  ADR=INT0_SUB ]
+
+%               end of microProg for Kronos-P2
+
+$

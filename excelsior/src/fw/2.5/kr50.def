@@ -1,0 +1,236 @@
+%---------------------------------------------------------------%
+%                                                               %
+%           Firmware for Kronos-P2.5 processor                  %
+%                                                               %
+%---------------------------------------------------------------%
+%    Computer center, Acadimy of Sience, Sybiria department,    %
+%                  Novosibirsk, USSR.                           %
+%                                                               %
+%    (c)  Start, Kronos research groop.                         %
+%                                         23-Sep-86             %
+%---------------------------------------------------------------%
+%    11-Dec-86  error in STOT:  [ bus_A=S WR_MEM_A ]            %
+%    11-Dec-86  error in LODT: absent FINISH                    %
+%    15-Dec-86  error in SXB:  absent FLAG=ZERO                 %
+%    15-Dec-86  error in XIT                                    %
+%    17-Dec-86  error in ENTC, TRAP                             %
+%    29-Dec-86  error in ENTR: absent UPDATE_CASH               %
+%    29-Dec-86  error in LODFV   Etop fargot                    %
+%    29-Dec-86  error in SETM:  not implemented                 %
+%    29-Dec-86  error in RTN:  absent RESET_STK_OVR             %
+%    31-Dec-86  error in PCOP: mast be size (not high)          %
+%    31-Dec-86  error in IMUL: 20000000h*2 -> overflow          %
+%    02-Jan-87  error in STOFV: marazm in optimization          %
+%    03-Jan-87  error in COMP: illegal order of search          %
+%    03-Jan-87  New value of NIL: 7FFFFF80                      %
+%    06-Jan-87  error in LEA: absent UPDATE_CASH                %
+%    28-Aug-87     bus_B=RW_PC ????????                         %
+%---------------------------------------------------------------%
+
+% Bit 3F locked for parity
+
+FIELD F 3F:00 = 0FFFFFFFFFFFFFFFF
+FIELD   D 3A ^1F ^13 ^11 ^12 ^17 ^1D ^15 ^2 ^14 ^1 ^3 = 0
+FIELD ADR ^1A 1F 15 13 17 12 1 2 1D 14 3 11 = 0
+FIELD ALU ^33 35 37  0D 8 9 0B  7 4 5 6
+   {   A       2D5      B       2DE
+       B+1     0DE      B+FLAG  3DE
+       A+1     0D5      A+FLAG  3D5
+       A-1     2D1      A+B     2D6
+       A-B     0DC      B-A     0DF
+       A-B-1   2DC      A+B+1   0D6
+                        A+B+FLAG 3D6
+       A_OR_B  2DB      A_AND_B 2D0
+       A_XOR_B 2DD      A_BIC_B 2D9
+       NE(A)   2D2      NE(B)   2D8
+       NEG(A)  0D2      NEG(B)  0D8
+       ROL(A)  245      ROR(A)  2C5
+       ROR(A+1) 0C5     ROR(A-1)  2C1
+       ROL(B)  24E      ROR(B)  2CE
+       ROL(A-B) 04C     ROL(A_AND_B) 240
+       ROR(A_BIC_B) 2C9 ROR(A_AND_B) 2C0
+       ROL(A_BIC_B) 249 ASL(A)  205
+       ROR(A_OR_B) 2CB  B->P    22E
+       ASR(A)  255      ROR(NE(B)) 2C8
+       ASL(A-B) 00C
+       A&NP+B&P 2FE     ASR(A+FLAG) 355
+
+       P         21E    % Обе команды читают P-register
+%      P         23E    % что установлено чисто эмпирически. Sem&Leo
+       A->P      225
+
+   } = A
+%              PUSH POP POP1 WR RD A3 A2 A1 A0
+FIELD bus_A     19   27  2C  22 21 34 2A 28 29
+ { NOTHING 0
+   Etop 10 R1 11 R2 12 R3 13 R4 14 R5 15 R6 16 Time 17 G 18
+   L 19 PC 1A M 1B S 1C H 1D P 1E F 1F e1 12 m1 13 s1 14 e2 15 m2 16 s2 17
+   constFF 18 const02 19 tmp1 1A tmp2 1B
+   WR_Etop 20 WR_R1   21  WR_R2 22  WR_R3 23  WR_R4 24  WR_R5   25
+   WR_tmp1 2A WR_tmp2 2B  WR_e1 22
+
+   WR_Time 27 WR_PC   2A  WR_S  2C  WR_H  2D  WR_F  2F               % Leo
+   WR_P    2E WR_G    28  WR_L  29  WR_M  2B  WR_R6 26               % Leo
+
+
+   RW_Etop 30  RW_R1 31   RW_R2 32  RW_R3 33  RW_R5 35  RW_Time 37
+   RW_R4   34  RW_R6 36   RW_PC 3A  RW_S  3C  RW_H  3D  RW_F    3F
+   RW_e1   32  RW_m1 33   RW_s1 34  RW_e2 35  RW_m2 36  RW_s2   37
+   RW_tmp1 3A  RW_tmp2 3B RW_M  3B  RW_L  39
+
+   STACK 0C0
+   STACK->Etop 0E0  STACK->R1 0E1  STACK->R2 0E2  STACK->R3 0E3
+   STACK->R4 0E4  STACK->R5 0E5  STACK->R6 0E6  STACK->Time 0E7
+   STACK->G  0E8  STACK->L  0E9 STACK->tmp1 0EA STACK->tmp2 0EB
+   STACK->M  0EB  STACK->PC 0EA STACK->e2 0E5  STACK->m2 0E6
+   STACK->s2 0E7
+   Etop->STACK 110  R1->STACK 111  R2->STACK 112  R3->STACK 113
+   R4->STACK 114  R5->STACK 115  R6->STACK 116  Time->STACK 117
+   G->STACK 118  L->STACK 119 tmp1->STACK 11A tmp2->STACK 11B
+   PC->STACK 11A M->STACK 11B e1->STACK 112 m1->STACK 113
+   s1->STACK 114
+ } = NOTHING
+
+GENERIC STACK_DOWN  bus_A = 080
+GENERIC STACK_UP    bus_A = 180
+GENERIC STACK_RD+UP bus_A = 1C0
+GENERIC STACK_RD    bus_A = 040
+
+%                       WR RD A3 A2 A1 A0
+FIELD bus_B             25 23 2B 2D 2E 2F
+ { NOTHING 0
+   Etop 10 R1 11 R2 12 R3 13 R4 14 R5 15 R6 16 Time 17 G 18
+   L 19 PC 1A M 1B S 1C H 1D P 1E F 1F constFF 18 const02 19
+   e1 12 m1 13 s1 14 e2 15 m2 16 s2 17 tmp1 1A tmp2 1B
+   WR_Etop 20 WR_R1 21 WR_R2 22 WR_R3 23 WR_R4 24 WR_R5 25 WR_R6 26
+
+   WR_G 28 WR_L 29 WR_PC 2A WR_M 2B WR_S 2C WR_Time 27
+   WR_H 2D WR_P 2E WR_F 2F WR_constFF 28 WR_const02 29 WR_e2 25 WR_e1 22
+   WR_tmp1 2A WR_tmp2 2B WR_m2 26 WR_s1 24 WR_m1 23
+
+%  WR_Time 27 WR_PC   2A  WR_S  2C  WR_H  2D  WR_F  2F               % Leo
+%  WR_P    2E WR_G    28  WR_L  29  WR_M  2B                         % Leo
+
+
+%  RW_Etop 30 RW_R1 31 RW_R2 32 RW_R5 35 RW_R6 36 RW_Time 37 RW_S 3C
+%  RW_e1 32 RW_e2 35 RW_m1 33 RW_m2 36 RW_tmp1 3A RW_tmp2 3B RW_PC 3A
+
+   RW_Etop 30  RW_R1 31   RW_R2 32  RW_R3 33  RW_R5 35  RW_Time 37  % Leo
+   RW_R4   34  RW_R6 36   RW_PC 3A  RW_S  3C  RW_H  3D  RW_F    3F  % Leo
+   RW_e1   32  RW_m1 33   RW_s1 34  RW_e2 35  RW_m2 36  RW_s2   37  % Leo
+   RW_tmp1 3A  RW_tmp2 3B RW_M  3B  RW_L  39                        % Leo
+   RW_P    3E  RW_G  38                                             % Leo
+
+ } = NOTHING
+
+%                CNST WR RD  A3 A2 A1 A0
+FIELD CONST->Etop ^36 25 23  2B 2D 2E 2F = 020
+FIELD CONST->R1   ^36 25 23  2B 2D 2E 2F = 021
+FIELD CONST->R2   ^36 25 23  2B 2D 2E 2F = 022
+FIELD CONST->R3   ^36 25 23  2B 2D 2E 2F = 023
+FIELD CONST->R4   ^36 25 23  2B 2D 2E 2F = 024
+FIELD CONST->R5   ^36 25 23  2B 2D 2E 2F = 025
+FIELD CONST->R6   ^36 25 23  2B 2D 2E 2F = 026
+FIELD CONST->Time ^36 25 23  2B 2D 2E 2F = 027
+FIELD CONST->G    ^36 25 23  2B 2D 2E 2F = 028
+FIELD CONST->L    ^36 25 23  2B 2D 2E 2F = 029
+FIELD CONST->PC   ^36 25 23  2B 2D 2E 2F = 02A
+FIELD CONST->M    ^36 25 23  2B 2D 2E 2F = 02B
+FIELD CONST->e1   ^36 25 23  2B 2D 2E 2F = 022
+FIELD CONST->m1   ^36 25 23  2B 2D 2E 2F = 023
+FIELD CONST->s1   ^36 25 23  2B 2D 2E 2F = 024
+FIELD CONST->m2   ^36 25 23  2B 2D 2E 2F = 026
+FIELD CONST->s2   ^36 25 23  2B 2D 2E 2F = 027
+FIELD CONST->tmp1 ^36 25 23  2B 2D 2E 2F = 02A
+FIELD CONST->tmp2 ^36 25 23  2B 2D 2E 2F = 02B
+FIELD CONST        36                    = 1
+
+%                         C2 C1 C0 FILE S1 S0
+FIELD GOTO                26 24 20  0A  16 0  { NEXT 08} = 0B
+FIELD GO_TRUE             26 24 20  0A  16 0  = 33
+FIELD GO_FALSE            26 24 20  0A  16 0  = 2B
+FIELD CALL                26 24 20  0A  16 0  = 0F
+FIELD CALL_TRUE           26 24 20  0A  16 0  = 37
+FIELD CALL_FALSE          26 24 20  0A  16 0  = 2F
+FIELD RETURN              26 24 20  0A  16 0  = 0D
+FIELD RETURN_TRUE         26 24 20  0A  16 0  = 35
+FIELD RETURN_FALSE        26 24 20  0A  16 0  = 2D
+FIELD GO_REG              26 24 20  0A  16 0  = 0A
+FIELD GO_REG_TRUE         26 24 20  0A  16 0  = 32
+FIELD GO_REG_FALSE        26 24 20  0A  16 0  = 2A
+FIELD CALL_REG            26 24 20  0A  16 0  = 0E
+FIELD GO_IF_STACK_EMPTY   26 24 20  0A  16 0  = 3B
+FIELD GO_IF_NO_MP_ERR     26 24 20  0A  16 0  = 03
+FIELD GO_IF_INT_REQ       26 24 20  0A  16 0  = 1B
+FIELD GO_IF_CASH_EMPTY    26 24 20  0A  16 0  = 23
+FIELD CALL_IF_CASH_EMPTY  26 24 20  0A  16 0  = 27
+
+FIELD REG_EN       ^10 = 1
+
+FIELD FLAG 0C 0E 0F
+  { SAVE 6  NEG(FLAG) 7  ZERO 4  Z 3  OVR 2  FLAG+OVR 0  CARRY 1 N 5 }=SAVE
+
+%               WRMSK  D2 D1 D0
+FIELD INTERUPTS   32   28 2A 29 =0
+% НА ШИНЕ B - НОВОЕ ЗНАЧЕНИЕ МАСКИ ПРЕРЫВАНИЙ
+GENERIC RESET_MP_ERR   INTERUPTS = 09
+GENERIC RESET_STK_OVR  INTERUPTS = 0D
+GENERIC RESET_ACL      INTERUPTS = 0E
+GENERIC RESET_TIME     INTERUPTS = 0C
+GENERIC RESET_INC_PC   INTERUPTS = 0F
+
+FIELD WRMASK 32 = 1
+FIELD INTE 38 = 1
+
+%         CASH CNST MAP CH1 CH0
+FIELD PC   3A   36  1A   1C  1E  = 4
+% ПРИ ИСПОЛЗОВАНИИ ЭТИХ ПОЛЕЙ НА ШИНУ МИКРО-АДРЕСА ПОДАЕТСЯ ВЫХОД КЭША
+GENERIC WR_CASH  PC = 0
+GENERIC RW_PC    PC = 1
+GENERIC INC_PC   PC =1A
+
+FIELD UPDATE_CASH
+3A ^26 24 20 ^0A ^16 ^0 ^1A 1F 15 13 17 12 1 2 1D 14 3 11 = UPDATE_CASH_S
+
+FIELD FINISH 3A ^38 1A ^1C 1E 26 24 ^20 0A ^16 ^0 = 0
+
+%                 MP  LOCK BR  OUT  A1  A0
+FIELD MEMORY      ^3B ^39  ^31  3D  3C  3E
+GENERIC RD_MEM_A     MEMORY= 08
+GENERIC RD_MEM_D     MEMORY= 00
+GENERIC RD_LOCK      MEMORY= 10
+GENERIC LOCK_MEM     MEMORY= 10
+GENERIC WR_MEM_A     MEMORY= 0C
+GENERIC WR_MEM_D     MEMORY= 04
+GENERIC WR_SIO_A     MEMORY= 0E
+GENERIC WR_SIO_D     MEMORY= 06
+GENERIC RD_SIO_A     MEMORY= 0A
+GENERIC RD_SIO_D     MEMORY= 02
+
+$
+DEFAULT[ GOTO=NEXT REG_EN=0 PC ALU=400 FLAG bus_A bus_B INTE=0
+         CONST=0 MEMORY=7 WRMASK=0 ]
+
+
+% Reserved registers:
+%       R7  - timer
+%       R8  - G  global data segment
+%       R9  - L  local data segment
+%       R0A - PC program counter
+%       R0B - M  process mask
+%       R0C - S  first free word on procedure stack
+%       R0D - H  procedure stack limit
+%       R0E - P  carrent process
+%       R0F - F  code segment
+%
+% Floating point arithmetic registers:
+%       R2  - e1 exponent 1
+%       R3  - m1 mantith  1
+%       R4  - s1 sign     1
+%       R5  - e2 exponent 2
+%       R6  - m2 mantith  2
+%       R7  - s2 sign     2
+%       R8  - constFF
+%       R9  - const02
+%       R0A - tmp1
+%       R0B - tmp2

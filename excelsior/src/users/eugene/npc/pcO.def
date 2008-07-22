@@ -1,0 +1,83 @@
+DEFINITION MODULE pcO; (* mx: Ned 06-Nov-87. (c) KRONOS *)
+                         (* ox: Ned 06-Jun-89. (c) KRONOS *)
+
+IMPORT  pcK;
+
+TYPE SHORTINT = INTEGER;
+
+VAR
+  invtype  : pcK.STRUCT;
+  undef    : pcK.STRUCT;
+  shortIC  : pcK.STRUCT;
+  IC       : pcK.STRUCT;
+  shortcard: pcK.STRUCT;
+  cardinal : pcK.STRUCT;
+  shortint : pcK.STRUCT;
+  integer  : pcK.STRUCT;
+  longint  : pcK.STRUCT;
+  real     : pcK.STRUCT;
+  longreal : pcK.STRUCT;
+  boolean  : pcK.STRUCT;
+  char     : pcK.STRUCT;
+  bitset   : pcK.STRUCT;
+  byte     : pcK.STRUCT;
+  word     : pcK.STRUCT;
+  addr     : pcK.STRUCT;
+  niltype  : pcK.STRUCT;
+
+  inv_obj  : pcK.OBJECT;     (* illegal object *)
+  scope    : pcK.OBJECT;     (* current block *)
+  false    : pcK.OBJECT;
+  true     : pcK.OBJECT;
+
+CONST max_ext = 31;
+
+VAR
+  level  : INTEGER;
+  exts   : ARRAY [0..max_ext] OF pcK.OBJECT;
+  ext_no : INTEGER;
+  def    : BOOLEAN;  (* definition module               *)
+  imp    : BOOLEAN;  (* implementation or oberon module *)
+  cu_name: pcK.NAME;  (* name of compilation unit        *)
+
+VAR (* symfile read/write additional information *)
+  put_object: PROCEDURE (pcK.OBJECT);
+  put_struct: PROCEDURE (pcK.STRUCT);
+
+  get_object: PROCEDURE (pcK.OBJECT);
+  get_struct: PROCEDURE (pcK.STRUCT);
+
+(*----------------------------------------------------------------*)
+
+PROCEDURE new_obj (VAR o: pcK.OBJECT; mode: SHORTINT);
+PROCEDURE new_type(VAR t: pcK.STRUCT; mode: pcK.Form);
+
+PROCEDURE rem_type(VAR t: pcK.STRUCT); (* only for memory *)
+
+PROCEDURE enter_scope(proc: pcK.OBJECT);
+PROCEDURE exit_scope;
+
+PROCEDURE dcl   (                  obj: pcK.OBJECT);
+PROCEDURE dcl_in(scope: pcK.OBJECT; obj: pcK.OBJECT);
+
+PROCEDURE try(name: pcK.NAME; VAR o: pcK.OBJECT): BOOLEAN;
+PROCEDURE vis(name: pcK.NAME; VAR o: pcK.OBJECT);
+
+PROCEDURE try_in(name: pcK.NAME; scope: pcK.OBJECT; VAR o: pcK.OBJECT): BOOLEAN;
+PROCEDURE vis_in(name: pcK.NAME; scope: pcK.OBJECT; VAR o: pcK.OBJECT);
+
+PROCEDURE dcl_in_rec(rec: pcK.STRUCT; o: pcK.OBJECT);
+PROCEDURE try_in_rec(name: pcK.NAME; rec: pcK.STRUCT; VAR o: pcK.OBJECT): BOOLEAN;
+PROCEDURE vis_in_rec(name: pcK.NAME; rec: pcK.STRUCT; VAR o: pcK.OBJECT);
+
+PROCEDURE import(mod: pcK.OBJECT; imp_name: pcK.NAME; self: BOOLEAN);
+
+PROCEDURE export(scope: pcK.OBJECT; VAR newSF: BOOLEAN; key: LONGINT);
+
+PROCEDURE standard(mode: SHORTINT; name: pcK.NAME; proc_no: LONGINT);
+PROCEDURE system  (mode: SHORTINT; name: pcK.NAME; proc_no: LONGINT);
+(* описание стандартных и системных процедур. mode IN {sproc,sfunc} *)
+
+PROCEDURE Ini;
+
+END pcO.

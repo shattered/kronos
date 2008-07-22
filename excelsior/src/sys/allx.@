@@ -1,0 +1,1 @@
+su.SAVE="$BIN"BIN=". /bin /usr/bin /ipr"config system -mc shell ex mx rm cp ls ln mkdir dt config boo hi msex mv LEXICON login human $1 $2 $3 $4 $5 $6 $7 $8 $9BIN="$SAVE"config -b /dev/xd1 systemboo /dev/xd1

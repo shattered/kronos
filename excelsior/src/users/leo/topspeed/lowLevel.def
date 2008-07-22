@@ -1,0 +1,50 @@
+DEFINITION MODULE lowLevel;  (* Leo 7-Jul-91 *)
+
+(*# module(implementation=>off, init_code=>off) *)
+
+(*# call(reg_saved=>(dx,si,di,es,ds,st1,st2)) *)
+                                                                        (*# call ( reg_param=>(ax,bx,cx), reg_return=>(ax,bx) ) *)
+PROCEDURE rol32(w: LONGWORD; no: CARDINAL): LONGWORD;
+                                                                        (*# call ( reg_param=>(ax,bx,cx), reg_return=>(ax,bx) ) *)
+PROCEDURE ror32(w: LONGWORD; no: CARDINAL): LONGWORD;
+
+
+(*# call(reg_saved=>(dx,es,ds,st1,st2)) *)
+                                                                        (*# call (reg_param=>(di,es,ax,si,ds,bx,cx)) *)
+PROCEDURE cmove(des: ADDRESS; dp: CARDINAL; sou: ADDRESS; sp,bytes: CARDINAL);
+                                                                        (*# call (reg_param=>(es,di,cx),o_a_size=>on) *)
+PROCEDURE zero(VAR data: ARRAY OF BYTE);
+                                                                        (*# call (reg_param=>(es,di,ax,cx)) *)
+PROCEDURE _zero(adr: ADDRESS;  pos,len: CARDINAL);
+                                                                        (*# call(reg_param=>(es,di,cx,ax),reg_return=>(ax)) *)
+PROCEDURE scasb(data: ADDRESS; size: CARDINAL; byte: BYTE): CARDINAL;
+
+(*# call(inline=>on) *)
+
+                                                                        (*# call(reg_saved=>(bx,dx,es,ds,st1,st2) ) *)
+                                                                        (*# call(reg_param=>(di,es,si,ds,cx)) *)
+INLINE
+PROCEDURE move (des,sou: ADDRESS; bytes: CARDINAL) = 90A4F3FCH;
+                                                                        (*# call(reg_param=>(di,es,si,ds,cx)) *)
+INLINE
+PROCEDURE movew(des,sou: ADDRESS; words: CARDINAL) = 90A5F3FCH;
+                                                                        (*# call(reg_saved=>(bx,cx,dx,si,di,es,ds,st1,st2) ) *)
+                                                                        (*# call(reg_param=>(), reg_return=>(ax) ) *)
+PROCEDURE CF(): BOOLEAN;
+                                                                        (*# call(reg_saved=>(bx,dx,si,di,es,ds,st1,st2) ) *)
+                                                                        (*# call(reg_param=>(ax,cx), reg_return=>(ax) ) *)
+INLINE
+PROCEDURE rol(w: WORD; no: CARDINAL): WORD = CARDINAL(0C0D3H);
+INLINE
+PROCEDURE ror(w: WORD; no: CARDINAL): WORD = CARDINAL(0C8D3H);
+                                                                        (*# call(reg_saved=>(bx,cx,dx,si,di,es,ds,st1,st2)) *)
+                                                                        (*# call(reg_return=>(ax)) *)
+INLINE (* REGISTERS *)
+PROCEDURE AX(): CARDINAL = CARDINAL( 090H );
+INLINE
+PROCEDURE BP(): CARDINAL = CARDINAL( 0C58BH );
+INLINE
+PROCEDURE SS(): CARDINAL = CARDINAL( 0D08CH );
+
+END lowLevel.
+

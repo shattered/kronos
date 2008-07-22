@@ -1,0 +1,162 @@
+:READ   % R1 - virtual address
+        % R2 - word from memory
+        % destroed R3
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R2 D=0FF ] % R2 - segment no
+        [ CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A+B bus_A=R3 bus_B=R2 RD_MEM_A FLAG=N ]
+        [ bus_B=WR_R2 FLAG=N        RD_MEM_D     % R2 - segment adr
+          GO_FALSE ADR=FAIL ]
+        [ bus_B=RW_R1 SHIFT_EN GO_FALSE ADR=NO_SEG ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R3 D=0FF ] % R3 - page no
+        [ ALU=A+B bus_A=R2 bus_B=R3 RD_MEM_A ]
+        [ bus_B=WR_R2 FLAG=N        RD_MEM_D ]   % R2 - page adr
+        [ bus_B=RW_R1 SHIFT_EN GO_FALSE ADR=NO_PAGE ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R3 D=0FF ] % R3 - word no
+        [ ALU=A+B bus_A=RW_R2 bus_B=R3 ]
+        [ CONST->R3 D=0FF SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ ALU=A_BIC_B bus_A=R2 bus_B=R3 RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D RETURN ]          % R2 - word
+
+:WRITE  % R1 - virtual address
+        % R4 - word to memory
+        % destroed R2, R3
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R2 D=0FF ] % R2 - segment no
+        [ CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]                 % R3 segment table
+        [ ALU=A+B bus_A=R3 bus_B=R2 RD_MEM_A FLAG=N ]
+        [ bus_B=WR_R2 FLAG=N        RD_MEM_D     % R2 - segment adr
+          GO_FALSE ADR=FAIL ]
+        [ bus_B=RW_R1 SHIFT_EN GO_FALSE ADR=NO_SEG ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R3 D=0FF ] % R3 - page no
+        [ ALU=A+B bus_A=R2 bus_B=R3 RD_MEM_A ]
+        [ bus_B=WR_R2 FLAG=N        RD_MEM_D ]   % R2 - page adr
+        [ bus_B=RW_R1 SHIFT_EN GO_FALSE ADR=NO_PAGE ]
+        [ ALU=ROL(A)  bus_A=R2 bus_B=WR_R3 FLAG=N ]
+        [ GO_FALSE ADR=NO_PAGE
+          ALU=ROL(A)  bus_A=R3 FLAG=N ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R3 D=0FF ] % R3 - word no
+        [ ALU=A+B bus_A=RW_R2 bus_B=R3 ]
+        [ CONST->R3 D=0FF SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ ALU=A_BIC_B bus_A=R2 bus_B=R3 WR_MEM_A ]
+        [ bus_B=R4 WR_MEM_D RETURN_TRUE ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R2 D=0FF ] % R2 - segment no
+        [ CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A+B bus_A=R3 bus_B=R2 RD_MEM_A ]
+        [ bus_B=WR_R2               RD_MEM_D   ] % R2 - segment adr
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R3 D=0FF ] % R3 - page no
+        [ ALU=A+B bus_A=R2 bus_B=RW_R3 RD_MEM_A ]
+        [ bus_A=R4->STACK bus_B=WR_R2  RD_MEM_D ]   % R2 - page adr
+        [ ALU=ROR(B) CONST->R4 D=1 ]
+        [ ALU=ROR(B) bus_B=RW_R4 ]
+        [ ALU=ROR(B) bus_B=RW_R4 ]
+        [ ALU=A_BIC_B bus_A=RW_R2 bus_B=R4 ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ bus_B=R3 WR_MEM_A ]
+        [ bus_A=STACK->R4 bus_B=R2 WR_MEM_D RETURN ]
+
+:NO_SEG [ bus_B=RW_R1 SHIFT_EN ]
+:NO_PAGE[ ALU=A_BIC_B bus_A=RW_R1 CONST D=0FF ]
+        [ CONST D=2   RD_MEM_A ]
+        [ bus_B=WR_R2 RD_MEM_D ]
+        [ CONST D=3   RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A+B bus_A=R2 bus_B=R3 WR_MEM_A ]
+        [ bus_B=R1                  WR_MEM_D ]
+        [ ALU=A+1 bus_A=RW_R3 ]
+        [ CONST D=3   WR_MEM_A ]
+        [ bus_B=R3    WR_MEM_D ]
+        [ CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=ROR(B)  CONST->R2 D=1 ]
+        [ ALU=A_OR_B  bus_A=RW_R3 bus_B=R2 ]
+        [ CONST D=0 WR_MEM_A ]
+        [ bus_B=R3  WR_MEM_D FLAG=ZERO RETURN ]
+
+:FAIL   [ bus_B=RW_R1 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ CONST->R2 D=0 RETURN FLAG=ZERO ]
+
+:CHECK  % R1 - virtual address
+        % FLAG - page exist
+        % destroed R3, R2
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R2 D=0FF ] % R2 - segment no
+        [ CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A+B bus_A=R3 bus_B=R2 RD_MEM_A FLAG=N ]
+        [ bus_B=WR_R2 FLAG=N        RD_MEM_D     % R2 - segment adr
+          GO_FALSE ADR=FAIL ]
+        [ bus_B=RW_R1 SHIFT_EN GO_FALSE ADR=NO_SEG ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R3 D=0FF ] % R3 - page no
+        [ ALU=A+B bus_A=R2 bus_B=R3 RD_MEM_A ]
+        [ bus_B=WR_R2 FLAG=N        RD_MEM_D ]   % R2 - page adr
+        [ bus_B=RW_R1 SHIFT_EN GO_FALSE ADR=NO_PAGE ]
+        [ RETURN ]
+
+:MAP    [ CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D FLAG=N ]
+        [ GO_FALSE ADR=MAP1 ]
+        [ FLAG=ZERO FINISH ]
+:MAP1   [ ALU=ROR(B) CONST->R2 D=1 ]
+        [ ALU=A_BIC_B bus_A=RW_R3 bus_B=R2 ]
+        [ CONST D=0 WR_MEM_A ]
+        [ bus_B=R3  WR_MEM_D RETURN ]
+
+:calcPH % R2 - virtual address
+        % R2 - ph address
+        % destroed R1,R3
+        [ ALU=A bus_A=R2 bus_B=WR_R1 ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R2 D=0FF ] % R2 - segment no
+        [ CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A+B bus_A=R3 bus_B=R2 RD_MEM_A FLAG=N ]
+        [ bus_B=WR_R2 FLAG=N        RD_MEM_D     % R2 - segment adr
+          GO_FALSE ADR=FAIL ]
+        [ bus_B=RW_R1 SHIFT_EN GO_FALSE ADR=NO_SEG ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R3 D=0FF ] % R3 - page no
+        [ ALU=A+B bus_A=R2 bus_B=R3 RD_MEM_A ]
+        [ bus_B=WR_R2 FLAG=N        RD_MEM_D ]   % R2 - page adr
+        [ bus_B=RW_R1 SHIFT_EN GO_FALSE ADR=NO_PAGE ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R3 D=0FF ] % R3 - word no
+        [ ALU=A+B bus_A=RW_R2 bus_B=R3 ]
+        [ CONST->R3 D=0FF SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ bus_B=RW_R3 SHIFT_EN ]
+        [ ALU=A_BIC_B bus_A=RW_R2 bus_B=R3 RETURN ]
+
+:CHECK_WR
+        % R1 - virtual address
+        % FLAG - page exist
+        % destroed R3, R2
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ bus_B=RW_R1 SHIFT_EN ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R2 D=0FF ] % R2 - segment no
+        [ CONST D=0 RD_MEM_A ]
+        [ bus_B=WR_R3 RD_MEM_D ]
+        [ ALU=A+B bus_A=R3 bus_B=R2 RD_MEM_A FLAG=N ]
+        [ bus_B=WR_R2 FLAG=N        RD_MEM_D     % R2 - segment adr
+          GO_FALSE ADR=FAIL ]
+        [ bus_B=RW_R1 SHIFT_EN GO_FALSE ADR=NO_SEG ]
+        [ ALU=A_AND_B bus_A=R1 CONST->R3 D=0FF ] % R3 - page no
+        [ ALU=A+B bus_A=R2 bus_B=R3 RD_MEM_A ]
+        [ bus_B=WR_R2 FLAG=N        RD_MEM_D ]   % R2 - page adr
+        [ bus_B=RW_R1 SHIFT_EN GO_FALSE ADR=NO_PAGE ]
+        [ ALU=ROL(A) bus_A=R2 FLAG=N ]
+        [ GO_FALSE ADR=NO_PAGE ]
+        [ RETURN ]

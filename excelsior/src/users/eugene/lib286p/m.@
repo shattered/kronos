@@ -1,0 +1,23 @@
+STK=10
+rm *.ref *.obj *.sym -q
+mc /sys/lib/Time.d /sys/pure/Strings.d /sys/pure/Formats.d Terminal.d
+mc lowLevel.d /sys/def/defErrors.d /sys/lib/Heap.d /sys/cool/coolDefs.d
+mc ../mnt/pcTab.d ../mnt/coErrors.d ../mnt/coSym.d ../mnt/pcSystem.d
+mc ../mnt/mcObj.d ../mnt/mcGen.d ../mnt/mcPars.d ../mnt/mcScan.d ../mnt/mcSym.d
+mc ../mnt/mcVis.d def_GDT.d
+
+mc Time.m /sys/pure/Strings.m Formats.m Terminal.m
+mc lowLevel.m /sys/def/defErrors.m Heap.m /sys/cool/coolDefs.m
+mc ../mnt/pcTab.m ../mnt/coErrors.m ../mnt/coSym.m pcSystem.m
+mc ../mnt/mcObj.m ../mnt/mcGen.m ../mnt/mcPars.m ../mnt/mcScan.m ../mnt/mcSym.m
+mc ../mnt/mcVis.m def_GDT.m
+
+mc mcTEXT='../mnt' inSym.d inCmd.d inFlow.d inVars.d
+mc mcTEXT='../mnt' inAsm.d inCmds.d inConst.d
+mc mcTEXT='../mnt' inDesig.d inEmul.d inExpr.d inFPP.d
+mc mcTEXT='../mnt' inGen.d inNum.d inStat.d
+
+mc mcTEXT='../mnt' inSym.m inVars.m
+mc mcTEXT='../mnt' inAsm.m inCmd.m inCmds.m inConst.m
+mc mcTEXT='../mnt' inDesig.m inEmul.m inExpr.m inFPP.m
+mc mcTEXT='../mnt' inFlow.m inGen.m inNum.m inStat.m

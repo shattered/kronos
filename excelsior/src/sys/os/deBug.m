@@ -1,0 +1,7 @@
+IMPLEMENTATION MODULE deBug; (* Leo 14-May-90. (c) KRONOS *)
+
+IMPORT      SYSTEM;
+
+PROCEDURE print(f: ARRAY OF CHAR; SEQ a: SYSTEM.WORD); END print;
+
+END deBug.
