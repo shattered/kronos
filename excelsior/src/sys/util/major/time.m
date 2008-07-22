@@ -8,7 +8,7 @@ IMPORT  tim: Time;
 
 VAR t: INTEGER;
     s: STRING;
-    echo: BITSET;
+    echo: ARRAY [0..7] OF CHAR;
 
 BEGIN
   NEW(s);

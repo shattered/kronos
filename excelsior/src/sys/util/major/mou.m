@@ -1,4 +1,5 @@
 MODULE mou; (* Leg 12-Apr-90. (c) KRONOS *)
+            (* Igo 02-Mar-92. (c) KRONOS *)
 
 IMPORT  bio: BIO;
 IMPORT  err: defErrors;
@@ -33,6 +34,7 @@ END unmount;
 
 PROCEDURE mount(dir,dev: ARRAY OF CHAR; ro: BOOLEAN);
   VAR label: ARRAY [0..15] OF CHAR;
+      fs   : STRING;
       i    : INTEGER;
 
   PROCEDURE ready;
@@ -45,7 +47,18 @@ PROCEDURE mount(dir,dev: ARRAY OF CHAR; ro: BOOLEAN);
   END ready;
 
 BEGIN
-  bio.mount(dir,dev,'',label,ro);
+  label:='EXC';
+  IF arg.string('fs',fs) THEN
+    IF HIGH(fs)>7 THEN
+      tty.perror(err.too_large,"File System name %%s\n"); HALT(err.too_large)
+    END;
+    label:=fs
+  END;
+  IF HIGH(arg.words)<=1 THEN
+    bio.mount(dir,dev,'',label,ro)
+  ELSE
+    bio.mount(dir,dev,arg.words[2],label,ro)
+  END;
   IF bio.done THEN ready; RETURN END;
   IF NOT arg.flag('-','a') OR (bio.error#err.busy) THEN
     tty.perror(bio.error,"Can't mount "'"%s" at "%s": %%s\n',dev,dir);
@@ -56,7 +69,11 @@ BEGIN
     tty.perror(bio.error,"Can't unmount "'"%s" at "%s": %%s\n',dev,dir);
     HALT(bio.error)
   END;
-  bio.mount(dir,dev,'',label,ro);
+  IF HIGH(arg.words)<=1 THEN
+    bio.mount(dir,dev,'',label,ro)
+  ELSE
+    bio.mount(dir,dev,arg.words[2],label,ro)
+  END;
   IF bio.done THEN ready; RETURN END;
   tty.perror(bio.error,"Can't mount "'"%s" at "%s": %%s\n',dev,dir);
 END mount;

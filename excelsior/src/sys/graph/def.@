@@ -1,1 +1,1 @@
-{mxOUT="*=/sys" SYM=". /sys /sym" CD=/sys/graph} mx Screen.d Fonts.d BMG.d pmCrs.d pmWnd.d pmPUP.d pmWM.d
+{mxOUT="*=/sys" SYM=". /sys /sym" CD=/sys/graph} mx Screen.d Fonts.d BMG.d pmPUP.d pmWnd.d pmWM.d pmCrs.d

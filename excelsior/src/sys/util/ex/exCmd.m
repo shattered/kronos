@@ -19,7 +19,7 @@ IMPORT        ASCII;
 
 FROM SYSTEM     IMPORT  WORD;
 FROM exScreen   IMPORT  push, pop, posl?, infomode, infoline_pos?
-                      , pushandclearinfo, showinfo;
+                      , pushandclearinfo, showinfo, pushandposinfo;
 FROM exIO       IMPORT  ReadFile, WriteFile;
 FROM exHead     IMPORT  readstr, message, ask, UPPG;
 FROM exMain     IMPORT  RefreshScreen, SetName, GetName, inform_on, inform_off
@@ -318,7 +318,7 @@ PROCEDURE Shell;
   VAR  cmd: ARRAY [0..127] OF CHAR;
        pmt: ARRAY  [0..79] OF CHAR;
       name: ARRAY  [0..31] OF CHAR;
-      echo: BITSET;
+      echo: ARRAY [0..31] OF CHAR;
 BEGIN
   infomode(FALSE);
   str.copy(cmd,MainName);
@@ -473,7 +473,7 @@ BEGIN
   save:=shell.print;
   shell.print:=f_print;
   shell.hold_break(TRUE);
-  shell.system(buff,shell._trap+shell._break+shell._ipr);
+  shell.system(buff, "TBI"); -- shell._trap+shell._break+shell._ipr);
   shell.hold_break(FALSE);
   shell.print:=save;
   kbrd.set_break(0);
@@ -481,6 +481,7 @@ BEGIN
   IF marks>0 THEN show_mark(FALSE)
   ELSE
     WaitUntilPressed;
+    pushandposinfo;
     UpdateInfo
   END
 END Filter;

@@ -1,1 +1,1 @@
-{ SYM='/sys /sym' mxOUT=*=/sys CD=/sys/def } mx defCPD defErrors defRequest defCode defCodes defTerminal defKeyboard defPrinter defTasks defScreen defBMG defFont defPlotter $1
+{ SYM='/sys /sym' mxOUT=*=/sys CD=/sys/def } mx defCPD defErrors defRequest defCode defCodes defTerminal defKeyboard defPrinter defTasks defScreen defBMG defFont defPlotter $1

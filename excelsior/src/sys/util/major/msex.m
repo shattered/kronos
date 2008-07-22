@@ -1,4 +1,5 @@
 MODULE msex; (* Leo 12-Mar-91. (c) KRONOS *)
+             (* Igo 24-Nov-91. (c) KRONOS *)
 
 IMPORT       SYSTEM;
 IMPORT       ASCII;
@@ -16,6 +17,8 @@ IMPORT  wnd: ttyWindows;
 FROM SYSTEM  IMPORT ADR;
 
 WITH STORAGE: Heap;
+
+(*$N+*)
 
 TYPE
   STR32     = ARRAY [0..31] OF CHAR;
@@ -253,6 +256,7 @@ VAR   BAD: BOOLEAN;
  msd_done: BOOLEAN;
      disk: bio.FILE;
     bytes_per_sec   (* длина сектора в байтах    *)
+   ,bytes_per_clu   (* длина кластера в байтах   *)
    ,sec_per_clu     (* число секторов в кластере *)
    ,res_sec         (* число зарезервированных секторов *)
    ,no_FATs         (* число FAT-ов  *)
@@ -303,6 +307,14 @@ BEGIN
   read_sectors(offset+(cl-2)*sec_per_clu, sec_per_clu, to);
 END read_cluster;
 
+PROCEDURE read_clusters(cl,no: INTEGER; to: SYSTEM.ADDRESS);
+(* считывает с диска no кластеров начиная с -cl- *)
+(* и размещает информацию по адресу -to-         *)
+BEGIN
+  ASSERT((no>0) & (2<=cl) & (cl+no-1<=max_clu));
+  read_sectors(offset+(cl-2)*sec_per_clu, sec_per_clu*no , to);
+END read_clusters;
+
 PROCEDURE write_cluster(cl: INTEGER; from: SYSTEM.ADDRESS);
 (* записывает на диск кластер -cl-          *)
 (* информацию берет по адресу -from-        *)
@@ -310,6 +322,14 @@ BEGIN
   ASSERT((2<=cl) & (cl<=max_clu));
   write_sectors(offset+(cl-2)*sec_per_clu, sec_per_clu, from);
 END write_cluster;
+
+PROCEDURE write_clusters(cl,no: INTEGER; from: SYSTEM.ADDRESS);
+(* записывает на диск no кластеров начиная с -cl- *)
+(* информацию берет по адресу -from-              *)
+BEGIN
+  ASSERT((no>0) & (2<=cl) & (cl+no-1<=max_clu));
+  write_sectors(offset+(cl-2)*sec_per_clu, sec_per_clu*no , from);
+END write_clusters;
 
 ---------------------  R E A D    B O O T  ---------------------
                      ----------------------
@@ -358,6 +378,7 @@ BEGIN
 
   bytes_per_sec:=512;
   sec_per_clu  :=2;
+  bytes_per_clu:=bytes_per_sec*sec_per_clu;
   res_sec      :=1;
   no_FATs      :=1;
   root_dir_ent :=112;
@@ -389,6 +410,7 @@ BEGIN
     hidden_sec    := word(1Ch)
   END;
   ---- производные значения ----
+  bytes_per_clu:=bytes_per_sec*sec_per_clu;
   clu_size:=bytes_per_sec * sec_per_clu;
   offset  :=res_sec + sec_per_FAT  * no_FATs
                     + root_dir_ent * 32 DIV bytes_per_sec;
@@ -551,7 +573,7 @@ BEGIN
   REPEAT
     IF FAT(i)=0 THEN INC(s) END; INC(i)
   UNTIL i=max_clu;
-  RETURN s*1024
+  RETURN s*clu_size
 END free;
 
 PROCEDURE saveFATs;
@@ -566,7 +588,7 @@ PROCEDURE loadFATs;
 BEGIN
   IF BAD THEN RETURN END;
   ASSERT(BYTES(FATs)>=sec_per_FAT*512);
-  read_sectors( 1, sec_per_FAT, SYSTEM.ADR(FATs) );
+  read_sectors( 1, sec_per_FAT , SYSTEM.ADR(FATs) );
   IF (ORD(FATs[0]) # media_desc) THEN
     werror(0,'%|48s','Illegal Files Allocation Table!'); BAD:=TRUE
   END;
@@ -656,7 +678,8 @@ BEGIN
   tim.unpack(tim.time(),y,n,d,h,m,s); y:=y-1980;
   s:=s+(m+h*64)*32;
   p[22]:=CHAR(s);       p[23]:=CHAR(s DIV 256);
-  d:=d+(n+y*128)*16;
+--d:=d+(n+y*128)*16;
+  d:=d+(n+y*16)*32;
   p[24]:=CHAR(d);       p[25]:=CHAR(d DIV 256);
   p[26]:=CHAR(e.clu);   p[27]:=CHAR(e.clu DIV 256);
   p[28]:=CHAR(e.eof);   p[29]:=CHAR(e.eof DIV 256);
@@ -855,9 +878,27 @@ PROCEDURE msd2exc(VAL e: ITEM; txt: BOOLEAN);
     prc: INTEGER;
     len: INTEGER;
     eof: INTEGER;
-    buf: ARRAY [0..4095] OF CHAR;
+    buf: STRING;
    name: STR32;
    text: STRING;
+
+PROCEDURE read_to_buf;
+  VAR fclu,nclu,con: INTEGER;
+BEGIN
+  fclu:=clu;
+  nclu:=1;
+  clu :=FAT(clu);
+  con :=sec_per_trk*heads;
+  con :=con - (offset+(clu-2)*sec_per_clu) MOD con;
+  WHILE (nclu<con) & (1<clu) & (clu<0FFFh)&(fclu+nclu=clu) & ((nclu+1)*clu_size<=BYTES(buf)) DO
+    clu:=FAT(clu);
+    INC(nclu)
+  END;
+  read_clusters(fclu,nclu,ADR(buf));
+  len:=clu_size*nclu;
+  IF eof<clu_size*nclu THEN len:=eof END
+END read_to_buf;
+
 BEGIN
   IF e.name="" THEN RETURN END;
   msd_press(name,e.name);
@@ -873,15 +914,14 @@ BEGIN
   END;
   bio.create(f,name,'w',e.eof); bio_check;
   bio.buffers(f,1,4096);        bio_check;
+  NEW(buf,sec_per_trk*heads*bytes_per_sec*2);
   IF txt THEN
     pos:=0;
     eof:=e.eof;
     clu:=e.clu;
     NEW(text,eof);
     WHILE (1<clu) & (clu<0FFFh) DO
-      read_cluster(clu,ADR(buf));
-      clu:=FAT(clu);
-      IF eof>1024 THEN len:=1024 ELSE len:=eof END;
+      read_to_buf;
       low.cmove(ADR(text),pos,ADR(buf),0,len);
       DEC(eof,len); INC(pos,len)
     END;
@@ -906,13 +946,16 @@ BEGIN
     clu:=e.clu;
     WHILE (1<clu) & (clu<0FFFh) DO
       termo(name,pos,e.eof,prc);
-      read_cluster(clu,ADR(buf));
-      clu:=FAT(clu);
-      IF eof>1024 THEN len:=1024 ELSE len:=eof END;
+      read_to_buf;
       bio.put(f,buf,len); bio_check; DEC(eof,len); INC(pos,len)
     END
   END;
+  DISPOSE(buf);
   termo(name,e.eof,e.eof,prc);
+  bio.close(f);     bio_check;
+  bio.open(f,name,'r'); bio_check;
+  bio.set_attr(f, bio.a_wtime, e.time);     bio_check;
+  bio.set_attr(f, bio.a_ctime, e.time);     bio_check;
   bio.close(f);     bio_check;
 END msd2exc;
 
@@ -923,13 +966,32 @@ PROCEDURE exc2msd(VAR e: ITEM; txt: BOOLEAN);
     ent: INTEGER;
     i,j: INTEGER;
     clu: INTEGER;
+   fclu: INTEGER;
+   nclu: INTEGER;
     pos: INTEGER;
     prc: INTEGER;
     len: INTEGER;
+   flen: INTEGER;
     eof: INTEGER;
-    buf: ARRAY [0..4095] OF CHAR;
+    buf: STRING;
    text: STRING;
    name: STR32;
+
+PROCEDURE calc_fats;
+  VAR con: INTEGER;
+BEGIN
+  fclu:=clu;
+  nclu:=1;
+  clu :=FAT(clu);
+  con :=sec_per_trk*heads;
+  con :=con - (offset+(clu-2)*sec_per_clu) MOD con;
+  WHILE (nclu<con) & (1<clu) & (clu<0FFFh)&(fclu+nclu=clu) & ((nclu+1)*clu_size<=BYTES(buf)) DO
+    clu:=FAT(clu);
+    INC(nclu)
+  END;
+  flen:=clu_size*nclu
+END calc_fats;
+
 BEGIN
   IF e.name="" THEN RETURN END;
   msd_unpress(name,e.name);
@@ -968,7 +1030,6 @@ BEGIN
     FOR i:=0 TO HIGH(text) DO (*$<$T-*)
       ch:=text[i]; INC(eof,ORD(ch=36c)); INC(j,ORD(ch=12c)) (*$>*)
     END;
-ASSERT(j=0);
     IF j>0 THEN
       IF text[0]=12c THEN INC(eof) END;
       FOR i:=1 TO HIGH(text) DO
@@ -976,34 +1037,35 @@ ASSERT(j=0);
       END
     END
   END;
-  IF NOT alloc_cluster((eof+1023) DIV 1024,m.clu) THEN
+  IF NOT alloc_cluster((eof+clu_size-1) DIV clu_size,m.clu) THEN
     werror(0,'no space for "%s"',name); bio.close(f); RETURN
   END;
   m.name:=name;
   saveFATs;
+  NEW(buf,sec_per_trk*heads*bytes_per_sec);
   IF txt THEN
-    i:=0; j:=0; len:=e.eof; clu:=m.clu;
+    i:=0; j:=0; len:=e.eof; clu:=m.clu; calc_fats;
     WHILE len>0 DO
       ch:=text[i];
       IF ch>=40c THEN
         buf[j]:=kr2pc[ORD(ch)]; INC(j)
       ELSIF (ch=36c) OR ((ch=12c) & ((i=0) OR (i>0) & (text[i-1]#15c))) THEN
         buf[j]:=15c; INC(j);
-        IF j=1024 THEN
-          write_cluster(clu,ADR(buf)); clu:=FAT(clu); INC(pos,1024); j:=0;
+        IF j=flen THEN
+          write_clusters(fclu,nclu,ADR(buf)); calc_fats; INC(pos,flen); j:=0;
           termo(name,pos,eof,prc)
         END;
         buf[j]:=12c; INC(j)
       ELSE
         buf[j]:=kr2pc[ORD(ch)]; INC(j)
       END;
-      IF j=1024 THEN
-        write_cluster(clu,ADR(buf)); clu:=FAT(clu); INC(pos,1024); j:=0;
+      IF j=flen THEN
+        write_clusters(fclu,nclu,ADR(buf)); calc_fats; INC(pos,flen); j:=0;
         termo(name,pos,eof,prc)
       END;
       DEC(len); INC(i)
     END;
-    IF j#0 THEN write_cluster(clu,ADR(buf)); INC(pos,j) END;
+    IF j#0 THEN write_clusters(fclu,nclu,ADR(buf)); INC(pos,j) END;
     m.eof:=eof;
     DISPOSE(text)
   ELSE
@@ -1011,16 +1073,18 @@ ASSERT(j=0);
     clu:=m.clu;
     WHILE eof>0 DO
       termo(name,pos,e.eof,prc);
-      IF eof>1024 THEN len:=1024 ELSE len:=eof END;
+      calc_fats;
+      IF eof>flen THEN len:=flen ELSE len:=eof END;
       bio.get(f,buf,len); bio_check;
-      write_cluster(clu,ADR(buf));
-      clu:=FAT(clu);
+      write_clusters(fclu,nclu,ADR(buf));
       DEC(eof,len); INC(pos,len)
     END;
     m.eof:=e.eof;
   END;
+  DISPOSE(buf);
   termo(name,e.eof,e.eof,prc);
   bio.close(f);     bio_check;
+  m.time := e.time;
   put_entry(ent,m);
   save_dir
 END exc2msd;
@@ -1522,8 +1586,8 @@ PROCEDURE monitor;
       IF dir THEN mvdw; RETURN END;
       IF X=ADR(R) THEN updateattr(X^.cur) END;
       seld:=NOT seld;
-      IF X=ADR(R) THEN i:=(eof+1023) DIV 1024 * 1024
-      ELSE             i:=(eof+4095) DIV 4096 * 4096
+      IF X=ADR(R) THEN i:=(eof+clu_size-1) DIV clu_size * clu_size
+      ELSE             i:=(eof+      4095) DIV 4096     * 4096
       END;
       IF seld THEN INC(X^.cou); INC(X^.sum,i)
       ELSE         DEC(X^.cou); DEC(X^.sum,i)
@@ -1546,8 +1610,8 @@ PROCEDURE monitor;
         IF NOT dir & NOT seld THEN
           done:=TRUE; seld:=TRUE;
           IF X=ADR(R) THEN updateattr(i) END;
-          IF X=ADR(R) THEN j:=(eof+1023) DIV 1024 * 1024
-          ELSE             j:=(eof+4095) DIV 4096 * 4096
+          IF X=ADR(R) THEN j:=(eof+clu_size-1) DIV clu_size * clu_size
+          ELSE             j:=(eof+      4095) DIV     4096 * 4096
           END;
           INC(X^.cou); INC(X^.sum,j)
         END
@@ -1726,6 +1790,8 @@ END barline;
 VAR s: req.REQUEST;
 
 BEGIN
+  tty.set_pos(0,0);
+  tty.erase(0);
   MSCD:=-1;
   disk:=bio.null;
   tty.set_awp(0);

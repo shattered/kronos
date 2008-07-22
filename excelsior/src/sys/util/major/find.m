@@ -19,6 +19,7 @@ WITH STORAGE: mem;
 
 TYPE
   STR4   = ARRAY [0..  3] OF CHAR;
+  STR8   = ARRAY [0..  7] OF CHAR;
   STR32  = ARRAY [0.. 31] OF CHAR;
   STR256 = ARRAY [0..255] OF CHAR;
 
@@ -27,7 +28,7 @@ VAR (* flags *)
   sys: BOOLEAN;
   dir: BOOLEAN;
   qry: BOOLEAN;
-  vrb: BITSET;
+  vrb: STR8;
   com: BOOLEAN;
   tms: BOOLEAN;
   fls: BOOLEAN;
@@ -77,10 +78,31 @@ BEGIN
   env.put_str(env.info,name,TRUE);
 END push_info;
 
+PROCEDURE in?(VAL s: ARRAY OF CHAR; c: CHAR): BOOLEAN;
+  VAR i: INTEGER;
+BEGIN
+  i:=0;
+  WHILE (i<=HIGH(s)) & (s[i]#0c) DO
+    IF CAP(s[i])=c THEN RETURN TRUE END;
+    INC(i)
+  END;
+  RETURN FALSE
+END in?;
+
+PROCEDURE excl(VAR s: ARRAY OF CHAR; c: CHAR);
+  VAR i: INTEGER;
+BEGIN
+  i:=0;
+  WHILE (i<=HIGH(s)) & (s[i]#0c) DO
+    IF CAP(s[i])=c THEN s[i]:=" " END;
+    INC(i)
+  END;
+END excl;
+
 PROCEDURE query(VAL name: ARRAY OF CHAR): BOOLEAN;
   VAR ch,c: CHAR;
 BEGIN
-  IF NOT qry OR (vrb*shl._cfi={}) THEN RETURN TRUE END;
+  IF NOT qry OR NOT in?(vrb,"@") THEN RETURN TRUE END;
   IF str.len(name)<16 THEN tty.print('%-16s',name)
   ELSE tty.print('%-32s',name)
   END;
@@ -97,7 +119,7 @@ BEGIN
   IF c ='I'     THEN skip:=TRUE  END;
   IF ch='A'     THEN qry :=FALSE END;
   IF ch='a'     THEN all :=TRUE  END;
-  IF ch=key.can THEN qry:=FALSE; vrb:=vrb-shl._cfi END;
+  IF ch=key.can THEN qry:=FALSE; excl(vrb,"@") END;
   RETURN (c='Y') OR (c='A') OR (ch=key.can);
 END query;
 
@@ -125,8 +147,8 @@ BEGIN
   IF NOT all THEN
     IF NOT query(cm) THEN DISPOSE(cm); RETURN END
   END;
-  IF (vrb*shl._cfi#{}) & (all OR NOT qry) THEN tty.print('%s\n',cm) END;
-  shl.system(cm,vrb);
+  IF in?(vrb,"@") & (all OR NOT qry) THEN tty.print('%s\n',cm) END;
+  shl.system(cm,'');
   DISPOSE(cm);
 END process;
 
@@ -157,7 +179,7 @@ BEGIN
     bio.purge(f);
     IF (wt<w_aft) OR (wt>w_bef) OR (ct<c_aft) OR (ct>c_bef) THEN RETURN END
   END;
-  IF env.ipr() THEN IF NOT com THEN HALT END; qry:=FALSE; vrb:={} END;
+  IF env.ipr() THEN IF NOT com THEN HALT END; qry:=FALSE; vrb:="" END;
   IF com THEN process(name) ELSE std.print('%s\n',name) END
 END find;
 
@@ -255,7 +277,7 @@ BEGIN
   sys:=NOT arg.flag('-','y');
   dev:=NOT arg.flag('-','z');
   shl.get_echo(vrb);
-  IF arg.flag('-','v') THEN vrb:=vrb-shl._cfi END;
+  IF arg.flag('-','v') THEN excl(vrb,"@") END;
   tms:=FALSE;
   IF arg.string("after"  ,s) THEN date(w_aft,FALSE) ELSE w_aft:= 0  END;
   IF arg.string("before" ,s) THEN date(w_bef,TRUE)  ELSE w_bef:=max END;
@@ -273,7 +295,7 @@ BEGIN
   flags;
   IF NOT env.ipr() THEN RETURN END;
   IF NOT com THEN HALT END;
-  qry:=FALSE; vrb:={}
+  qry:=FALSE; vrb:=""
 END init;
 
 VAR i: INTEGER;

@@ -66,7 +66,8 @@ MODULE dio; (* Hady. 20-Oct-89. (c) KRONOS *)
       cTime : INTEGER;  (* Creation time *)       -- 48
       wTime : INTEGER;  (* Last write time *)     -- 52
       pro   : INTEGER;                            -- 56
-      res   : ARRAY [0..1] OF INTEGER;            -- 64
+      gen   : INTEGER;  (* generation number *)   -- 60
+      res   : ARRAY [0..0] OF INTEGER;            -- 64
     END (* i_node *);
 
     b_ptr = POINTER TO ARRAY [0..1023] OF WORD;
@@ -584,7 +585,7 @@ BEGIN
           RETURN -1
         END;
       ELSIF b=HIGH(dir^.n.Ref) THEN
-        tty.print('Не умею работать с длинными директориями\n');
+        tty.print('е умею работать с длинными директориями\n');
         RETURN -1;
       END;
     END;
@@ -964,10 +965,10 @@ BEGIN
     CASE res OF
       |0: (* ok *)
       |1: (* bBusy=1 bSET=0 *)
-          err.put_error('block %d wrong busy, must be free; SET corrected',i);
+          err.put_error('block %d wrongly reported used, must be free; SET corrected',i);
           INC(b_err_busy); incl(dio.bSET,i); dio.s_put:=TRUE
       |2: (* bBusy=0 bSET=1 *)
-          err.put_error('block %d wrong free, must be busy; SET corrected',i);
+          err.put_error('block %d wrongly reported free, must be busy; SET corrected',i);
           INC(b_err_free); excl(dio.bSET,i); dio.s_put:=TRUE
       |3: (* ok *)
     END

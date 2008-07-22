@@ -7,10 +7,12 @@ IMPORT inter: coolSystem;
 IMPORT  scan: mxScan;
 IMPORT   obs: mxObj;
 IMPORT   cmd: mxCmd;
-
+IMPORT stdio: StdIO;
 WITH STORAGE: inter;
 
-CONST _origin = -10;    _dcopy = -11;
+CONST
+  _origin = -10;    _dcopy = -11;
+  _ash = 16;
 
 --------------------------  CONTEXT  --------------------------
                           -----------
@@ -1349,6 +1351,7 @@ PROCEDURE param(o: ObjPtr; parm: obs.ParmPtr);
 
   PROCEDURE save(addr: INTEGER);
   BEGIN
+    IF calls = NIL THEN RETURN END;
     IF calls^.pw=1 THEN cmd.stot;
     ELSE cmd.ssw(calls^.pw+addr-1); IF addr<-1 THEN cmd.copt END;
     END;
@@ -1356,14 +1359,15 @@ PROCEDURE param(o: ObjPtr; parm: obs.ParmPtr);
 
   PROCEDURE save_high(addr: INTEGER);
   BEGIN
-    IF addr>0 THEN RETURN END;
+    IF (addr>0) OR (calls = NIL) THEN RETURN END;
     cmd.ssw(calls^.pw+addr-2); IF addr<-1 THEN cmd.copt END;
   END save_high;
 
   PROCEDURE save_adr(addr: INTEGER);
   BEGIN
-    IF addr>0 THEN RETURN END;
-    cmd.ssw(calls^.pw+addr-1); IF addr<0 THEN cmd.copt END;
+    IF (addr>0) OR (calls = NIL) THEN RETURN END;
+    cmd.ssw(calls^.pw+addr-1);
+    IF addr<0 THEN cmd.copt END;
   END save_adr;
 
   PROCEDURE char_to_string(addr: INTEGER);
@@ -1416,7 +1420,7 @@ PROCEDURE param(o: ObjPtr; parm: obs.ParmPtr);
   CONST arrs = obs.ARRs - obs.Types{obs.dynarr};
   VAR addr: INTEGER; t: obs.TypePtr; dyn: BOOLEAN;
 BEGIN
-  IF scan.noErrors#0 THEN DISPOSE(o); RETURN END;
+--  IF scan.noErrors#0 THEN DISPOSE(o); RETURN END;
   addr:=parm^.addr; t:=parm^.type;
   dyn:=(o^.type^.mode=obs.dynarr);
   IF obs.varpar IN parm^.kind THEN
@@ -1833,6 +1837,22 @@ PROCEDURE exitStandardCall(VAR o: ObjPtr);
          obs.TypeCmp(p1^.type,p2^.type^.base);
          var_adr(p1);
          p1^.type:=p2^.type;
+      |_ash :
+         obs.TypeCmp(p1^.type,obs.intp);
+         obs.TypeCmp(p2^.type,obs.intp);
+         IF p2^.mode=cons THEN
+           IF p2^.addr>0 THEN cmd.c(M.shl)
+           ELSE cmd.pop_const; cmd.li(-p2^.addr); cmd.c(M.shr)
+           END;
+         ELSE
+           cmd.copt; cmd.li(0); cmd.c(M.lss); cmd.ePop;
+           cmd.c(M.jfsc); cmd.b(4); cmd.ePop;
+           cmd.c(M.neg);
+           cmd.c(M.shr);
+           cmd.c(M.jfs); cmd.b(1);
+           cmd.c(M.shl);
+         END;
+         cmd.ePop;
       |_abs :
          IF p1^.type^.mode=obs.real THEN
            IF p1^.mode=cons THEN
@@ -1882,6 +1902,7 @@ PROCEDURE exitStandardCall(VAR o: ObjPtr);
          IF p1^.mode#type THEN scan.err(22); p1^.mode:=inv; RETURN END;
          IF    p1^.type^.mode=obs.bitset  THEN lo:=0; hi:=31
          ELSIF p1^.type^.mode=obs.settype THEN obs.LoHi(p1^.type^.base,lo,hi)
+         ELSIF p1^.type^.mode=obs.real    THEN lo:=0FFFFFFFFh; hi:=7FFFFFFFh;
          ELSE obs.chkScalar(p1^.type); obs.LoHi(p1^.type,lo,hi);
          END;
          IF s^.proc^.no=_min THEN p1^.addr:=lo ELSE p1^.addr:=hi END;

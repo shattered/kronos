@@ -1,1 +1,1 @@
-{ SYM='/sys /sym' mxOUT=*=/sys CD=/sys/api } mx regExpr fsWalk realMath Sorts PCX LZW0 $1
+{ SYM='/sys /sym' mxOUT=*=/sys CD=/sys/api } mx regExpr fsWalk realMath Sorts PCX LZW0 $1

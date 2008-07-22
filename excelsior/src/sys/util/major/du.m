@@ -36,7 +36,7 @@ BEGIN
   std.print('at "%s"',name);
   p('  total: ',t);  prc:=f*100 DIV t;
   p('   free: ',f);  std.print(" (%d%%)",prc);
-  p('   busy: ',u);  std.print(" (%d%%)\n",100-prc)
+  p('   used: ',u);  std.print(" (%d%%)\n",100-prc)
 END du;
 
 VAR  f: bio.FILE;

@@ -417,22 +417,23 @@ PROCEDURE tie_to_timeq(r_time: INTEGER; n: queue_ptr);
   VAR l: queue_ptr;
 BEGIN
   n^.info:=r_time;
-  IF timeq=NIL THEN timeq:=n; timeq^.bck:=n; timeq^.fwd:=n;
-  ELSE l:=timeq;
-    LOOP
-      IF n^.info<l^.info THEN
-        IF l=timeq THEN timeq:=n END;
-        EXIT
-      END;
-      l:=l^.bck;
-      IF l=timeq THEN EXIT END;
+  IF timeq=NIL THEN timeq:=n; timeq^.bck:=n; timeq^.fwd:=n
+  ELSE
+    l:=timeq;
+    IF r_time>=l^.info THEN
+      l:=l^.fwd;
+      WHILE r_time<l^.info DO l:=l^.fwd END;
+      n^.bck:=l^.bck;
+      n^.fwd:=l
+    ELSE
+      timeq :=n;
+      n^.bck:=l;
+      n^.fwd:=l^.fwd
     END;
-    n^.fwd:=l^.fwd;
-    n^.bck:=l;
     n^.bck^.fwd:=n;
-    n^.fwd^.bck:=n;
+    n^.fwd^.bck:=n
   END;
-  n^.sig:=REF(timeq,queue_ref);
+  n^.sig:=REF(timeq,queue_ref)
 END tie_to_timeq;
 
 PROCEDURE delay(ticks: INTEGER);
@@ -621,12 +622,14 @@ BEGIN
   ELSE                            check_p_stack(W_tie_to_timeq+8);
   END;
   di;
+    n:=ready;
+    IF (abort_tag IN n^.prs^.tags)&(s.tags*break#{}) THEN
+      ei; RETURN 1
+    END;
     IF s.cou>0 THEN
       DEC(s.cou); res:=0;
     ELSE
-      n:=ready;
       IF s.tags*break#{} THEN
-        IF abort_tag IN n^.prs^.tags THEN ei; RETURN 1 END;
         q_wait(s.queue,_brk_wait);
       ELSE
         q_wait(s.queue,_wait);
@@ -641,7 +644,7 @@ BEGIN
       END;
       res:=ready^.info;
     END;
-    IF s.tags*guard#{} THEN INC(ready^.prs^.guard) END;
+    IF (res=0)&(s.tags*guard#{}) THEN INC(ready^.prs^.guard) END;
   ei;
   RETURN res
 END wait_del;
@@ -857,7 +860,7 @@ END ini_mutex;
 
 CONST
   frequency = 50;
-  interval  = 2;
+  interval  = 1;
 
 VAR clocker, ipted: PROCESS;
 
@@ -888,30 +891,30 @@ BEGIN
     WHILE (timeq#NIL) & (timeq^.info<=timer) DO
       timeq^.info:=-1; q_send(timeq,FALSE);
     END;
-
-    IF timer<next    THEN
-      new:=ipted;
-    ELSE
+    new:=ipted;
+    IF timer>=next THEN
       next:=timer+interval;
-      IF (ready#NIL) & (ipted^.prs^.prio>=0) THEN
-        IF ipted#idler THEN ipted^.prs^.pp:=ipted END;
-        changed:=FALSE;
-        LOOP
-          IF ready=NIL THEN EXIT END;
-          p:=ready^.prs;
-          IF (p^.guard=0) & (p^.tags*marks#{}) THEN
-            IF abort_tag IN p^.tags THEN finish(p);
-            ELSE _suspend(p);
-            END;
-            changed:=TRUE
-          ELSIF changed THEN EXIT
-          ELSE
-            ready:=ready^.bck;
-            changed:=TRUE
+      IF ipted^.prs^.prio>=0 THEN
+        IF ready#NIL THEN
+          IF ipted#idler THEN ipted^.prs^.pp:=ipted END;
+          changed:=FALSE;
+          LOOP
+            IF ready=NIL THEN EXIT END;
+            p:=ready^.prs;
+            IF (p^.guard=0) & (p^.tags*marks#{}) THEN
+              IF abort_tag IN p^.tags THEN finish(p);
+              ELSE _suspend(p);
+              END;
+              changed:=TRUE
+            ELSIF changed THEN EXIT
+            ELSE
+              ready:=ready^.bck;
+              changed:=TRUE
+            END
           END
-        END
-      END;
-      IF ready=NIL THEN new:=idler ELSE new:=ready^.prs^.pp END
+        END;
+        IF ready=NIL THEN new:=idler ELSE new:=ready^.prs^.pp END
+      END
     END;
     transfer(clocker,new)
   END

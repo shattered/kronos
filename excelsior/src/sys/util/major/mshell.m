@@ -1,7 +1,7 @@
 MODULE mshell; (* Hady. 14-Sep-90. (c) KRONOS *)
 
 IMPORT  shell: Shell,
-          exe: exeCut,
+          exe: Execute,
           env: tskEnv,
           sys: SYSTEM,
            os: osKernel,
@@ -59,7 +59,15 @@ TYPE str256 = ARRAY [0..255] OF CHAR;
 VAR desc: sle.descriptor;
     bump: str256;
 
-VAR echo: BITSET;
+VAR echo: ARRAY [0..7] OF CHAR;
+
+PROCEDURE in_echo(ch: CHAR): BOOLEAN;
+  VAR i: INTEGER;
+BEGIN
+  i:=0;
+  WHILE (i<=HIGH(echo)) & (echo[i]#0c) & (echo[i]#ch) DO INC(i) END;
+  RETURN (i<=HIGH(echo)) & (echo[i]=ch)
+END in_echo;
 
 ---------------------------- ERRORS ----------------------------
                             --------
@@ -427,7 +435,7 @@ BEGIN
       IF abort THEN EXIT END;
       pos:=0; skip(bump,pos);
       IF (pos<=HIGH(bump)) & (bump[pos]="%") THEN
-        IF echo*shell._cfi#{} THEN tty.print('%s\n',bump) END;
+        IF in_echo("@") THEN tty.print('%s\n',bump) END;
         pos:=HIGH(bump)+1
       END
     ELSE
@@ -565,7 +573,7 @@ END comp_num;
 PROCEDURE execute(VAL cmd: ARRAY OF CHAR): INTEGER;
 BEGIN
   shell.get_echo(echo);
-  IF (echo*shell._cfi#{}) & blk^.active THEN tty.print('%s\n',cmd) END;
+  IF in_echo("@") & blk^.active THEN tty.print('%s\n',cmd) END;
   shell.system(cmd,echo);
   RETURN shell.result
 END execute;

@@ -143,6 +143,7 @@ BEGIN
   UNTIL dh=0
 END save;
 
+(*
 PROCEDURE paint(wnd: WINDOW; cx,cy,cw,ch: INTEGER);
   VAR w: Window;            dx,dy,dh,dw: INTEGER;
     bmd: BITMAP;            so,do      : INTEGER;
@@ -171,7 +172,64 @@ BEGIN
     INC(so,bmd^.WPL); INC(do,B^.WPL); DEC(dh)
   UNTIL dh=0
 END paint;
+*)
 
+PROCEDURE paint(wnd: WINDOW; cx,cy,cw,ch: INTEGER);
+  VAR w: Window;            dx,dy,dh,dw: INTEGER;
+    bmd: BITMAP;            so,do      : INTEGER;
+    b,m: ARRAY [0..3] OF INTEGER;   c,i: INTEGER;
+   mask: BITSET;
+BEGIN
+  w:=Window(wnd);
+  bmd:=w^.d.desc;
+  IF bmd=NIL THEN RETURN END;
+  dw:=cw;  dx:=cx+w^.d.x;
+  dh:=ch;  dy:=cy+w^.d.y;
+  IF dx<0           THEN dw:=dw+dx; cx:=cx-dx; dx:=0 END;
+  IF dy<0           THEN dh:=dh+dy; cy:=cy-dy; dy:=0 END;
+  IF dx+dw>T.clip.w THEN dw:=T.clip.w-dx END;
+  IF dy+dh>T.clip.h THEN dh:=T.clip.h-dy END;
+  IF (dw<=0) OR (dh<=0) THEN RETURN END;
+  so:=(bmd^.H-cy-dh)*bmd^.WPL;
+  do:=(B^  .H-dy-dh)*B^.  WPL;
+  mask:=w^.d.fore*B^.mask;
+  c:=0; i:=0;
+  REPEAT
+    IF mask*{0}#{} THEN
+      mask:=mask-{0};
+      b[c]:=B  ^.layers[i];
+      m[c]:=bmd^.layers[i];
+      INC(c)
+    END;
+    INC(i); mask:=mask>>1
+  UNTIL mask={};
+  CASE c OF
+    |1: REPEAT
+          bmv(b[0]+do,dx,m[0]+so,cx,dw);
+          INC(so,bmd^.WPL); INC(do,B^.WPL); DEC(dh)
+        UNTIL dh=0
+    |2: REPEAT
+          bmv(b[0]+do,dx,m[0]+so,cx,dw);
+          bmv(b[1]+do,dx,m[1]+so,cx,dw);
+          INC(so,bmd^.WPL); INC(do,B^.WPL); DEC(dh)
+        UNTIL dh=0
+    |3: REPEAT
+          bmv(b[0]+do,dx,m[0]+so,cx,dw);
+          bmv(b[1]+do,dx,m[1]+so,cx,dw);
+          bmv(b[2]+do,dx,m[2]+so,cx,dw);
+          INC(so,bmd^.WPL); INC(do,B^.WPL); DEC(dh)
+        UNTIL dh=0
+    |4: REPEAT
+          bmv(b[0]+do,dx,m[0]+so,cx,dw);
+          bmv(b[1]+do,dx,m[1]+so,cx,dw);
+          bmv(b[2]+do,dx,m[2]+so,cx,dw);
+          bmv(b[3]+do,dx,m[3]+so,cx,dw);
+          INC(so,bmd^.WPL); INC(do,B^.WPL); DEC(dh)
+        UNTIL dh=0
+  ELSE
+  END
+END paint;
+(*
 PROCEDURE paintwithboard(wnd: WINDOW; cx,cy,cw,ch: INTEGER);
   VAR w: Window;
     bmd: BITMAP;       dx,dy: INTEGER;
@@ -207,6 +265,88 @@ BEGIN
     UNTIL mask={};
     INC(so,bmd^.WPL); INC(do,B^.WPL); DEC(dh)
   UNTIL dh=0
+END paintwithboard;
+*)
+PROCEDURE paintwithboard(wnd: WINDOW; cx,cy,cw,ch: INTEGER);
+  VAR w: Window;
+    bmd: BITMAP;       dx,dy: INTEGER;
+   mask: BITSET;       dh,dw: INTEGER;
+   back: BITSET;       so,do: INTEGER;
+   fore: BITSET;
+
+    c,i: INTEGER;
+
+   dest,sou1: ARRAY [0..3] OF INTEGER;
+        sou0: ARRAY [0..3] OF ADDRESS;
+        sou2: ARRAY [0..3] OF POINTER TO INTEGER;
+
+BEGIN
+  w:=Window(wnd);
+  bmd:=w^.d.desc;
+  IF bmd=NIL THEN RETURN END;
+  dw:=cw;  dx:=cx+w^.d.x;
+  dh:=ch;  dy:=cy+w^.d.y;
+  IF dx<0           THEN dw:=dw+dx; cx:=cx-dx; dx:=0 END;
+  IF dy<0           THEN dh:=dh+dy; cy:=cy-dy; dy:=0 END;
+  IF dx+dw>T.clip.w THEN dw:=T.clip.w-dx END;
+  IF dy+dh>T.clip.h THEN dh:=T.clip.h-dy END;
+  IF (dw<=0) OR (dh<=0) THEN RETURN END;
+  so:=(bmd^.H-cy-dh)*bmd^.WPL;
+  do:=(B^  .H-dy-dh)*B^.  WPL;
+
+  mask:=B^.mask;
+  fore:=w^.d.fore;
+  back:=w^.d.back;
+  i:=0; c:=0;
+  REPEAT
+    IF mask*{0}#{} THEN
+      mask:=mask-{0};
+      dest[c]:=B^.layers[i];
+      IF fore*{0}#{} THEN
+        sou0[c]:=bmd^.layers[i];
+        sou1[c]:=cx;
+        sou2[c]:=SYSTEM.ADR(so)
+      ELSIF back*{0}#{} THEN
+        sou0[c]:=_fill;
+        sou1[c]:=dx MOD 32;
+        sou2[c]:=SYSTEM.ADR(i)
+      ELSE
+        sou0[c]:=_zero;
+        sou1[c]:=dx MOD 32;
+        sou2[c]:=SYSTEM.ADR(i)
+      END;
+      INC(c)
+    END;
+    mask:=mask>>1; fore:=fore>>1; back:=back>>1; INC(i)
+  UNTIL mask={};
+
+  i:=0;
+
+  CASE c OF
+    |1: REPEAT
+          bmv(dest[0]+do,dx,sou0[0]+sou2[0]^,sou1[0],dw);
+          INC(so,bmd^.WPL); INC(do,B^.WPL); DEC(dh)
+        UNTIL dh=0
+    |2: REPEAT
+          bmv(dest[0]+do,dx,sou0[0]+sou2[0]^,sou1[0],dw);
+          bmv(dest[1]+do,dx,sou0[1]+sou2[1]^,sou1[1],dw);
+          INC(so,bmd^.WPL); INC(do,B^.WPL); DEC(dh)
+        UNTIL dh=0
+    |3: REPEAT
+          bmv(dest[0]+do,dx,sou0[0]+sou2[0]^,sou1[0],dw);
+          bmv(dest[1]+do,dx,sou0[1]+sou2[1]^,sou1[1],dw);
+          bmv(dest[2]+do,dx,sou0[2]+sou2[2]^,sou1[2],dw);
+          INC(so,bmd^.WPL); INC(do,B^.WPL); DEC(dh)
+        UNTIL dh=0
+    |4: REPEAT
+          bmv(dest[0]+do,dx,sou0[0]+sou2[0]^,sou1[0],dw);
+          bmv(dest[1]+do,dx,sou0[1]+sou2[1]^,sou1[1],dw);
+          bmv(dest[2]+do,dx,sou0[2]+sou2[2]^,sou1[2],dw);
+          bmv(dest[3]+do,dx,sou0[3]+sou2[3]^,sou1[3],dw);
+          INC(so,bmd^.WPL); INC(do,B^.WPL); DEC(dh)
+        UNTIL dh=0
+  ELSE
+  END
 END paintwithboard;
 
 PROCEDURE draw(w: Window; cx,cy,cw,ch: INTEGER);
@@ -259,7 +399,7 @@ END tieonbot;
 PROCEDURE untie(w: Window);
   VAR t,b: Window;
 BEGIN
-  ASSERT(top#bottom); -- ????
+  ASSERT(top#bottom); (* cause of desktop allways exist! *)
   t:=Window(top);
   b:=Window(bottom);
   IF t=w THEN top   :=WINDOW(t^.dw) END;
@@ -559,113 +699,61 @@ BEGIN
   draw(w,cx-w^.d.x,cy-w^.d.y,cw,ch)
 END _ontop;
 
-PROCEDURE _onbotdw(w,u: Window; cx,cy,cw,ch: INTEGER);
+PROCEDURE _onbotdw(w,u,bot: Window; cx,cy,cw,ch: INTEGER);
   VAR i: INTEGER;
 BEGIN
 --bmg.print(B,T,0,340,fnt.font,"_onbotdw(%d,%d,%d,%d) 0     ",cx,cy,cw,ch);
-  IF (ch<=0) OR (cw<=0) OR (u=desk) THEN RETURN END;
+  IF (ch<=0) OR (cw<=0) OR (u=bot) THEN RETURN END;
   IF u^.d.closed OR notcross(u,cx,cy,cw,ch) THEN
-    _onbotdw(w,u^.dw,cx,cy,cw,ch); RETURN
+    _onbotdw(w,u^.dw,bot,cx,cy,cw,ch); RETURN
   END;
   IF cy <= u^.d.y THEN
     i:=min(ch,u^.d.y-cy);
-    _onbotdw(w,u^.dw,cx,cy,cw,i); cy:=cy+i; ch:=ch-i
+    _onbotdw(w,u^.dw,bot,cx,cy,cw,i); cy:=cy+i; ch:=ch-i
   END;
   IF u^.d.y <= cy THEN
     i:=min(ch,(u^.d.y+u^.d.h-1)-cy+1);
-    _onbotdw(w,u^.dw,cx,cy+i,cw,ch-i); ch:=i
+    _onbotdw(w,u^.dw,bot,cx,cy+i,cw,ch-i); ch:=i
   END;
   IF cx <= u^.d.x THEN
     i:=min(cw,u^.d.x-cx);
-    _onbotdw(w,u^.dw,cx,cy,i,ch);  cx:=cx+i; cw:=cw-i
+    _onbotdw(w,u^.dw,bot,cx,cy,i,ch);  cx:=cx+i; cw:=cw-i
   END;
   IF u^.d.x <= cx THEN
     i:=min(cw,(u^.d.x+u^.d.w-1)-cx+1);
-    _onbotdw(w,u^.dw,cx+i,cy,cw-i,ch); cw:=i
+    _onbotdw(w,u^.dw,bot,cx+i,cy,cw-i,ch); cw:=i
   END;
 --bmg.print(B,T,0,320,fnt.font,"_onbotdw(%d,%d,%d,%d) 1     ",cx,cy,cw,ch);
   draw(u,cx-u^.d.x,cy-u^.d.y,cw,ch)
 END _onbotdw;
 
-PROCEDURE _onbottom(w,u: Window; cx,cy,cw,ch: INTEGER);
+PROCEDURE _onbottom(w,u,bot: Window; cx,cy,cw,ch: INTEGER);
   VAR i: INTEGER;
 BEGIN
   IF (ch<=0) OR (cw<=0) THEN RETURN END;
   IF u=desk THEN
-    _onbotdw(w,w^.dw,cx,cy,cw,ch); RETURN
+    _onbotdw(w,w^.dw,bot,cx,cy,cw,ch); RETURN
   END;
   IF u^.d.closed OR notcross(u,cx,cy,cw,ch) THEN
-    _onbottom(w,u^.up,cx,cy,cw,ch); RETURN
+    _onbottom(w,u^.up,bot,cx,cy,cw,ch); RETURN
   END;
   IF cy <= u^.d.y THEN
     i:=min(ch,u^.d.y-cy);
-    _onbottom(w,u^.up,cx,cy,cw,i); cy:=cy+i; ch:=ch-i
+    _onbottom(w,u^.up,bot,cx,cy,cw,i); cy:=cy+i; ch:=ch-i
   END;
   IF u^.d.y <= cy THEN
     i:=min(ch,(u^.d.y+u^.d.h-1)-cy+1);
-    _onbottom(w,u^.up,cx,cy+i,cw,ch-i); ch:=i
+    _onbottom(w,u^.up,bot,cx,cy+i,cw,ch-i); ch:=i
   END;
   IF cx <= u^.d.x THEN
     i:=min(cw,u^.d.x-cx);
-    _onbottom(w,u^.up,cx,cy,i,ch);  cx:=cx+i; cw:=cw-i
+    _onbottom(w,u^.up,bot,cx,cy,i,ch);  cx:=cx+i; cw:=cw-i
   END;
   IF u^.d.x <= cx THEN
     i:=min(cw,(u^.d.x+u^.d.w-1)-cx+1);
-    _onbottom(w,u^.up,cx+i,cy,cw-i,ch); cw:=i
+    _onbottom(w,u^.up,bot,cx+i,cy,cw-i,ch); cw:=i
   END
 END _onbottom;
-
-PROCEDURE _emerge(w,u,t: Window; cx,cy,cw,ch: INTEGER);
-  VAR i: INTEGER;
-BEGIN
-  IF (ch<=0) OR (cw<=0) OR (u=w) THEN RETURN END;
-  IF u^.d.closed OR notcross(u,cx,cy,cw,ch) THEN
-    _emerge(w,u^.dw,t,cx,cy,cw,ch); RETURN
-  END;
-  IF cy <= u^.d.y THEN
-    i:=min(ch,u^.d.y-cy);
-    _emerge(w,u^.dw,t,cx,cy,cw,i); cy:=cy+i; ch:=ch-i
-  END;
-  IF u^.d.y <= cy THEN
-    i:=min(ch,(u^.d.y+u^.d.h-1)-cy+1);
-    _emerge(w,u^.dw,t,cx,cy+i,cw,ch-i); ch:=i
-  END;
-  IF cx <= u^.d.x THEN
-    i:=min(cw,u^.d.x-cx);
-    _emerge(w,u^.dw,t,cx,cy,i,ch);  cx:=cx+i; cw:=cw-i
-  END;
-  IF u^.d.x <= cx THEN
-    i:=min(cw,(u^.d.x+u^.d.w-1)-cx+1);
-    _emerge(w,u^.dw,t,cx+i,cy,cw-i,ch); cw:=i
-  END;
-  _refresh(w,t,cx,cy,cw,ch)
-END _emerge;
-
-PROCEDURE _sink(w,u: Window; cx,cy,cw,ch: INTEGER);
-  VAR i: INTEGER;
-BEGIN
-  IF (ch<=0) OR (cw<=0) OR (u=w) THEN RETURN END;
-  IF u^.d.closed OR notcross(u,cx,cy,cw,ch) THEN
-    _sink(w,u^.dw,cx,cy,cw,ch); RETURN
-  END;
-  IF cy <= u^.d.y THEN
-    i:=min(ch,u^.d.y-cy);
-    _sink(w,u^.dw,cx,cy,cw,i); cy:=cy+i; ch:=ch-i
-  END;
-  IF u^.d.y <= cy THEN
-    i:=min(ch,(u^.d.y+u^.d.h-1)-cy+1);
-    _sink(w,u^.dw,cx,cy+i,cw,ch-i); ch:=i
-  END;
-  IF cx <= u^.d.x THEN
-    i:=min(cw,u^.d.x-cx);
-    _sink(w,u^.dw,cx,cy,i,ch);  cx:=cx+i; cw:=cw-i
-  END;
-  IF u^.d.x <= cx THEN
-    i:=min(cw,(u^.d.x+u^.d.w-1)-cx+1);
-    _sink(w,u^.dw,cx+i,cy,cw-i,ch); cw:=i
-  END;
-  _refresh(u,u^.up,cx,cy,cw,ch)
-END _sink;
 
 PROCEDURE open(wnd: WINDOW);
   VAR w: Window;
@@ -876,7 +964,7 @@ BEGIN
   done:=TRUE;
   IF w=Window(bottom) THEN RETURN END;
   IF NOT w^.d.closed  THEN
-    _onbottom(w,w^.up,w^.d.x,w^.d.y,w^.d.w,w^.d.h)
+    _onbottom(w,w^.up,desk,w^.d.x,w^.d.y,w^.d.w,w^.d.h)
   END;
   untie(w); tieonbot(w)
 END onbottom;
@@ -899,8 +987,7 @@ BEGIN
 END upperthen;
 
 PROCEDURE putunder(wnd,und: WINDOW);
-  VAR w,u,dw: Window;
-  PROCEDURE retie; BEGIN untie(w); tieunder(w,u) END retie;
+  VAR w,u: Window;
 BEGIN
   w:=Window(wnd);
   u:=Window(und);
@@ -909,19 +996,18 @@ BEGIN
   IF (w=desk) OR (u=desk)        THEN done:=FALSE; error:=err.unsuitable END;
   done:=TRUE;
   IF (w=u) OR (w^.up=u) THEN RETURN END;
-  IF w^.d.closed  THEN retie; RETURN END;
-  IF upperthen(wnd,und) THEN
-    dw:=w^.dw; retie;
-    _sink  (w,dw,      w^.d.x,w^.d.y,w^.d.w,w^.d.h)
-  ELSE
-    _emerge(w,u^.dw,u, w^.d.x,w^.d.y,w^.d.w,w^.d.h);
-    retie
-  END
+  IF NOT w^.d.closed  THEN
+    IF upperthen(wnd,und) THEN
+      _onbottom(w,w^.up,u^.dw,w^.d.x,w^.d.y,w^.d.w,w^.d.h)
+    ELSE
+      _refresh(w,u,w^.d.x,w^.d.y,w^.d.w,w^.d.h)
+    END
+  END;
+  untie(w); tieunder(w,u)
 END putunder;
 
 PROCEDURE putover(wnd,und: WINDOW);
-  VAR w,u,dw: Window;
-  PROCEDURE retie; BEGIN untie(w); tieover(w,u) END retie;
+  VAR w,u: Window;
 BEGIN
   IF und=top     THEN ontop(wnd);    RETURN END;
   IF und=desktop THEN onbottom(wnd); RETURN END;
@@ -932,14 +1018,14 @@ BEGIN
   IF (w=desk)                    THEN done:=FALSE; error:=err.unsuitable END;
   done:=TRUE;
   IF (w=u) OR (w^.dw=u) THEN RETURN END;
-  IF w^.d.closed  THEN retie; RETURN END;
-  IF upperthen(wnd,und) THEN
-    dw:=w^.dw; retie;
-    _sink  (w,dw,      w^.d.x,w^.d.y,w^.d.w,w^.d.h)
-  ELSE
-    _emerge(w,u,u^.up, w^.d.x,w^.d.y,w^.d.w,w^.d.h);
-    retie
-  END
+  IF NOT w^.d.closed  THEN
+    IF upperthen(wnd,und) THEN
+      _onbottom(w,w^.up,u,w^.d.x,w^.d.y,w^.d.w,w^.d.h)
+    ELSE
+      _refresh(w,u^.up,w^.d.x,w^.d.y,w^.d.w,w^.d.h)
+    END
+  END;
+  untie(w); tieover(w,u)
 END putover;
 
 PROCEDURE refreshboard(wnd: WINDOW; X,Y,W,H: INTEGER); (* only fore refreshed *)
