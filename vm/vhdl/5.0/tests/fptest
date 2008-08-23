@@ -1,0 +1,25 @@
+#!/usr/bin/bash
+
+if [ ! -d "$DSROOT" ]
+then
+  echo DSROOT is undefined or invalid
+  exit 1
+fi
+
+DSROOTUNX=`cygpath -u $DSROOT`
+
+if [ ! -d "$DSTEMP" ]
+then
+  echo DSTEMP is undefined or invalid
+  exit 1
+fi
+
+DSTEMPUNX=`cygpath -u $DSTEMP`
+
+export PATH="$PATH:$DSROOTUNX/kits/jdk/sun/1.4/bin"
+export PATH="$PATH:$DSROOTUNX/exe/win-nt"
+export CLASSPATH=`cygpath -w $DSTEMPUNX/idea-classes`
+
+java net.largest.tools.mkas.FPTest fptest.txt
+
+

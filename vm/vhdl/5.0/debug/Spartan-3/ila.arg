@@ -1,0 +1,18 @@
+#
+# Usage: generate.exe ila -f=<arg_file_name>
+#
+-compname=ila
+-outputdirectory=C:\kronos\cpu\5.0\debug\Spartan-3
+-datadepth=512
+-datawidth=32
+-numtrigports=1
+-trigportwidth0=8
+-nummatchunits=1
+-mtrigport0=0
+-mtype0=0
+-enablestoragequal
+-trigseqtype=1
+-numtrigseqlevels=16
+-devicefamily=Spartan3
+-srl16type=2
+-createcdc

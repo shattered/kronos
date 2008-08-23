@@ -1,0 +1,36 @@
+#!/usr/bin/bash
+
+if [ ! -d "$DSROOT" ]
+then
+  echo DSROOT is undefined or invalid
+  exit 1
+fi
+
+DSROOTUNX=`cygpath -u $DSROOT`
+
+export PATH="$PATH:$DSROOTUNX/kits/vhdl-simili/bin"
+export PATH="$PATH:$DSROOTUNX/exe/win-nt"
+
+rm -rf `cygpath -u $DSTEMP`/vhdl/kronos.sym || exit 1
+
+vc="vhdlp -s -work kronos"
+
+$vc BlockRamSym.vhdl || exit 1
+$vc DistrRamSym.vhdl || exit 1
+
+$vc ../cpu/KronosTypes.vhdl || exit 1
+$vc ../cpu/uCmdBits.vhdl || exit 1
+$vc ../cpu/DataCacheFM.vhdl || exit 1
+$vc ../cpu/InstructionCache.vhdl || exit 1
+$vc ../cpu/DataStorage.vhdl || exit 1
+$vc ../cpu/ALU.vhdl || exit 1
+$vc ../cpu/Microcode.vhdl || exit 1
+$vc ../cpu/Decode.vhdl || exit 1
+$vc ../cpu/Kronos.vhdl || exit 1
+
+$vc ../sio/SerialPortSym.vhdl || exit 1
+$vc ../ata/ATA33.vhdl || exit 1
+
+$vc KronosSymBench.vhdl || exit 1
+
+vhdle -s -work kronos -p -nowarn all KronosSymBench
