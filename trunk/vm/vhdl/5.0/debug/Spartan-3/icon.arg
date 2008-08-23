@@ -1,0 +1,8 @@
+#
+# Usage: generate.exe icon -f=<arg_file_name>
+#
+-compname=icon
+-numports=1
+-devicefamily=Spartan3
+-bscanchain=1
+-outputdirectory=C:\kronos\cpu\5.0\debug\Spartan-3

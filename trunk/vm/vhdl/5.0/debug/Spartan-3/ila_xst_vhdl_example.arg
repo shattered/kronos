@@ -1,0 +1,10 @@
+#
+# Usage: generate.exe ila_example -f=<arg_file_name>
+#
+-tool=xst
+-language=VHDL
+-outputdirectory=C:\kronos\cpu\5.0\debug\Spartan-3
+-compname=ila
+-numtrigports=1
+-trigportwidth0=8
+-datawidth=32

@@ -1,0 +1,9 @@
+#
+# Usage: generate.exe icon_example -f=<arg_file_name>
+#
+-devicefamily=Spartan3
+-tool=xst
+-language=VHDL
+-numports=1
+-outputdirectory=C:\kronos\cpu\5.0\debug\Spartan-3
+-compname=icon
